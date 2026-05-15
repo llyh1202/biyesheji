@@ -15,6 +15,8 @@ public class CheweiVO implements Serializable {
 	private String cheweibianhao;
 	private String zhuangtai;
 	private Long cheweixinxiId;
+	private Long chezijinchangId;
+	private Long tingchejiaofeiId;
 	private String beizhu;
 	@JsonFormat(locale = "zh", timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
 	@DateTimeFormat
@@ -66,6 +68,22 @@ public class CheweiVO implements Serializable {
 
 	public void setCheweixinxiId(Long cheweixinxiId) {
 		this.cheweixinxiId = cheweixinxiId;
+	}
+
+	public Long getChezijinchangId() {
+		return chezijinchangId;
+	}
+
+	public void setChezijinchangId(Long chezijinchangId) {
+		this.chezijinchangId = chezijinchangId;
+	}
+
+	public Long getTingchejiaofeiId() {
+		return tingchejiaofeiId;
+	}
+
+	public void setTingchejiaofeiId(Long tingchejiaofeiId) {
+		this.tingchejiaofeiId = tingchejiaofeiId;
 	}
 
 	public String getBeizhu() {

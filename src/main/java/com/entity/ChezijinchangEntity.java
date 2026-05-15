@@ -112,8 +112,10 @@ public class ChezijinchangEntity<T> implements Serializable {
 	@JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
 	@DateTimeFormat 		
 	private Date jinchangshijian;
-	
-	
+
+	/** N2：关联车位主数据 chewei.id */
+	private Long cheweiId;
+
 	@JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")
 	@DateTimeFormat
 	private Date addtime;
@@ -251,6 +253,14 @@ public class ChezijinchangEntity<T> implements Serializable {
 	 */
 	public Date getJinchangshijian() {
 		return jinchangshijian;
+	}
+
+	public Long getCheweiId() {
+		return cheweiId;
+	}
+
+	public void setCheweiId(Long cheweiId) {
+		this.cheweiId = cheweiId;
 	}
 
 }

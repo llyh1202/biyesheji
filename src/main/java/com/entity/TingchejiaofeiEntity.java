@@ -144,7 +144,10 @@ public class TingchejiaofeiEntity<T> implements Serializable {
 	 */
 					
 	private Long crossrefid;
-	
+
+	/** N2：关联车位主数据 chewei.id（可与 crossrefid 入场单推导一致） */
+	private Long cheweiId;
+
 	/**
 	 * 是否支付
 	 */
@@ -350,6 +353,15 @@ public class TingchejiaofeiEntity<T> implements Serializable {
 	public Long getCrossrefid() {
 		return crossrefid;
 	}
+
+	public Long getCheweiId() {
+		return cheweiId;
+	}
+
+	public void setCheweiId(Long cheweiId) {
+		this.cheweiId = cheweiId;
+	}
+
 	/**
 	 * 设置：是否支付
 	 */

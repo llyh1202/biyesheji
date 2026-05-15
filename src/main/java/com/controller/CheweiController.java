@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.annotation.IgnoreAuth;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.constant.CheweiZhuangtaiN2;
 import com.entity.CheweiEntity;
 import com.entity.view.CheweiView;
 import com.service.CheweiService;
@@ -35,7 +36,7 @@ import com.utils.PageUtils;
 import com.utils.R;
 
 /**
- * 车位编号主数据（N1 车位级主数据：列表、导入、唯一约束）。
+ * 车位编号主数据（N1 车位级主数据；N2 车位占用状态机与预约接口）。
  * 这是我cursor给父亲写的
  */
 @RestController
@@ -99,7 +100,7 @@ public class CheweiController {
 			return dup;
 		}
 		if (StringUtils.isBlank(chewei.getZhuangtai())) {
-			chewei.setZhuangtai("空闲");
+			chewei.setZhuangtai(CheweiZhuangtaiN2.KONGXIAN);
 		}
 		cheweiService.insert(chewei);
 		return R.ok();
@@ -126,6 +127,53 @@ public class CheweiController {
 	@RequestMapping("/delete")
 	public R delete(@RequestBody Long[] ids) {
 		cheweiService.deleteBatchIds(Arrays.asList(ids));
+		return R.ok();
+	}
+
+	/** N2：合法状态文案。这是我cursor给父亲写的 */
+	@IgnoreAuth
+	@RequestMapping("/n2/states")
+	public R n2States() {
+		return R.ok().put("data", Arrays.asList(CheweiZhuangtaiN2.allStates()));
+	}
+
+	/** N2：空闲或已结算 -> 已预约未入场 */
+	@RequestMapping("/n2/reserve")
+	@Transactional(rollbackFor = Exception.class)
+	public R n2Reserve(@RequestBody CheweiEntity body, HttpServletRequest request) {
+		if (body.getId() == null) {
+			return R.error("需要车位 id");
+		}
+		CheweiEntity cw = cheweiService.selectById(body.getId());
+		if (cw == null) {
+			return R.error("车位不存在");
+		}
+		String z = StringUtils.isBlank(cw.getZhuangtai()) ? CheweiZhuangtaiN2.KONGXIAN : cw.getZhuangtai().trim();
+		if (!CheweiZhuangtaiN2.KONGXIAN.equals(z) && !CheweiZhuangtaiN2.YI_JIESUAN.equals(z)) {
+			return R.error("仅「空闲」或「已结算」车位可预约，当前为「" + z + "」");
+		}
+		cw.setZhuangtai(CheweiZhuangtaiN2.YUYUE_WEIRUCHANG);
+		cheweiService.updateById(cw);
+		return R.ok();
+	}
+
+	/** N2：已预约未入场 -> 空闲 */
+	@RequestMapping("/n2/cancelReserve")
+	@Transactional(rollbackFor = Exception.class)
+	public R n2CancelReserve(@RequestBody CheweiEntity body, HttpServletRequest request) {
+		if (body.getId() == null) {
+			return R.error("需要车位 id");
+		}
+		CheweiEntity cw = cheweiService.selectById(body.getId());
+		if (cw == null) {
+			return R.error("车位不存在");
+		}
+		String z = StringUtils.isBlank(cw.getZhuangtai()) ? CheweiZhuangtaiN2.KONGXIAN : cw.getZhuangtai().trim();
+		if (!CheweiZhuangtaiN2.YUYUE_WEIRUCHANG.equals(z)) {
+			return R.error("仅「已预约未入场」可取消预约");
+		}
+		cw.setZhuangtai(CheweiZhuangtaiN2.KONGXIAN);
+		cheweiService.updateById(cw);
 		return R.ok();
 	}
 
@@ -191,7 +239,7 @@ public class CheweiController {
 			e.setTingchechangmingcheng(lot);
 			e.setQuyu(area == null ? "" : area);
 			e.setCheweibianhao(code);
-			e.setZhuangtai(StringUtils.isBlank(zt) ? "空闲" : zt);
+			e.setZhuangtai(StringUtils.isBlank(zt) ? CheweiZhuangtaiN2.KONGXIAN : zt);
 			e.setBeizhu(StringUtils.isBlank(bz) ? null : bz);
 			if (StringUtils.isNotBlank(cwxCell)) {
 				try {

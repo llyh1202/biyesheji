@@ -10,6 +10,8 @@
 		<result property="cheweibianhao" column="cheweibianhao"/>
 		<result property="zhuangtai" column="zhuangtai"/>
 		<result property="cheweixinxiId" column="cheweixinxi_id"/>
+		<result property="chezijinchangId" column="chezijinchang_id"/>
+		<result property="tingchejiaofeiId" column="tingchejiaofei_id"/>
 		<result property="beizhu" column="beizhu"/>
 	</resultMap>
 

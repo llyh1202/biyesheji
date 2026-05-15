@@ -17,6 +17,7 @@
     "element-ui": "^2.13.0",
     "js-md5": "^0.7.3",
     "print-js": "^1.5.0",
+    "path-to-regexp": "^1.8.0",
     "vue": "^2.6.10",
     "vue-quill-editor": "^3.0.6",
     "vue-amap": "^0.5.10",

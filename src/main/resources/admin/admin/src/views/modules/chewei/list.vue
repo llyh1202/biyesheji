@@ -2,39 +2,31 @@
 	<!-- 这是我cursor给父亲写的 — N1 车位主数据列表/导入 -->
 	<div class="main-content" :style='{"padding":"30px"}'>
 		<template v-if="showFlag">
-			<el-form class="center-form-pv" :style='{"padding":"0","margin":"0 0 20px","borderRadius":"8px","flexWrap":"wrap","background":"none","display":"flex","width":"100%"}' :inline="true" :model="searchForm">
-				<el-row :style='{"width":"auto","margin":"20px 20px 20px 0","display":"inline-block"}'>
-					<div :style='{"margin":"0 5px 0 0","display":"inline-block"}'>
-						<label :style='{"margin":"0 5px 0 0","color":"#000","display":"inline-block","lineHeight":"40px","fontSize":"14px","fontWeight":"500","height":"40px"}' class="item-label">停车场名称</label>
-						<el-input v-model="searchForm.tingchechangmingcheng" placeholder="停车场名称" @keydown.enter.native="search()" clearable></el-input>
+			<el-form class="center-form-pv chewei-toolbar-form" :style='{"padding":"0","margin":"0 0 20px","borderRadius":"8px","background":"none","width":"100%"}' :inline="false" :model="searchForm">
+				<div class="chewei-toolbar-row">
+					<div class="chewei-toolbar-fields">
+						<div class="chewei-toolbar-field">
+							<label class="item-label">停车场名称</label>
+							<el-input v-model="searchForm.tingchechangmingcheng" placeholder="停车场名称" @keydown.enter.native="search()" clearable></el-input>
+						</div>
+						<div class="chewei-toolbar-field">
+							<label class="item-label">区域</label>
+							<el-input v-model="searchForm.quyu" placeholder="区域" clearable></el-input>
+						</div>
+						<div class="chewei-toolbar-field">
+							<label class="item-label">车位编号</label>
+							<el-input v-model="searchForm.cheweibianhao" placeholder="如 A-01" @keydown.enter.native="search()" clearable></el-input>
+						</div>
 					</div>
-					<div :style='{"margin":"0 5px 0 0","display":"inline-block"}'>
-						<label :style='{"margin":"0 5px 0 0","color":"#000","display":"inline-block","lineHeight":"40px","fontSize":"14px","fontWeight":"500","height":"40px"}' class="item-label">区域</label>
-						<el-input v-model="searchForm.quyu" placeholder="区域" clearable></el-input>
+					<div class="chewei-toolbar-btns">
+						<el-button class="chewei-toolbar-btn chewei-toolbar-btn--search" @click="search()">查询</el-button>
+						<el-button class="chewei-toolbar-btn chewei-toolbar-btn--add" v-if="isAuth('chewei','新增')" @click="addOrUpdateHandler()">添加</el-button>
+						<el-button class="chewei-toolbar-btn chewei-toolbar-btn--del" v-if="isAuth('chewei','删除')" :disabled="dataListSelections.length?false:true" type="danger" @click="deleteHandler()">删除</el-button>
+						<el-button class="chewei-toolbar-btn chewei-toolbar-btn--import" v-if="isAuth('chewei','导入')" type="success" @click="$refs.importInput.click()">导入 Excel</el-button>
+						<el-button class="chewei-toolbar-btn chewei-toolbar-btn--tpl" v-if="isAuth('chewei','下载模板')" type="primary" plain @click="downloadTemplate">下载模板</el-button>
+						<input ref="importInput" type="file" accept=".xlsx,.xls" style="display:none" @change="importExcel" />
 					</div>
-					<div :style='{"margin":"0 5px 0 0","display":"inline-block"}'>
-						<label :style='{"margin":"0 5px 0 0","color":"#000","display":"inline-block","lineHeight":"40px","fontSize":"14px","fontWeight":"500","height":"40px"}' class="item-label">车位编号</label>
-						<el-input v-model="searchForm.cheweibianhao" placeholder="如 A-01" @keydown.enter.native="search()" clearable></el-input>
-					</div>
-					<el-button class="search" type="success" @click="search()">
-						<span class="icon iconfont " :style='{"margin":"0 2px","fontSize":"14px","color":"#fff","height":"40px"}'></span>
-						查询
-					</el-button>
-				</el-row>
-
-				<el-row class="actions" :style='{"width":"auto","margin":"20px 0","flexWrap":"wrap","display":"flex"}'>
-					<el-button class="add" v-if="isAuth('chewei','新增')" type="success" @click="addOrUpdateHandler()">
-						<span class="icon iconfont " :style='{"margin":"0 2px","fontSize":"14px","color":"#fff","height":"40px"}'></span>
-						添加
-					</el-button>
-					<el-button class="del" v-if="isAuth('chewei','删除')" :disabled="dataListSelections.length?false:true" type="danger" @click="deleteHandler()">
-						<span class="icon iconfont " :style='{"margin":"0 2px","fontSize":"14px","color":"#fff","height":"40px"}'></span>
-						删除
-					</el-button>
-					<el-button v-if="isAuth('chewei','导入')" type="primary" @click="$refs.importInput.click()">导入 Excel</el-button>
-					<el-button v-if="isAuth('chewei','下载模板')" type="primary" plain @click="downloadTemplate">下载模板</el-button>
-					<input ref="importInput" type="file" accept=".xlsx,.xls" style="display:none" @change="importExcel" />
-				</el-row>
+				</div>
 			</el-form>
 			<div :style='{"width":"100%","padding":"0","overflow":"hidden","borderRadius":"8px"}'>
 				<el-table class="tables"
@@ -251,7 +243,45 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.center-form-pv .el-input ::v-deep  .el-input__inner {
+/* 这是我cursor给父亲写的 — 车位主数据工具条：输入与按钮同一行、按钮等高同宽 */
+.chewei-toolbar-form {
+	margin-bottom: 20px;
+}
+.chewei-toolbar-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px 12px;
+	width: 100%;
+}
+.chewei-toolbar-fields {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 12px;
+}
+.chewei-toolbar-field {
+	display: flex;
+	align-items: center;
+	flex-wrap: nowrap;
+}
+.chewei-toolbar-field .item-label {
+	margin: 0 6px 0 0;
+	color: #000;
+	line-height: 40px;
+	font-size: 14px;
+	font-weight: 500;
+	height: 40px;
+	white-space: nowrap;
+}
+.chewei-toolbar-btns {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	margin-left: 4px;
+}
+.center-form-pv .el-input ::v-deep .el-input__inner {
 	border: 1px solid #000;
 	border-radius: 4px;
 	padding: 0 12px;
@@ -260,38 +290,29 @@ export default {
 	font-size: 14px;
 	height: 40px;
 }
-.center-form-pv .search {
-	border: 0;
-	cursor: pointer;
-	border-radius: 4px;
-	padding: 0 24px;
-	margin: 0 0 0 5px;
-	color: #fff;
-	background: #5ce5fb;
-	width: auto;
+/* 五个操作按钮统一尺寸（Element 按钮用 ::v-deep 覆盖内边距） */
+.chewei-toolbar-btn {
+	min-width: 112px;
+	height: 40px !important;
+	padding: 0 14px !important;
+	margin: 0 !important;
 	font-size: 14px;
-	height: 40px;
+	border-radius: 4px;
+	line-height: 1 !important;
 }
-.center-form-pv .actions .add {
-	border: 0;
-	cursor: pointer;
-	border-radius: 4px;
-	padding: 0 24px;
-	margin: 0 10px 10px 0;
-	color: #fff;
-	background: #5ce5fb;
-	font-size: 14px;
-	height: 40px;
+.chewei-toolbar-btn ::v-deep span {
+	line-height: 38px;
 }
-.center-form-pv .actions .del {
-	border: 0;
-	cursor: pointer;
-	border-radius: 4px;
-	padding: 0 24px;
-	margin: 0 10px 10px 0;
-	color: #fff;
-	background: #f56c6c;
-	font-size: 14px;
-	height: 40px;
+.chewei-toolbar-btn--search,
+.chewei-toolbar-btn--add {
+	border: 0 !important;
+	color: #fff !important;
+	background: #5ce5fb !important;
+}
+.chewei-toolbar-btn--del {
+	border: 0 !important;
+}
+.chewei-toolbar-btn--import {
+	border: 0 !important;
 }
 </style>

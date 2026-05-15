@@ -17,6 +17,7 @@ import com.utils.ValidatorUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,6 +32,7 @@ import com.entity.ChezijinchangEntity;
 import com.entity.view.ChezijinchangView;
 
 import com.service.ChezijinchangService;
+import com.service.CheweiZhuangtaiN2Service;
 import com.service.TokenService;
 import com.utils.PageUtils;
 import com.utils.R;
@@ -55,6 +57,9 @@ import java.io.FileNotFoundException;
 public class ChezijinchangController {
     @Autowired
     private ChezijinchangService chezijinchangService;
+    /** N2 车位状态机。这是我cursor给父亲写的 */
+    @Autowired
+    private CheweiZhuangtaiN2Service cheweiZhuangtaiN2Service;
 
 
 
@@ -142,9 +147,16 @@ public class ChezijinchangController {
      * 后台保存
      */
     @RequestMapping("/save")
+    @Transactional(rollbackFor = Exception.class)
     public R save(@RequestBody ChezijinchangEntity chezijinchang, HttpServletRequest request){
     	//ValidatorUtils.validateEntity(chezijinchang);
         chezijinchangService.insert(chezijinchang);
+        try {
+            cheweiZhuangtaiN2Service.afterChezijinchangInserted(chezijinchang);
+        } catch (IllegalStateException ex) {
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            return R.error(ex.getMessage());
+        }
         return R.ok();
     }
     
@@ -152,9 +164,16 @@ public class ChezijinchangController {
      * 前台保存
      */
     @RequestMapping("/add")
+    @Transactional(rollbackFor = Exception.class)
     public R add(@RequestBody ChezijinchangEntity chezijinchang, HttpServletRequest request){
     	//ValidatorUtils.validateEntity(chezijinchang);
         chezijinchangService.insert(chezijinchang);
+        try {
+            cheweiZhuangtaiN2Service.afterChezijinchangInserted(chezijinchang);
+        } catch (IllegalStateException ex) {
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            return R.error(ex.getMessage());
+        }
         return R.ok();
     }
 

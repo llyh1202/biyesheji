@@ -37,6 +37,10 @@ public class CheweiEntity<T> implements Serializable {
 	private String cheweibianhao;
 	private String zhuangtai;
 	private Long cheweixinxiId;
+	/** N2：当前入场单 id */
+	private Long chezijinchangId;
+	/** N2：当前离场/缴费订单 id */
+	private Long tingchejiaofeiId;
 	private String beizhu;
 
 	@JsonFormat(locale = "zh", timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
@@ -97,6 +101,22 @@ public class CheweiEntity<T> implements Serializable {
 
 	public void setCheweixinxiId(Long cheweixinxiId) {
 		this.cheweixinxiId = cheweixinxiId;
+	}
+
+	public Long getChezijinchangId() {
+		return chezijinchangId;
+	}
+
+	public void setChezijinchangId(Long chezijinchangId) {
+		this.chezijinchangId = chezijinchangId;
+	}
+
+	public Long getTingchejiaofeiId() {
+		return tingchejiaofeiId;
+	}
+
+	public void setTingchejiaofeiId(Long tingchejiaofeiId) {
+		this.tingchejiaofeiId = tingchejiaofeiId;
 	}
 
 	public String getBeizhu() {

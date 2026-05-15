@@ -17,6 +17,7 @@ import com.utils.ValidatorUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,6 +31,9 @@ import com.annotation.IgnoreAuth;
 import com.entity.TingchejiaofeiEntity;
 import com.entity.view.TingchejiaofeiView;
 
+import com.entity.ChezijinchangEntity;
+import com.service.ChezijinchangService;
+import com.service.CheweiZhuangtaiN2Service;
 import com.service.TingchejiaofeiService;
 import com.service.TokenService;
 import com.utils.PageUtils;
@@ -57,6 +61,11 @@ import com.config.AlipayConfig;
 public class TingchejiaofeiController {
     @Autowired
     private TingchejiaofeiService tingchejiaofeiService;
+    @Autowired
+    private ChezijinchangService chezijinchangService;
+    /** N2 车位状态机。这是我cursor给父亲写的 */
+    @Autowired
+    private CheweiZhuangtaiN2Service cheweiZhuangtaiN2Service;
 
 
 
@@ -144,9 +153,15 @@ public class TingchejiaofeiController {
      * 后台保存
      */
     @RequestMapping("/save")
+    @Transactional(rollbackFor = Exception.class)
     public R save(@RequestBody TingchejiaofeiEntity tingchejiaofei, HttpServletRequest request){
     	//ValidatorUtils.validateEntity(tingchejiaofei);
+        fillCheweiIdFromCrossref(tingchejiaofei);
         tingchejiaofeiService.insert(tingchejiaofei);
+        R n2r = applyN2AfterTingchejiaofeiSave(null, tingchejiaofei);
+        if (n2r != null) {
+            return n2r;
+        }
         return R.ok();
     }
     
@@ -154,9 +169,15 @@ public class TingchejiaofeiController {
      * 前台保存
      */
     @RequestMapping("/add")
+    @Transactional(rollbackFor = Exception.class)
     public R add(@RequestBody TingchejiaofeiEntity tingchejiaofei, HttpServletRequest request){
     	//ValidatorUtils.validateEntity(tingchejiaofei);
+        fillCheweiIdFromCrossref(tingchejiaofei);
         tingchejiaofeiService.insert(tingchejiaofei);
+        R n2r = applyN2AfterTingchejiaofeiSave(null, tingchejiaofei);
+        if (n2r != null) {
+            return n2r;
+        }
         return R.ok();
     }
 
@@ -168,11 +189,46 @@ public class TingchejiaofeiController {
      * 修改
      */
     @RequestMapping("/update")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public R update(@RequestBody TingchejiaofeiEntity tingchejiaofei, HttpServletRequest request){
         //ValidatorUtils.validateEntity(tingchejiaofei);
+        TingchejiaofeiEntity old = tingchejiaofeiService.selectById(tingchejiaofei.getId());
+        fillCheweiIdFromCrossref(tingchejiaofei);
         tingchejiaofeiService.updateById(tingchejiaofei);//全部更新
+        TingchejiaofeiEntity fresh = tingchejiaofeiService.selectById(tingchejiaofei.getId());
+        R n2r = applyN2AfterTingchejiaofeiSave(old, fresh);
+        if (n2r != null) {
+            return n2r;
+        }
         return R.ok();
+    }
+
+    /** N2：离场单首次写入、支付状态变更时联动车位。这是我cursor给父亲写的 */
+    private R applyN2AfterTingchejiaofeiSave(TingchejiaofeiEntity old, TingchejiaofeiEntity current) {
+        try {
+            if (old == null) {
+                cheweiZhuangtaiN2Service.afterTingchejiaofeiInserted(current);
+            } else {
+                if (old.getLichangshijian() == null && current.getLichangshijian() != null) {
+                    cheweiZhuangtaiN2Service.afterTingchejiaofeiInserted(current);
+                }
+                cheweiZhuangtaiN2Service.afterTingchejiaofeiUpdatedIfPaid(old, current);
+            }
+        } catch (IllegalStateException ex) {
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            return R.error(ex.getMessage());
+        }
+        return null;
+    }
+
+    private void fillCheweiIdFromCrossref(TingchejiaofeiEntity t) {
+        if (t == null || t.getCheweiId() != null || t.getCrossrefid() == null) {
+            return;
+        }
+        ChezijinchangEntity e = chezijinchangService.selectById(t.getCrossrefid());
+        if (e != null && e.getCheweiId() != null) {
+            t.setCheweiId(e.getCheweiId());
+        }
     }
 
 
@@ -231,6 +287,7 @@ public class TingchejiaofeiController {
 
     @IgnoreAuth
     @RequestMapping("notify")
+    @Transactional(rollbackFor = Exception.class)
     public R nofity(HttpServletRequest request, HttpServletResponse response) throws IOException {
         /* *
          * 功能：支付宝服务器异步通知页面
@@ -282,8 +339,11 @@ public class TingchejiaofeiController {
                 //付款完成后，支付宝系统发送该交易状态通知
                 TingchejiaofeiEntity tingchejiaofei = tingchejiaofeiService.selectOne(new EntityWrapper<TingchejiaofeiEntity>().eq("dingdanhao", out_trade_no));
                 if(tingchejiaofei!=null) {
+                    TingchejiaofeiEntity before = tingchejiaofeiService.selectById(tingchejiaofei.getId());
                     tingchejiaofei.setIspay("已支付");
                     tingchejiaofeiService.updateById(tingchejiaofei);
+                    TingchejiaofeiEntity after = tingchejiaofeiService.selectById(tingchejiaofei.getId());
+                    cheweiZhuangtaiN2Service.afterTingchejiaofeiUpdatedIfPaid(before, after);
                 }
             }
 
