@@ -150,6 +150,15 @@
 	</dependencies>
 
 	<build>
+		<!-- 排除前端 node_modules，避免 resources 复制失败且减小 target 体积。这是我cursor给父亲写的 -->
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<excludes>
+					<exclude>**/node_modules/**</exclude>
+				</excludes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

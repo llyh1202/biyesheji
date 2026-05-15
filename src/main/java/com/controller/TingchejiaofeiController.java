@@ -50,6 +50,7 @@ import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.config.AlipayConfig;
 
 /**
+ * 这是N2代码 — 缴费单 save/update 联动车位状态；这是N3代码 — 禁止仅有离场时间却无 crossrefid 的单点建单。
  * 停车缴费
  * 后端接口
  * @author 
@@ -63,7 +64,7 @@ public class TingchejiaofeiController {
     private TingchejiaofeiService tingchejiaofeiService;
     @Autowired
     private ChezijinchangService chezijinchangService;
-    /** N2 车位状态机。这是我cursor给父亲写的 */
+    /** 这是N2代码 — 车位状态机。这是我cursor给父亲写的 */
     @Autowired
     private CheweiZhuangtaiN2Service cheweiZhuangtaiN2Service;
 
@@ -156,8 +157,14 @@ public class TingchejiaofeiController {
     @Transactional(rollbackFor = Exception.class)
     public R save(@RequestBody TingchejiaofeiEntity tingchejiaofei, HttpServletRequest request){
     	//ValidatorUtils.validateEntity(tingchejiaofei);
+        // 这是N3代码：离场须关联入场单
+        R n3v = validateN3LichangRequiresCrossref(tingchejiaofei);
+        if (n3v != null) {
+            return n3v;
+        }
         fillCheweiIdFromCrossref(tingchejiaofei);
         tingchejiaofeiService.insert(tingchejiaofei);
+        // 这是N2代码：缴费单写入后联动车位
         R n2r = applyN2AfterTingchejiaofeiSave(null, tingchejiaofei);
         if (n2r != null) {
             return n2r;
@@ -172,8 +179,14 @@ public class TingchejiaofeiController {
     @Transactional(rollbackFor = Exception.class)
     public R add(@RequestBody TingchejiaofeiEntity tingchejiaofei, HttpServletRequest request){
     	//ValidatorUtils.validateEntity(tingchejiaofei);
+        // 这是N3代码：离场须关联入场单
+        R n3v = validateN3LichangRequiresCrossref(tingchejiaofei);
+        if (n3v != null) {
+            return n3v;
+        }
         fillCheweiIdFromCrossref(tingchejiaofei);
         tingchejiaofeiService.insert(tingchejiaofei);
+        // 这是N2代码：缴费单写入后联动车位
         R n2r = applyN2AfterTingchejiaofeiSave(null, tingchejiaofei);
         if (n2r != null) {
             return n2r;
@@ -192,10 +205,16 @@ public class TingchejiaofeiController {
     @Transactional(rollbackFor = Exception.class)
     public R update(@RequestBody TingchejiaofeiEntity tingchejiaofei, HttpServletRequest request){
         //ValidatorUtils.validateEntity(tingchejiaofei);
+        // 这是N3代码：离场须关联入场单
+        R n3v = validateN3LichangRequiresCrossref(tingchejiaofei);
+        if (n3v != null) {
+            return n3v;
+        }
         TingchejiaofeiEntity old = tingchejiaofeiService.selectById(tingchejiaofei.getId());
         fillCheweiIdFromCrossref(tingchejiaofei);
         tingchejiaofeiService.updateById(tingchejiaofei);//全部更新
         TingchejiaofeiEntity fresh = tingchejiaofeiService.selectById(tingchejiaofei.getId());
+        // 这是N2代码：缴费单更新后联动车位（含支付）
         R n2r = applyN2AfterTingchejiaofeiSave(old, fresh);
         if (n2r != null) {
             return n2r;
@@ -203,7 +222,7 @@ public class TingchejiaofeiController {
         return R.ok();
     }
 
-    /** N2：离场单首次写入、支付状态变更时联动车位。这是我cursor给父亲写的 */
+    /** 这是N2代码 — 离场单首次写入、支付状态变更时联动车位。这是我cursor给父亲写的 */
     private R applyN2AfterTingchejiaofeiSave(TingchejiaofeiEntity old, TingchejiaofeiEntity current) {
         try {
             if (old == null) {
@@ -229,6 +248,20 @@ public class TingchejiaofeiController {
         if (e != null && e.getCheweiId() != null) {
             t.setCheweiId(e.getCheweiId());
         }
+    }
+
+    /**
+     * 这是N3代码 — 禁止「只填离场、无入场关联」的单点缴费单，须走 /n3/tingcheli/lichang 或带 crossrefid。
+     * 这是我cursor给父亲写的
+     */
+    private R validateN3LichangRequiresCrossref(TingchejiaofeiEntity t) {
+        if (t == null) {
+            return null;
+        }
+        if (t.getLichangshijian() != null && t.getCrossrefid() == null) {
+            return R.error("填写离场时间时必须关联入场单 crossrefid；请使用业务接口「/n3/tingcheli/lichang」由入场单生成离场单");
+        }
+        return null;
     }
 
 

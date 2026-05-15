@@ -13,7 +13,7 @@ import com.service.CheweiZhuangtaiN2Service;
 import com.service.ChezijinchangService;
 
 /**
- * N2 车位占用状态机实现。
+ * 这是N2代码 — 车位占用状态机实现。
  * 这是我cursor给父亲写的
  */
 @Service("cheweiZhuangtaiN2Service")

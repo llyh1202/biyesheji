@@ -4,7 +4,7 @@ import com.entity.ChezijinchangEntity;
 import com.entity.TingchejiaofeiEntity;
 
 /**
- * N2：车位状态与入场单、缴费单联动。
+ * 这是N2代码 — 车位状态与入场单、缴费单联动。
  * 这是我cursor给父亲写的
  */
 public interface CheweiZhuangtaiN2Service {

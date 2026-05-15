@@ -36,6 +36,7 @@ import com.utils.PageUtils;
 import com.utils.R;
 
 /**
+ * 这是N2代码 — 含 N2 车位占用状态：预约/取消预约接口 /chewei/n2/*，新建车位默认「空闲」。
  * 车位编号主数据（N1 车位级主数据；N2 车位占用状态机与预约接口）。
  * 这是我cursor给父亲写的
  */
@@ -130,14 +131,14 @@ public class CheweiController {
 		return R.ok();
 	}
 
-	/** N2：合法状态文案。这是我cursor给父亲写的 */
+	/** 这是N2代码 — 合法状态文案。这是我cursor给父亲写的 */
 	@IgnoreAuth
 	@RequestMapping("/n2/states")
 	public R n2States() {
 		return R.ok().put("data", Arrays.asList(CheweiZhuangtaiN2.allStates()));
 	}
 
-	/** N2：空闲或已结算 -> 已预约未入场 */
+	/** 这是N2代码 — 空闲或已结算 -> 已预约未入场 */
 	@RequestMapping("/n2/reserve")
 	@Transactional(rollbackFor = Exception.class)
 	public R n2Reserve(@RequestBody CheweiEntity body, HttpServletRequest request) {
@@ -157,7 +158,7 @@ public class CheweiController {
 		return R.ok();
 	}
 
-	/** N2：已预约未入场 -> 空闲 */
+	/** 这是N2代码 — 已预约未入场 -> 空闲 */
 	@RequestMapping("/n2/cancelReserve")
 	@Transactional(rollbackFor = Exception.class)
 	public R n2CancelReserve(@RequestBody CheweiEntity body, HttpServletRequest request) {

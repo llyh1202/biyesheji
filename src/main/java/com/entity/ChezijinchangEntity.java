@@ -113,7 +113,7 @@ public class ChezijinchangEntity<T> implements Serializable {
 	@DateTimeFormat 		
 	private Date jinchangshijian;
 
-	/** N2：关联车位主数据 chewei.id */
+	/** 这是N2代码 — 关联车位主数据 chewei.id */
 	private Long cheweiId;
 
 	@JsonFormat(locale="zh", timezone="GMT+8", pattern="yyyy-MM-dd HH:mm:ss")

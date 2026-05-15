@@ -46,6 +46,7 @@ import org.springframework.util.ResourceUtils;
 import java.io.FileNotFoundException;
 
 /**
+ * 这是N2代码 — 入场单 save/add 成功后调 CheweiZhuangtaiN2Service，占用车位为「已入场」。
  * 车子进场
  * 后端接口
  * @author 
@@ -57,7 +58,7 @@ import java.io.FileNotFoundException;
 public class ChezijinchangController {
     @Autowired
     private ChezijinchangService chezijinchangService;
-    /** N2 车位状态机。这是我cursor给父亲写的 */
+    /** 这是N2代码 — 车位状态机。这是我cursor给父亲写的 */
     @Autowired
     private CheweiZhuangtaiN2Service cheweiZhuangtaiN2Service;
 
@@ -151,6 +152,7 @@ public class ChezijinchangController {
     public R save(@RequestBody ChezijinchangEntity chezijinchang, HttpServletRequest request){
     	//ValidatorUtils.validateEntity(chezijinchang);
         chezijinchangService.insert(chezijinchang);
+        // 这是N2代码：入场后联动车位
         try {
             cheweiZhuangtaiN2Service.afterChezijinchangInserted(chezijinchang);
         } catch (IllegalStateException ex) {
@@ -168,6 +170,7 @@ public class ChezijinchangController {
     public R add(@RequestBody ChezijinchangEntity chezijinchang, HttpServletRequest request){
     	//ValidatorUtils.validateEntity(chezijinchang);
         chezijinchangService.insert(chezijinchang);
+        // 这是N2代码：入场后联动车位
         try {
             cheweiZhuangtaiN2Service.afterChezijinchangInserted(chezijinchang);
         } catch (IllegalStateException ex) {

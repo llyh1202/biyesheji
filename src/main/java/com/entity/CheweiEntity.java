@@ -11,6 +11,7 @@ import org.apache.commons.beanutils.BeanUtils;
 import com.baomidou.mybatisplus.enums.IdType;
 
 /**
+ * 这是N2代码 — 含车位占用关联字段（chezijinchangId、tingchejiaofeiId）与状态 zhuangtai。
  * 车位编号主数据（车场/区域下单车位）。N1 实体表 chewei。
  * 这是我cursor给父亲写的
  */
@@ -37,9 +38,9 @@ public class CheweiEntity<T> implements Serializable {
 	private String cheweibianhao;
 	private String zhuangtai;
 	private Long cheweixinxiId;
-	/** N2：当前入场单 id */
+	/** 这是N2代码 — 当前入场单 id */
 	private Long chezijinchangId;
-	/** N2：当前离场/缴费订单 id */
+	/** 这是N2代码 — 当前离场/缴费订单 id */
 	private Long tingchejiaofeiId;
 	private String beizhu;
 

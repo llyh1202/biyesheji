@@ -145,7 +145,7 @@ public class TingchejiaofeiEntity<T> implements Serializable {
 					
 	private Long crossrefid;
 
-	/** N2：关联车位主数据 chewei.id（可与 crossrefid 入场单推导一致） */
+	/** 这是N2代码 — 关联车位主数据 chewei.id（可与 crossrefid 入场单推导一致） */
 	private Long cheweiId;
 
 	/**

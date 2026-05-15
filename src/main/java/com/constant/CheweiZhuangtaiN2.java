@@ -1,7 +1,7 @@
 package com.constant;
 
 /**
- * N2 车位占用状态机：合法状态文案与说明。
+ * 这是N2代码 — N2 车位占用状态机：合法状态文案与说明。
  * 这是我cursor给父亲写的
  */
 public final class CheweiZhuangtaiN2 {
