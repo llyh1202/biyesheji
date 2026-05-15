@@ -29,14 +29,18 @@ import com.annotation.IgnoreAuth;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.constant.CheweiZhuangtaiN2;
 import com.entity.CheweiEntity;
+import com.entity.dto.N4YuliangChaDto;
+import com.entity.dto.N4YuyueReserveDto;
 import com.entity.view.CheweiView;
 import com.service.CheweiService;
+import com.service.CheweiYuliangN4Service;
 import com.utils.MPUtil;
 import com.utils.PageUtils;
 import com.utils.R;
 
 /**
  * 这是N2代码 — 含 N2 车位占用状态：预约/取消预约接口 /chewei/n2/*，新建车位默认「空闲」。
+ * 这是N4代码 — 余位校验与时段预约 /chewei/n4/*。
  * 车位编号主数据（N1 车位级主数据；N2 车位占用状态机与预约接口）。
  * 这是我cursor给父亲写的
  */
@@ -46,6 +50,8 @@ public class CheweiController {
 
 	@Autowired
 	private CheweiService cheweiService;
+	@Autowired
+	private CheweiYuliangN4Service cheweiYuliangN4Service;
 
 	@RequestMapping("/page")
 	public R page(@RequestParam Map<String, Object> params, CheweiEntity chewei, HttpServletRequest request) {
@@ -175,7 +181,22 @@ public class CheweiController {
 		}
 		cw.setZhuangtai(CheweiZhuangtaiN2.KONGXIAN);
 		cheweiService.updateById(cw);
+		// 这是N4代码：同步作废时段预约
+		cheweiYuliangN4Service.cancelActiveYuyueForChewei(body.getId());
 		return R.ok();
+	}
+
+	/** 这是N4代码 — 预约前余位：总车位 − 时段内不可用（已入场/待结算/已预约/时段重叠）。这是我cursor给父亲写的 */
+	@RequestMapping("/n4/availability")
+	public R n4Availability(@RequestBody N4YuliangChaDto body, HttpServletRequest request) {
+		return cheweiYuliangN4Service.availability(body);
+	}
+
+	/** 这是N4代码 — 带时段预约：先余位校验再置「已预约未入场」并写 chewei_yuyue。这是我cursor给父亲写的 */
+	@RequestMapping("/n4/reserve")
+	@Transactional(rollbackFor = Exception.class)
+	public R n4Reserve(@RequestBody N4YuyueReserveDto body, HttpServletRequest request) {
+		return cheweiYuliangN4Service.reserveWithSlot(body);
 	}
 
 	/**
@@ -183,20 +204,20 @@ public class CheweiController {
 	 */
 	@RequestMapping("/importTemplate")
 	public void importTemplate(HttpServletResponse response) throws java.io.IOException {
-		Workbook wb = new XSSFWorkbook();
-		Sheet sheet = wb.createSheet("车位");
-		Row h = sheet.createRow(0);
-		String[] titles = { "停车场名称", "区域", "车位编号", "状态", "备注", "关联车位信息ID" };
-		for (int i = 0; i < titles.length; i++) {
-			h.createCell(i).setCellValue(titles[i]);
+		try (Workbook wb = new XSSFWorkbook()) {
+			Sheet sheet = wb.createSheet("车位");
+			Row h = sheet.createRow(0);
+			String[] titles = { "停车场名称", "区域", "车位编号", "状态", "备注", "关联车位信息ID" };
+			for (int i = 0; i < titles.length; i++) {
+				h.createCell(i).setCellValue(titles[i]);
+			}
+			sheet.setColumnWidth(0, 20 * 256);
+			sheet.setColumnWidth(1, 12 * 256);
+			sheet.setColumnWidth(2, 14 * 256);
+			response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+			response.setHeader("Content-Disposition", "attachment;filename=chewei_import_template.xlsx");
+			wb.write(response.getOutputStream());
 		}
-		sheet.setColumnWidth(0, 20 * 256);
-		sheet.setColumnWidth(1, 12 * 256);
-		sheet.setColumnWidth(2, 14 * 256);
-		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-		response.setHeader("Content-Disposition", "attachment;filename=chewei_import_template.xlsx");
-		wb.write(response.getOutputStream());
-		wb.close();
 	}
 
 	/**
@@ -208,7 +229,7 @@ public class CheweiController {
 		if (file == null || file.isEmpty()) {
 			return R.error("请选择文件");
 		}
-		Workbook wb = WorkbookFactory.create(file.getInputStream());
+		try (Workbook wb = WorkbookFactory.create(file.getInputStream())) {
 		Sheet sheet = wb.getSheetAt(0);
 		DataFormatter fmt = new DataFormatter();
 		int ok = 0;
@@ -252,11 +273,11 @@ public class CheweiController {
 			cheweiService.insert(e);
 			ok++;
 		}
-		wb.close();
 		Map<String, Object> data = new HashMap<String, Object>();
 		data.put("successCount", ok);
 		data.put("errors", errors);
 		return R.ok().put("data", data);
+		}
 	}
 
 	private static String trim(String s) {

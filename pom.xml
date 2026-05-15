@@ -113,16 +113,17 @@
     		<version>4.4.1</version>
 		</dependency>
 
+        <!-- poi 与 poi-ooxml 须同版本，避免 XSSFWorkbook.close() AbstractMethodError。这是我cursor给父亲写的 -->
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
-            <version>3.11</version>
+            <version>4.1.2</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
-            <version>3.9</version>
+            <version>4.1.2</version>
         </dependency>
 
         <dependency>

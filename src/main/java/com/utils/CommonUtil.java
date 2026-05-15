@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.springframework.stereotype.Component;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import org.apache.poi.ss.usermodel.DateUtil;
@@ -55,19 +56,21 @@ public class CommonUtil {
             return resultValue;
         }
 
-        // 拿到单元格类型
-        int cellType = cell.getCellType();
+        CellType cellType = cell.getCellType();
+        if (cellType == CellType.FORMULA) {
+            cellType = cell.getCachedFormulaResultType();
+        }
         switch (cellType) {
             // 字符串类型
-            case Cell.CELL_TYPE_STRING:
+            case STRING:
                 resultValue = StringUtils.isEmpty(cell.getStringCellValue()) ? "" : cell.getStringCellValue().trim();
                 break;
             // 布尔类型
-            case Cell.CELL_TYPE_BOOLEAN:
+            case BOOLEAN:
                 resultValue = String.valueOf(cell.getBooleanCellValue());
                 break;
             // 数值类型
-            case Cell.CELL_TYPE_NUMERIC:
+            case NUMERIC:
                 /**
                  * format 的值可能为以下这些 yyyyMMddHHmmss
                  * yyyy-MM-dd----- 14

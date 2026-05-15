@@ -8,16 +8,17 @@
 		"lint": "vue-cli-service lint"
 	},
 	"dependencies": {
-        "@lucky-canvas/vue": "^0.1.11",
+		"@lucky-canvas/vue": "^0.1.11",
 		"animate.css": "^4.1.1",
 		"axios": "^0.19.2",
 		"core-js": "^3.6.5",
 		"element-ui": "^2.15.5",
-		"vue": "^2.6.11",
+		"hls.js": "1.5.7",
 		"swiper": "^5.2.0",
+		"vue": "^2.7.16",
+		"vue-amap": "^0.5.10",
 		"vue-aplayer": "^1.6.1",
 		"vue-baidu-map": "^0.21.22",
-		"vue-amap": "^0.5.10",
 		"vue-quill-editor": "^3.0.6",
 		"vue-resource": "^1.5.3",
 		"vue-router": "^3.5.2",
@@ -33,7 +34,7 @@
 		"eslint-plugin-vue": "^6.2.2",
 		"sass": "^1.69.5",
 		"sass-loader": "^8.0.2",
-		"vue-template-compiler": "^2.6.11"
+		"vue-template-compiler": "^2.7.16"
 	},
 	"eslintConfig": {
 		"root": true,
