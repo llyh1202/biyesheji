@@ -1,0 +1,30 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+release.properties
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# Node (admin / front)
+**/node_modules/
+**/npm-debug.log*
+**/yarn-error.log*
+**/dist/*.map
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Local overrides (do not commit real secrets)
+application-local.yml
+*.local.properties
