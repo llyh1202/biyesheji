@@ -56,6 +56,41 @@ INSERT INTO `cheweixinxi` VALUES (21,'2026-04-23 15:13:06','停车场名称1','A
 UNLOCK TABLES;
 
 --
+-- Table structure for table `chewei` (车位编号主数据 N1)
+-- 这是我cursor给父亲写的
+--
+
+DROP TABLE IF EXISTS `chewei`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `chewei` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `addtime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `tingchechangmingcheng` varchar(200) DEFAULT NULL COMMENT '停车场名称',
+  `quyu` varchar(200) NOT NULL DEFAULT '' COMMENT '区域',
+  `cheweibianhao` varchar(100) NOT NULL COMMENT '车位编号',
+  `zhuangtai` varchar(50) DEFAULT '空闲' COMMENT '状态',
+  `cheweixinxi_id` bigint(20) DEFAULT NULL COMMENT '关联车位信息ID',
+  `beizhu` varchar(500) DEFAULT NULL COMMENT '备注',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_lot_area_code` (`tingchechangmingcheng`(80),`quyu`(80),`cheweibianhao`(80))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='车位编号主数据';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `chewei`
+--
+
+LOCK TABLES `chewei` WRITE;
+/*!40000 ALTER TABLE `chewei` DISABLE KEYS */;
+INSERT INTO `chewei` (`tingchechangmingcheng`,`quyu`,`cheweibianhao`,`zhuangtai`,`beizhu`) VALUES
+('停车场名称1','A区','A-01','空闲','示例'),
+('停车场名称1','A区','A-02','空闲',NULL),
+('停车场名称2','A区','B-01','空闲',NULL);
+/*!40000 ALTER TABLE `chewei` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `chezijinchang`
 --
 

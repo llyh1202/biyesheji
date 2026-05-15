@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<div class="main-containers">
 		<div class="body-containers" :style='{"minHeight":"100vh","padding":"140px 0 0","margin":"0","background":"url(http://codegen.caihongy.cn/20231123/c647362c50df494286737bc0f3632cf0.png)","backgroundSize":"cover","position":"relative","backgroundPosition":"center center","backgroundRepeat":"no-repeat"}'>
 		<div class="top-container" :style='{"border":"1px solid #fff","boxShadow":"none","padding":"0 10%","alignItems":"center","display":"flex","justifyContent":"flex-end","top":"0","left":"0","background":"#BFD0CA","borderWidth":"0 0 90px","width":"100%","position":"absolute","height":"140px","zIndex":"1002"}'>
@@ -251,11 +251,11 @@ export default {
 	  .el-scrollbar {
 	    height: 100%;
 	  
-	    & /deep/ .scrollbar-wrapper-vertical {
+	    & ::v-deep  .scrollbar-wrapper-vertical {
 	      overflow-x: hidden;
 	    }
 	  
-	    & /deep/ .scrollbar-wrapper-horizontal {
+	    & ::v-deep  .scrollbar-wrapper-horizontal {
 	      overflow-y: hidden;
 	  
 	      .el-scrollbar__view {
@@ -427,34 +427,34 @@ export default {
 			}
 	
 	.banner-preview {
-	  .el-carousel /deep/ .el-carousel__indicator button {
+	  .el-carousel ::v-deep  .el-carousel__indicator button {
 	    width: 0;
 	    height: 0;
 	    display: none;
 	  }
 	}
 	
-	.banner-preview .el-carousel /deep/ .el-carousel__container .el-carousel__arrow--left {
+	.banner-preview .el-carousel ::v-deep  .el-carousel__container .el-carousel__arrow--left {
 		width: 36px;
 		font-size: 12px;
 		height: 36px;
 	}
 	
-	.banner-preview .el-carousel /deep/ .el-carousel__container .el-carousel__arrow--left:hover {
+	.banner-preview .el-carousel ::v-deep  .el-carousel__container .el-carousel__arrow--left:hover {
 		background: #57A7A5;
 	}
 	
-	.banner-preview .el-carousel /deep/ .el-carousel__container .el-carousel__arrow--right {
+	.banner-preview .el-carousel ::v-deep  .el-carousel__container .el-carousel__arrow--right {
 		width: 36px;
 		font-size: 12px;
 		height: 36px;
 	}
 	
-	.banner-preview .el-carousel /deep/ .el-carousel__container .el-carousel__arrow--right:hover {
+	.banner-preview .el-carousel ::v-deep  .el-carousel__container .el-carousel__arrow--right:hover {
 		background: #57A7A5;
 	}
 
-	.banner-preview .el-carousel /deep/ .el-carousel__indicators {
+	.banner-preview .el-carousel ::v-deep  .el-carousel__indicators {
 		padding: 0;
 		margin: 0;
 		z-index: 2;
@@ -462,7 +462,7 @@ export default {
 		list-style: none;
 	}
 	
-	.banner-preview .el-carousel /deep/ .el-carousel__indicators li {
+	.banner-preview .el-carousel ::v-deep  .el-carousel__indicators li {
 		padding: 0;
 		margin: 0 4px;
 		background: #fff;
@@ -473,7 +473,7 @@ export default {
 		height: 12px;
 	}
 	
-	.banner-preview .el-carousel /deep/ .el-carousel__indicators li:hover {
+	.banner-preview .el-carousel ::v-deep  .el-carousel__indicators li:hover {
 		padding: 0;
 		margin: 0 4px;
 		background: #57A7A5;
@@ -483,7 +483,7 @@ export default {
 		height: 12px;
 	}
 	
-	.banner-preview .el-carousel /deep/ .el-carousel__indicators li.is-active {
+	.banner-preview .el-carousel ::v-deep  .el-carousel__indicators li.is-active {
 		padding: 0;
 		margin: 0 4px;
 		background: #57A7A5;
@@ -525,7 +525,7 @@ export default {
 
 	
 	// -------- search --------
-	.main-containers .search .select /deep/ .el-input__inner {
+	.main-containers .search .select ::v-deep  .el-input__inner {
 				border: 0;
 				border-radius: 4px;
 				padding: 0 30px 0 10px;
@@ -537,7 +537,7 @@ export default {
 				height: 44px;
 			}
 	
-	.main-containers .search .input /deep/ .el-input__inner {
+	.main-containers .search .input ::v-deep  .el-input__inner {
 				border: 0;
 				border-radius: 4px;
 				padding: 0 10px;

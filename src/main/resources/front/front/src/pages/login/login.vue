@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 <div>
 	<div class="container" :style='{"minHeight":"100vh","alignItems":"center","background":"url(https://img.tukuppt.com/bg_grid/04/70/31/33tkqXlIAw.jpg!/fh/350)","display":"flex","width":"100%","backgroundSize":"100% 100%","backgroundPosition":"center center","backgroundRepeat":"no-repeat","justifyContent":"flex-end"}'>
 		<el-form ref="loginForm" :model="loginForm" :style='{"padding":"100px 20px","boxShadow":"0px 4px 10px 0px rgba(0,0,0,0.3)","margin":"0 100px","borderRadius":"0","flexWrap":"wrap","background":"#fff","display":"flex","width":"40%","height":"auto"}' :rules="rules">
@@ -188,29 +188,29 @@ export default {
 		background: url(https://img.tukuppt.com/bg_grid/04/70/31/33tkqXlIAw.jpg!/fh/350);
 		
 		.el-form-item {
-		  & /deep/ .el-form-item__content {
+		  & ::v-deep  .el-form-item__content {
 		    width: 100%;
 		  }
 		}
 		
-		.list-item /deep/ .el-form-item__content {
+		.list-item ::v-deep  .el-form-item__content {
 			display: flex;
 		}
 
-		.list-code /deep/ .el-form-item__content {
+		.list-code ::v-deep  .el-form-item__content {
 			display: flex;
 		}
 
-		.list-type /deep/ .el-form-item__content {
+		.list-type ::v-deep  .el-form-item__content {
 			display: flex;
 		}
 
-		.list-btn /deep/ .el-form-item__content {
+		.list-btn ::v-deep  .el-form-item__content {
 			display: flex;
 			justify-content: center;
 		}
 		
-		.list-item /deep/ .el-input .el-input__inner {
+		.list-item ::v-deep  .el-input .el-input__inner {
 			border: 1px solid #D7D7D7;
 			padding: 0 10px;
 			box-shadow: none;
@@ -223,7 +223,7 @@ export default {
 			height: 44px;
 		}
 		
-		.list-code /deep/ .el-input .el-input__inner {
+		.list-code ::v-deep  .el-input .el-input__inner {
 			border: 1px solid #d7d7d7;
 			padding: 0 10px;
 			outline: none;
@@ -237,20 +237,20 @@ export default {
 			height: 44px;
 		}
 
-		.list-type /deep/ .el-radio__input .el-radio__inner {
+		.list-type ::v-deep  .el-radio__input .el-radio__inner {
 			background: #000;
 			border-color: #000;
 		}
-		.list-type /deep/ .el-radio__input.is-checked .el-radio__inner {
+		.list-type ::v-deep  .el-radio__input.is-checked .el-radio__inner {
 			background: #A8FFD8;
 			border-color: #000;
 			border-width: 3px;
 		}
-		.list-type /deep/ .el-radio__label {
+		.list-type ::v-deep  .el-radio__label {
 			color: #9E9E9E;
 			font-size: 14px;
 		}
-		.list-type /deep/ .el-radio__input.is-checked+.el-radio__label {
+		.list-type ::v-deep  .el-radio__input.is-checked+.el-radio__label {
 			color: #9E9E9E;
 			font-size: 14px;
 		}

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div>
     <div class="container" :style='{"minHeight":"100vh","alignItems":"center","backgroundImage":"url(https://img.tukuppt.com/bg_grid/08/90/52/SULUk9fqy9.jpg!/fh/350)","display":"flex","width":"100%","backgroundSize":"100% 100%","backgroundPosition":"center","backgroundRepeat":"no-repeat","justifyContent":"center"}'>
       <el-form :style='{"border":"10px solid #39b6e2","padding":"90px 60px 40px","boxShadow":"0px 1px 9px #21667f80","margin":"60px 0 20px","borderRadius":"30px","background":"#fff","width":"900px","backgroundSize":"100% 100%","position":"relative","height":"auto"}'>
@@ -127,7 +127,7 @@ export default {
   background-position: center center;
   background-size: cover;
           
-  .list-item /deep/ .el-input .el-input__inner {
+  .list-item ::v-deep  .el-input .el-input__inner {
 		border: #818181;
 		padding: 0 10px;
 		outline: 1px solid #D7D7D7;
@@ -137,7 +137,7 @@ export default {
 		height: 44px;
 	  }
   
-  .list-item.select /deep/ .el-select .el-input__inner {
+  .list-item.select ::v-deep  .el-select .el-input__inner {
 		border: 1px solid #D7D7D7;
 		padding: 0 10px;
 		color: #818181;
@@ -146,7 +146,7 @@ export default {
 		height: 44px;
 	  }
   
-  .list-code /deep/ .el-input .el-input__inner {
+  .list-code ::v-deep  .el-input .el-input__inner {
   	  	border: 1px solid #D7D7D7;
   	  	padding: 0 20px;
   	  	outline: none;
@@ -157,19 +157,19 @@ export default {
   	  	height: 44px;
   	  }
 
-  .list-type /deep/ .el-radio__input .el-radio__inner {
+  .list-type ::v-deep  .el-radio__input .el-radio__inner {
 		background: rgba(53, 53, 53, 0);
 		border-color: #666666;
 	  }
-  .list-type /deep/ .el-radio__input.is-checked .el-radio__inner {
+  .list-type ::v-deep  .el-radio__input.is-checked .el-radio__inner {
         background: #5CE5FB;
         border-color: #5CE5FB;
       }
-  .list-type /deep/ .el-radio__label {
+  .list-type ::v-deep  .el-radio__label {
 		color: #666666;
 		font-size: 14px;
 	  }
-  .list-type /deep/ .el-radio__input.is-checked+.el-radio__label {
+  .list-type ::v-deep  .el-radio__input.is-checked+.el-radio__label {
         color: #5CE5FB;
         font-size: 14px;
       }

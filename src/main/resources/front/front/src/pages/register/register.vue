@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<div>
 
 	<div class="container" :style='{"minHeight":"100vh","alignItems":"center","background":"url(http://codegen.caihongy.cn/20231121/4577495c378443ad95aab1ad5fe253e2.png)","display":"flex","width":"100%","backgroundSize":"100% 100%","backgroundPosition":"center center","backgroundRepeat":"no-repeat","justifyContent":"flex-end"}'>
@@ -228,11 +228,11 @@ export default {
 			width: auto;
 		}
 		
-		.el-form-item /deep/ .el-form-item__content {
+		.el-form-item ::v-deep  .el-form-item__content {
 						display: flex;
 					}
 		
-		.rgs-form .el-input /deep/ .el-input__inner {
+		.rgs-form .el-input ::v-deep  .el-input__inner {
 						border: 1px solid #D7D7D7;
 						border-radius: 0;
 						padding: 0 10px;
@@ -245,7 +245,7 @@ export default {
 						height: 44px;
 					}
 		
-		.rgs-form .el-select /deep/ .el-input__inner {
+		.rgs-form .el-select ::v-deep  .el-input__inner {
 						border: 1px solid #D7D7D7;
 						border-radius: 0;
 						padding: 0 10px;
@@ -258,7 +258,7 @@ export default {
 						height: 44px;
 					}
 		
-		.rgs-form .el-date-editor /deep/ .el-input__inner {
+		.rgs-form .el-date-editor ::v-deep  .el-input__inner {
 						border: 1px solid #D7D7D7;
 						border-radius: 0;
 						padding: 0 10px 0 30px;
@@ -271,7 +271,7 @@ export default {
 						height: 44px;
 					}
 		
-		.rgs-form .el-date-editor /deep/ .el-input__inner {
+		.rgs-form .el-date-editor ::v-deep  .el-input__inner {
 						border: 1px solid #D7D7D7;
 						border-radius: 0;
 						padding: 0 10px 0 30px;
@@ -284,7 +284,7 @@ export default {
 						height: 44px;
 					}
 		
-		.rgs-form /deep/ .el-upload--picture-card {
+		.rgs-form ::v-deep  .el-upload--picture-card {
 			background: transparent;
 			border: 0;
 			border-radius: 0;
@@ -294,7 +294,7 @@ export default {
 			vertical-align: middle;
 		}
 		
-		.rgs-form /deep/ .upload .upload-img {
+		.rgs-form ::v-deep  .upload .upload-img {
 		  		  border: 1px solid #D7D7D7;
 		  		  cursor: pointer;
 		  		  border-radius: 0;
@@ -306,7 +306,7 @@ export default {
 		  		  height: 60px;
 		  		}
 		
-		.rgs-form /deep/ .el-upload-list .el-upload-list__item {
+		.rgs-form ::v-deep  .el-upload-list .el-upload-list__item {
 		  		  border: 1px solid #D7D7D7;
 		  		  cursor: pointer;
 		  		  border-radius: 0;
@@ -318,7 +318,7 @@ export default {
 		  		  height: 60px;
 		  		}
 		
-		.rgs-form /deep/ .el-upload .el-icon-plus {
+		.rgs-form ::v-deep  .el-upload .el-icon-plus {
 		  		  border: 1px solid #D7D7D7;
 		  		  cursor: pointer;
 		  		  border-radius: 0;

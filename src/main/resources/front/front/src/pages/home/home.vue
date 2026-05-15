@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 <div class="home-preview" :style='{"width":"100%","margin":"0 auto","flexDirection":"column","background":"#fff","display":"flex"}'>
 
 
@@ -107,7 +107,7 @@ import Swiper from "swiper";
 <style rel="stylesheet/scss" lang="scss" scoped>
 	.home-preview {
 		// -------- search --------
-		.search .select /deep/ .el-input__inner {
+		.search .select ::v-deep  .el-input__inner {
 			border: 0;
 			border-radius: 4px;
 			padding: 0 30px 0 10px;
@@ -119,7 +119,7 @@ import Swiper from "swiper";
 			height: 50px;
 		}
 		
-		.search .input /deep/ .el-input__inner {
+		.search .input ::v-deep  .el-input__inner {
 			border: 0;
 			border-radius: 4px;
 			padding: 0 10px;
@@ -353,7 +353,7 @@ import Swiper from "swiper";
 	}
 	
 
-	.home-preview .news .list13 .newsSwiper13 .swiper-pagination /deep/ span.swiper-pagination-bullet {
+	.home-preview .news .list13 .newsSwiper13 .swiper-pagination ::v-deep  span.swiper-pagination-bullet {
 				border-radius: 100%;
 				margin: 0 4px;
 				background: #fff;
@@ -363,12 +363,12 @@ import Swiper from "swiper";
 				height: 10px;
 			}
 	
-	.home-preview .news .list13 .newsSwiper13 .swiper-pagination /deep/ span.swiper-pagination-bullet:hover {
+	.home-preview .news .list13 .newsSwiper13 .swiper-pagination ::v-deep  span.swiper-pagination-bullet:hover {
 				background: #57A7A5;
 				opacity: 1;
 			}
 	
-	.home-preview .news .list13 .newsSwiper13 .swiper-pagination /deep/ span.swiper-pagination-bullet.swiper-pagination-bullet-active {
+	.home-preview .news .list13 .newsSwiper13 .swiper-pagination ::v-deep  span.swiper-pagination-bullet.swiper-pagination-bullet-active {
 				background: red;
 				opacity: 1;
 			}

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 <div class="center-preview" :style='{"width":"80%","margin":"10px auto","position":"relative","background":"none"}'>
 	<div class="title" :style='{"border":"2px solid #57A7A5","margin":"0","color":"#57A7A5","textAlign":"center","background":"#fff","fontSize":"20px","lineHeight":"44px"}'>{{ title }}</div>
 	
@@ -343,7 +343,7 @@
   .center-preview {
   
     .el-tabs {
-      & /deep/ .el-tabs__header {
+      & ::v-deep  .el-tabs__header {
 		.el-tabs__nav{
 			overflow: auto;
 		}
@@ -392,7 +392,7 @@
     }
   }
   
-  .center-preview .el-tabs /deep/ .el-tabs__header {
+  .center-preview .el-tabs ::v-deep  .el-tabs__header {
 	padding: 0;
 	margin: 0 auto;
 	background: #57A7A5;
@@ -404,7 +404,7 @@
 	border-style: solid;
   }
   
-  .center-preview .el-tabs /deep/ .el-tabs__header .el-tabs__item {
+  .center-preview .el-tabs ::v-deep  .el-tabs__header .el-tabs__item {
   	padding: 0 30px;
   	color: #000;
   	background: #57A7A5;
@@ -417,7 +417,7 @@
   	height: 60px;
   }
   
-  .center-preview .el-tabs /deep/ .el-tabs__header .el-tabs__item:hover {
+  .center-preview .el-tabs ::v-deep  .el-tabs__header .el-tabs__item:hover {
   	padding: 0 30px;
   	color: #fff;
   	background: #57A7A5;
@@ -430,7 +430,7 @@
   	height: 60px;
   }
   
-  .center-preview .el-tabs /deep/ .el-tabs__header .el-tabs__item.is-active {
+  .center-preview .el-tabs ::v-deep  .el-tabs__header .el-tabs__item.is-active {
   	padding: 0 30px;
   	color: #fff;
   	background: #57A7A5;
@@ -443,15 +443,15 @@
   	height: 60px;
   }
   
-  .center-preview .el-tabs /deep/ .el-tabs__content {
+  .center-preview .el-tabs ::v-deep  .el-tabs__content {
   	padding: 10px;
   	background: #fff;
   	width: 100%;
   }
-  .center-preview .el-tabs /deep/ .el-tabs__content .el-tab-pane {
+  .center-preview .el-tabs ::v-deep  .el-tabs__content .el-tab-pane {
   }
   
-  .center-preview-pv .el-form-item /deep/ .el-form-item__label {
+  .center-preview-pv .el-form-item ::v-deep  .el-form-item__label {
   	padding: 0 10px 0 0;
   	color: #000;
   	font-weight: 500;
@@ -465,7 +465,7 @@
     margin-left: 200px;
   }
   
-  .center-preview-pv .el-input /deep/ .el-input__inner {
+  .center-preview-pv .el-input ::v-deep  .el-input__inner {
   	border: 1px solid #E2E3E5;
   	border-radius: 0;
   	padding: 0 12px;
@@ -477,7 +477,7 @@
   	height: 40px;
   }
   
-  .center-preview-pv .el-select /deep/ .el-input__inner {
+  .center-preview-pv .el-select ::v-deep  .el-input__inner {
   	border: 1px solid #E2E3E5;
   	border-radius: 0;
   	padding: 0 12px;
@@ -489,7 +489,7 @@
   	height: 40px;
   }
   
-  .center-preview-pv .el-date-editor /deep/ .el-input__inner {
+  .center-preview-pv .el-date-editor ::v-deep  .el-input__inner {
   	border: 1px solid #E2E3E5;
   	border-radius: 0;
   	padding: 0 10px 0 30px;
@@ -501,7 +501,7 @@
   	height: 40px;
   }
   
-  .center-preview-pv /deep/ .avatar-uploader-icon {
+  .center-preview-pv ::v-deep  .avatar-uploader-icon {
   	border: 1px solid #E2E3E5;
   	cursor: pointer;
   	border-radius: 0;
@@ -513,7 +513,7 @@
   	height: 60px;
   }
   
-  .center-preview-pv .el-form-item.balance /deep/ .el-input__inner {
+  .center-preview-pv .el-form-item.balance ::v-deep  .el-input__inner {
   	border: 1px solid #E2E3E5;
   	border-radius: 0;
   	padding: 0 12px;

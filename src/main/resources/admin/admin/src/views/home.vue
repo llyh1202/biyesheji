@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 <div class="content" :style='{"minHeight":"100vh","padding":"30px","flexWrap":"wrap","background":"url(http://codegen.caihongy.cn/20240414/b272aea717df4bbe8386c71c24c14e6e.png) no-repeat center top / cover","display":"flex","width":"100%","height":"auto"}'>
 	<!-- notice -->
 	<!-- title -->
@@ -193,7 +193,7 @@ export default {
             .card {
                 width: calc(25% - 20px);
                 margin: 0 10px;
-                /deep/.el-card__body{
+                ::v-deep .el-card__body{
                     padding: 0;
                 }
             }

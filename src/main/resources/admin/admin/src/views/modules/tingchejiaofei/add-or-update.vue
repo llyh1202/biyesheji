@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<div class="addEdit-block" :style='{"padding":"30px"}'>
 		<el-form
 			:style='{"padding":"40px 30px","boxShadow":"0 1px 6px rgba(64, 158, 255, .3)","borderRadius":"6px","flexWrap":"wrap","background":"#fff","display":"flex"}'
@@ -562,7 +562,7 @@ var objcross = this.$storage.getObj('crossObj');
 		width: auto;
 	}
 	
-	.add-update-preview .el-form-item /deep/ .el-form-item__label {
+	.add-update-preview .el-form-item ::v-deep  .el-form-item__label {
 	  	  padding: 0 10px 0 0;
 	  	  color: #666;
 	  	  font-weight: 500;
@@ -572,11 +572,11 @@ var objcross = this.$storage.getObj('crossObj');
 	  	  text-align: right;
 	  	}
 	
-	.add-update-preview .el-form-item /deep/ .el-form-item__content {
+	.add-update-preview .el-form-item ::v-deep  .el-form-item__content {
 	  margin-left: 180px;
 	}
 	
-	.add-update-preview .el-input /deep/ .el-input__inner {
+	.add-update-preview .el-input ::v-deep  .el-input__inner {
 	  	  border: 1px solid #000;
 	  	  border-radius: 4px;
 	  	  padding: 0 12px;
@@ -586,7 +586,7 @@ var objcross = this.$storage.getObj('crossObj');
 	  	  font-size: 14px;
 	  	  height: 40px;
 	  	}
-	.add-update-preview .el-input-number /deep/ .el-input__inner {
+	.add-update-preview .el-input-number ::v-deep  .el-input__inner {
 		text-align: left;
 	  	  border: 1px solid #000;
 	  	  border-radius: 4px;
@@ -597,14 +597,14 @@ var objcross = this.$storage.getObj('crossObj');
 	  	  font-size: 14px;
 	  	  height: 40px;
 	  	}
-	.add-update-preview .el-input-number /deep/ .el-input-number__decrease {
+	.add-update-preview .el-input-number ::v-deep  .el-input-number__decrease {
 		display: none;
 	}
-	.add-update-preview .el-input-number /deep/ .el-input-number__increase {
+	.add-update-preview .el-input-number ::v-deep  .el-input-number__increase {
 		display: none;
 	}
 	
-	.add-update-preview .el-select /deep/ .el-input__inner {
+	.add-update-preview .el-select ::v-deep  .el-input__inner {
 	  	  border: 1px solid #000;
 	  	  border-radius: 4px;
 	  	  padding: 0 10px;
@@ -615,7 +615,7 @@ var objcross = this.$storage.getObj('crossObj');
 	  	  height: 40px;
 	  	}
 	
-	.add-update-preview .el-date-editor /deep/ .el-input__inner {
+	.add-update-preview .el-date-editor ::v-deep  .el-input__inner {
 	  	  border: 1px solid #000;
 	  	  border-radius: 4px;
 	  	  padding: 0 10px 0 30px;
@@ -626,7 +626,7 @@ var objcross = this.$storage.getObj('crossObj');
 	  	  height: 40px;
 	  	}
 	
-	.add-update-preview /deep/ .el-upload--picture-card {
+	.add-update-preview ::v-deep  .el-upload--picture-card {
 		background: transparent;
 		border: 0;
 		border-radius: 0;
@@ -636,7 +636,7 @@ var objcross = this.$storage.getObj('crossObj');
 		vertical-align: middle;
 	}
 	
-	.add-update-preview /deep/ .upload .upload-img {
+	.add-update-preview ::v-deep  .upload .upload-img {
 	  	  border: 1px solid #000;
 	  	  cursor: pointer;
 	  	  border-radius: 6px;
@@ -648,7 +648,7 @@ var objcross = this.$storage.getObj('crossObj');
 	  	  height: 80px;
 	  	}
 	
-	.add-update-preview /deep/ .el-upload-list .el-upload-list__item {
+	.add-update-preview ::v-deep  .el-upload-list .el-upload-list__item {
 	  	  border: 1px solid #000;
 	  	  cursor: pointer;
 	  	  border-radius: 6px;
@@ -660,7 +660,7 @@ var objcross = this.$storage.getObj('crossObj');
 	  	  height: 80px;
 	  	}
 	
-	.add-update-preview /deep/ .el-upload .el-icon-plus {
+	.add-update-preview ::v-deep  .el-upload .el-icon-plus {
 	  	  border: 1px solid #000;
 	  	  cursor: pointer;
 	  	  border-radius: 6px;
@@ -672,7 +672,7 @@ var objcross = this.$storage.getObj('crossObj');
 	  	  height: 80px;
 	  	}
 	
-	.add-update-preview .el-textarea /deep/ .el-textarea__inner {
+	.add-update-preview .el-textarea ::v-deep  .el-textarea__inner {
 	  	  border: 1px solid #000;
 	  	  border-radius: 4px;
 	  	  padding: 12px;

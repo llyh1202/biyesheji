@@ -1,6 +1,7 @@
 // var webpack = require('webpack');
 //vue2
 const path = require('path')
+const sass = require('sass')
 function resolve(dir) {
     return path.join(__dirname, dir)
 }
@@ -15,6 +16,12 @@ function publicPath(){
 module.exports = {
     // publicPath:"././",
     publicPath: publicPath(),
+    css: {
+        loaderOptions: {
+            sass: { implementation: sass },
+            scss: { implementation: sass }
+        }
+    },
     // 国际化配置 使用其它语言，默认情况下中文语言包依旧是被引入的
     configureWebpack: {
         // plugins: [

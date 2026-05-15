@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<div class="menu-preview">
 		<!-- 竖向-2 -->
 		<el-scrollbar :wrap-class="isCollapse ? 'scrollbar-wrapper scrollbar-wrapper-close' : 'scrollbar-wrapper scrollbar-wrapper-open'">
@@ -223,13 +223,13 @@ export default {
 	  .el-scrollbar {
 	    height: 100%;
 	
-	    & /deep/ .scrollbar-wrapper {
+	    & ::v-deep  .scrollbar-wrapper {
 	      overflow-x: hidden;
 	    }
 		
 				// 竖向
 		.el-menu-vertical-demo {
-		  .el-submenu:first-of-type /deep/ .el-submenu__title .el-submenu__icon-arrow {
+		  .el-submenu:first-of-type ::v-deep  .el-submenu__title .el-submenu__icon-arrow {
 		    display: none;
 		  }
 		}
@@ -248,7 +248,7 @@ export default {
 						background: blue;
 					}
 		
-		.el-menu-vertical-demo .el-submenu /deep/ .el-submenu__title {
+		.el-menu-vertical-demo .el-submenu ::v-deep  .el-submenu__title {
 						cursor: pointer;
 						padding: 0 20px;
 						color: #333;
@@ -257,12 +257,12 @@ export default {
 						position: relative;
 					}
 		
-		.el-menu-vertical-demo .el-submenu /deep/ .el-submenu__title:hover {
+		.el-menu-vertical-demo .el-submenu ::v-deep  .el-submenu__title:hover {
 						color: #fff;
 						background: blue;
 					}
 		
-		.el-menu-vertical-demo .el-submenu /deep/ .el-submenu__title .el-submenu__icon-arrow {
+		.el-menu-vertical-demo .el-submenu ::v-deep  .el-submenu__title .el-submenu__icon-arrow {
 						margin: -7px 0 0 0;
 						top: 50%;
 						color: inherit;
@@ -278,12 +278,12 @@ export default {
 						list-style: none;
 					}
 		
-		// .el-menu-vertical-demo .el-submenu /deep/ .el-menu {
+		// .el-menu-vertical-demo .el-submenu ::v-deep  .el-menu {
 		// 				// 		border: none;
 		// 				// 		display: none;
 		// 				// }
 		
-		.el-menu-vertical-demo .el-submenu /deep/ .el-menu .el-menu-item {
+		.el-menu-vertical-demo .el-submenu ::v-deep  .el-menu .el-menu-item {
 						padding: 0 40px;
 						color: #666;
 						background: #fff;
@@ -291,7 +291,7 @@ export default {
 						height: 50px;
 					}
 		
-		.el-menu-vertical-demo .el-submenu /deep/ .el-menu .el-menu-item:hover {
+		.el-menu-vertical-demo .el-submenu ::v-deep  .el-menu .el-menu-item:hover {
 						padding: 0 40px;
 						color: #fff;
 						background: red;
@@ -299,7 +299,7 @@ export default {
 						height: 50px;
 					}
 		
-		.el-menu-vertical-demo .el-submenu /deep/ .el-menu .el-menu-item.is-active {
+		.el-menu-vertical-demo .el-submenu ::v-deep  .el-menu .el-menu-item.is-active {
 						padding: 0 40px;
 						color: #fff;
 						background: blue;
@@ -333,7 +333,7 @@ export default {
 			}
 	
 	
-	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.other /deep/ .el-submenu__title {
+	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.other ::v-deep  .el-submenu__title {
 				cursor: pointer !important;
 				padding: 0 20px !important;
 				color: #333 !important;
@@ -346,16 +346,16 @@ export default {
 				background: #fff !important;
 			}
 	
-	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.other /deep/ .el-submenu__title:hover {
+	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.other ::v-deep  .el-submenu__title:hover {
 				color: #5CE5FB !important;
 				background: #fff !important;
 			}
-	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.other.is-active /deep/ .el-submenu__title {
+	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.other.is-active ::v-deep  .el-submenu__title {
 				color: #5CE5FB !important;
 				background: #fff !important;
 			}
 	
-	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.other /deep/ .el-submenu__title .iconfont {
+	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.other ::v-deep  .el-submenu__title .iconfont {
 				margin: 0 3px;
 				color: inherit;
 				display: inline-block;
@@ -365,7 +365,7 @@ export default {
 				text-align: center;
 			}
 	
-	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.other /deep/ .el-submenu__title .el-submenu__icon-arrow {
+	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.other ::v-deep  .el-submenu__title .el-submenu__icon-arrow {
 				margin: -7px 0 0 0;
 				top: 50%;
 				color: inherit;
@@ -375,7 +375,7 @@ export default {
 				right: 20px;
 			}
 	
-	.scrollbar-wrapper-open .el-menu-vertical-2 /deep/ .el-submenu.other .el-menu {
+	.scrollbar-wrapper-open .el-menu-vertical-2 ::v-deep  .el-submenu.other .el-menu {
 				border: none;
 				display: block;
 			}
@@ -426,7 +426,7 @@ export default {
 				background: blue;
 			}
 	
-	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.other /deep/ .el-submenu__title {
+	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.other ::v-deep  .el-submenu__title {
 				cursor: pointer !important;
 				padding: 0 20px !important;
 				color: #333 !important;
@@ -435,12 +435,12 @@ export default {
 				position: relative !important;
 			}
 	
-	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.other /deep/ .el-submenu__title:hover {
+	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.other ::v-deep  .el-submenu__title:hover {
 				color: #fff !important;
 				background: blue !important;
 			}
 	
-	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.other /deep/ .el-submenu__title .iconfont {
+	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.other ::v-deep  .el-submenu__title .iconfont {
 				margin: 0;
 				color: inherit;
 				display: inline-block;
@@ -450,7 +450,7 @@ export default {
 				text-align: center;
 			}
 	
-	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.other /deep/ .el-submenu__title .el-submenu__icon-arrow {
+	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.other ::v-deep  .el-submenu__title .el-submenu__icon-arrow {
 				margin: -7px 0 0 0;
 				top: 50%;
 				color: inherit;
@@ -509,7 +509,7 @@ export default {
 				background: #fff;
 			}
 	
-	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.home /deep/ .el-submenu__title {
+	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.home ::v-deep  .el-submenu__title {
 				cursor: pointer !important;
 				padding: 0 20px !important;
 				color: #333 !important;
@@ -518,12 +518,12 @@ export default {
 				position: relative !important;
 			}
 	
-	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.home /deep/ .el-submenu__title:hover {
+	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.home ::v-deep  .el-submenu__title:hover {
 				color: #5CE5FB !important;
 				background: #fff !important;
 			}
 	
-	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.home /deep/ .el-submenu__title .iconfont {
+	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.home ::v-deep  .el-submenu__title .iconfont {
 				margin: 0 3px;
 				color: inherit;
 				display: inline-block;
@@ -533,7 +533,7 @@ export default {
 				text-align: center;
 			}
 	
-	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.home /deep/ .el-submenu__title .el-submenu__icon-arrow {
+	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.home ::v-deep  .el-submenu__title .el-submenu__icon-arrow {
 				margin: -7px 0 0 0;
 				top: 50%;
 				color: inherit;
@@ -594,7 +594,7 @@ export default {
 				background: blue;
 			}
 	
-	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.home /deep/ .el-submenu__title {
+	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.home ::v-deep  .el-submenu__title {
 				cursor: pointer;
 				padding: 0 20px;
 				color: #333;
@@ -603,12 +603,12 @@ export default {
 				position: relative;
 			}
 	
-	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.home /deep/ .el-submenu__title:hover {
+	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.home ::v-deep  .el-submenu__title:hover {
 				color: #fff;
 				background: blue;
 			}
 	
-	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.home /deep/ .el-submenu__title .iconfont {
+	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.home ::v-deep  .el-submenu__title .iconfont {
 				margin: 0;
 				color: inherit;
 				display: inline-block;
@@ -618,7 +618,7 @@ export default {
 				text-align: center;
 			}
 	
-	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.home /deep/ .el-submenu__title .el-submenu__icon-arrow {
+	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.home ::v-deep  .el-submenu__title .el-submenu__icon-arrow {
 				margin: -7px 0 0 0;
 				top: 50%;
 				color: inherit;
@@ -677,7 +677,7 @@ export default {
 				background: #fff;
 			}
 	
-	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.user /deep/ .el-submenu__title {
+	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.user ::v-deep  .el-submenu__title {
 				cursor: pointer !important;
 				padding: 0 20px !important;
 				color: #333 !important;
@@ -686,12 +686,12 @@ export default {
 				position: relative !important;
 			}
 	
-	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.user /deep/ .el-submenu__title:hover {
+	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.user ::v-deep  .el-submenu__title:hover {
 				color: #5CE5FB !important;
 				background: #fff !important;
 			}
 	
-	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.user /deep/ .el-submenu__title .iconfont {
+	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.user ::v-deep  .el-submenu__title .iconfont {
 				margin: 0 3px;
 				color: inherit;
 				display: inline-block;
@@ -701,7 +701,7 @@ export default {
 				text-align: center;
 			}
 	
-	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.user /deep/ .el-submenu__title .el-submenu__icon-arrow {
+	.scrollbar-wrapper-open .el-menu-vertical-2 .el-submenu.user ::v-deep  .el-submenu__title .el-submenu__icon-arrow {
 				margin: -7px 0 0 0;
 				top: 50%;
 				color: inherit;
@@ -711,7 +711,7 @@ export default {
 				right: 20px;
 			}
 	
-	.scrollbar-wrapper-open .el-menu-vertical-2 /deep/ .el-submenu.user .el-menu {
+	.scrollbar-wrapper-open .el-menu-vertical-2 ::v-deep  .el-submenu.user .el-menu {
 				border: none;
 				display: block;
 			}
@@ -762,7 +762,7 @@ export default {
 				background: blue;
 			}
 	
-	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.user /deep/ .el-submenu__title {
+	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.user ::v-deep  .el-submenu__title {
 				cursor: pointer !important;
 				padding: 0 20px !important;
 				color: #333 !important;
@@ -771,12 +771,12 @@ export default {
 				position: relative !important;
 			}
 	
-	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.user /deep/ .el-submenu__title:hover {
+	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.user ::v-deep  .el-submenu__title:hover {
 				color: #fff !important;
 				background: blue !important;
 			}
 	
-	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.user /deep/ .el-submenu__title .iconfont {
+	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.user ::v-deep  .el-submenu__title .iconfont {
 				margin: 0;
 				color: inherit;
 				display: inline-block;
@@ -786,7 +786,7 @@ export default {
 				text-align: center;
 			}
 	
-	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.user /deep/ .el-submenu__title .el-submenu__icon-arrow {
+	.scrollbar-wrapper-close .el-menu-vertical-2 .el-submenu.user ::v-deep  .el-submenu__title .el-submenu__icon-arrow {
 				margin: -7px 0 0 0;
 				top: 50%;
 				color: inherit;

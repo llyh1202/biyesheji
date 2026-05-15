@@ -12,6 +12,8 @@ import pay from '@/views/pay'
 import register from '@/views/register'
 import center from '@/views/center'
     import cheweixinxi from '@/views/modules/cheweixinxi/list'
+    // 这是我cursor给父亲写的 — N1 车位主数据
+    import chewei from '@/views/modules/chewei/list'
     import chezijinchang from '@/views/modules/chezijinchang/list'
     import yonghu from '@/views/modules/yonghu/list'
     import tingchejiaofei from '@/views/modules/tingchejiaofei/list'
@@ -50,6 +52,12 @@ export const routes = [{
 	path: '/cheweixinxi',
         name: '车位信息',
         component: cheweixinxi
+      }
+      /* 这是我cursor给父亲写的 — N1 路由 /chewei */
+      ,{
+	path: '/chewei',
+        name: '车位主数据',
+        component: chewei
       }
       ,{
 	path: '/chezijinchang',

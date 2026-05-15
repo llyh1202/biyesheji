@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dao.CheweiDao">
+	<!-- N1 车位主数据 Mapper。这是我cursor给父亲写的 -->
+
+	<resultMap type="com.entity.CheweiEntity" id="cheweiMap">
+		<result property="tingchechangmingcheng" column="tingchechangmingcheng"/>
+		<result property="quyu" column="quyu"/>
+		<result property="cheweibianhao" column="cheweibianhao"/>
+		<result property="zhuangtai" column="zhuangtai"/>
+		<result property="cheweixinxiId" column="cheweixinxi_id"/>
+		<result property="beizhu" column="beizhu"/>
+	</resultMap>
+
+	<select id="selectListVO" resultType="com.entity.vo.CheweiVO">
+		SELECT * FROM chewei chewei
+		<where> 1=1 ${ew.sqlSegment}</where>
+	</select>
+
+	<select id="selectVO" resultType="com.entity.vo.CheweiVO">
+		SELECT chewei.* FROM chewei chewei
+		<where> 1=1 ${ew.sqlSegment}</where>
+	</select>
+
+	<select id="selectListView" resultType="com.entity.view.CheweiView">
+		SELECT chewei.* FROM chewei chewei
+		<where> 1=1 ${ew.sqlSegment}</where>
+	</select>
+
+	<select id="selectView" resultType="com.entity.view.CheweiView">
+		SELECT * FROM chewei chewei
+		<where> 1=1 ${ew.sqlSegment}</where>
+	</select>
+
+</mapper>

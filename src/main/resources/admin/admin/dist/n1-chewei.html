@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>N1 车位主数据</title>
+  <!-- 这是我cursor给父亲写的 — N1 独立页：不依赖重新 npm build，便于在 dist + serve 下直接使用 -->
+  <script>!function(){var d={"8081":1,"8082":1,"5173":1,"9527":1,"9528":1},p=location.port||(location.protocol==="https:"?"443":"80"),h=location.hostname;"localhost"!==h&&"127.0.0.1"!==h||!d[p]?window.__API_BASE__="/springboot673i609q":window.__API_BASE__=location.protocol+"//"+h+":8080/springboot673i609q"}();</script>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui@2.15.14/lib/theme-chalk/index.css">
+  <script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+  <script src="https://unpkg.com/element-ui@2.15.14/lib/index.js"></script>
+  <script src="https://unpkg.com/axios@0.27.2/dist/axios.min.js"></script>
+  <style>body{margin:0;font-family:Helvetica,Arial,sans-serif;background:#f5f7fa;} .wrap{padding:16px;} .bar{margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;} .hint{color:#909399;font-size:13px;}</style>
+</head>
+<body>
+<div id="app" class="wrap">
+  <h2 style="margin:0 0 8px;">车位主数据（N1）</h2>
+  <p class="hint" v-if="!hasToken">请先在 <a href="./index.html">管理端首页</a> 使用管理员登录，再回到本页。</p>
+  <div class="bar" v-if="hasToken">
+    <el-input v-model="qLot" placeholder="停车场名称" clearable style="width:160px"></el-input>
+    <el-input v-model="qArea" placeholder="区域" clearable style="width:120px"></el-input>
+    <el-input v-model="qCode" placeholder="车位编号" clearable style="width:120px"></el-input>
+    <el-button type="primary" @click="load(1)">查询</el-button>
+    <el-button type="success" @click="openAdd">新增</el-button>
+    <el-button type="danger" :disabled="!sel.length" @click="batchDel">删除选中</el-button>
+    <el-button @click="tpl">下载导入模板</el-button>
+    <el-button type="warning" @click="$refs.f.click()">导入 Excel</el-button>
+    <input ref="f" type="file" accept=".xlsx,.xls" style="display:none" @change="imp">
+    <span class="hint" style="margin-left:8px;"><a href="./index.html">返回系统</a></span>
+  </div>
+  <el-table v-if="hasToken" :data="rows" border @selection-change="s=>sel=s" v-loading="loading" style="width:100%;background:#fff;">
+    <el-table-column type="selection" width="45"></el-table-column>
+    <el-table-column prop="tingchechangmingcheng" label="停车场" min-width="120"></el-table-column>
+    <el-table-column prop="quyu" label="区域" width="90"></el-table-column>
+    <el-table-column prop="cheweibianhao" label="车位编号" width="110"></el-table-column>
+    <el-table-column prop="zhuangtai" label="状态" width="90"></el-table-column>
+    <el-table-column prop="cheweixinxiId" label="关联车位信息ID" width="130"></el-table-column>
+    <el-table-column prop="beizhu" label="备注" min-width="120" show-overflow-tooltip></el-table-column>
+    <el-table-column label="操作" width="200" fixed="right">
+      <template slot-scope="{row}">
+        <el-button type="text" size="small" @click="edit(row)">编辑</el-button>
+        <el-button type="text" size="small" style="color:#f56c6c" @click="delOne(row)">删除</el-button>
+      </template>
+    </el-table-column>
+  </el-table>
+  <el-pagination v-if="hasToken" style="margin-top:12px;text-align:center;"
+    background layout="total, prev, pager, next, sizes"
+    :total="total" :page-size="ps" :current-page="page" :page-sizes="[10,20,50]"
+    @current-change="p=>{page=p;load()}" @size-change="s=>{ps=s;page=1;load()}"></el-pagination>
+
+  <el-dialog :title="form.id?'编辑车位':'新增车位'" :visible.sync="dlg" width="520px" @close="resetForm">
+    <el-form :model="form" label-width="120px" size="small">
+      <el-form-item label="停车场名称" required><el-input v-model="form.tingchechangmingcheng"></el-input></el-form-item>
+      <el-form-item label="区域"><el-input v-model="form.quyu" placeholder="可空"></el-input></el-form-item>
+      <el-form-item label="车位编号" required><el-input v-model="form.cheweibianhao" placeholder="如 A-01"></el-input></el-form-item>
+      <el-form-item label="状态"><el-input v-model="form.zhuangtai" placeholder="默认 空闲"></el-input></el-form-item>
+      <el-form-item label="关联车位信息ID"><el-input v-model="form.cheweixinxiId" placeholder="可选"></el-input></el-form-item>
+      <el-form-item label="备注"><el-input type="textarea" v-model="form.beizhu" rows="2"></el-input></el-form-item>
+    </el-form>
+    <span slot="footer"><el-button @click="dlg=false">取消</el-button><el-button type="primary" @click="save">保存</el-button></span>
+  </el-dialog>
+</div>
+<script>
+(function(){
+  function apiBase(){
+    var b = window.__API_BASE__ || '/springboot673i609q';
+    return String(b).replace(/\/$/,'');
+  }
+  function readToken(){
+    var raw = localStorage.getItem('Token');
+    if(!raw) return '';
+    try { var j = JSON.parse(raw); return typeof j==='string'?j:(j&&j.token)||String(j); } catch(e){ return raw.replace(/^"|"$/g,''); }
+  }
+  new Vue({
+    el:'#app',
+    data:function(){
+      return {hasToken:false,loading:false,rows:[],total:0,page:1,ps:10,sel:[],qLot:'',qArea:'',qCode:'',dlg:false,
+        form:{id:'',tingchechangmingcheng:'',quyu:'',cheweibianhao:'',zhuangtai:'空闲',cheweixinxiId:'',beizhu:''}};
+    },
+    mounted:function(){ this.hasToken=!!readToken(); if(this.hasToken) this.load(1); },
+    methods:{
+      http:function(){ var t=readToken(); return axios.create({baseURL:apiBase(),timeout:120000,headers:t?{Token:t}:{}}); },
+      load:function(p){
+        if(p) this.page=p;
+        this.loading=true;
+        var params={page:this.page,limit:this.ps,sort:'id',order:'desc'};
+        if(this.qLot) params.tingchechangmingcheng='%'+this.qLot+'%';
+        if(this.qArea) params.quyu='%'+this.qArea+'%';
+        if(this.qCode) params.cheweibianhao='%'+this.qCode+'%';
+        this.http().get('/chewei/page',{params:params}).then(function(r){
+          this.loading=false;
+          var d=r.data;
+          if(d&&d.code===0){ this.rows=d.data.list||[]; this.total=d.data.total||0; }
+          else{ this.rows=[]; this.total=0; if(d&&d.msg) this.$message.error(d.msg); }
+        }.bind(this)).catch(function(){ this.loading=false; this.$message.error('请求失败'); }.bind(this));
+      },
+      resetForm:function(){ this.form={id:'',tingchechangmingcheng:'',quyu:'',cheweibianhao:'',zhuangtai:'空闲',cheweixinxiId:'',beizhu:''}; },
+      openAdd:function(){ this.resetForm(); this.dlg=true; },
+      edit:function(row){ this.form=Object.assign({},row); if(this.form.cheweixinxiId==null)this.form.cheweixinxiId=''; this.dlg=true; },
+      save:function(){
+        if(!this.form.tingchechangmingcheng||!this.form.cheweibianhao){ this.$message.warning('停车场与车位编号必填'); return; }
+        var p=Object.assign({},this.form);
+        if(p.cheweixinxiId===''||p.cheweixinxiId==null) delete p.cheweixinxiId; else p.cheweixinxiId=Number(p.cheweixinxiId);
+        var url=p.id?'/chewei/update':'/chewei/save';
+        this.http().post(url,p).then(function(r){ var d=r.data; if(d&&d.code===0){ this.$message.success('保存成功'); this.dlg=false; this.load(); } else this.$message.error((d&&d.msg)||'失败'); }.bind(this));
+      },
+      delOne:function(row){ this.$confirm('确定删除?','提示',{type:'warning'}).then(function(){ return this.http().post('/chewei/delete',[row.id]); }.bind(this)).then(function(r){ var d=r.data; if(d&&d.code===0){ this.$message.success('已删除'); this.load(); } else this.$message.error((d&&d.msg)||'失败'); }.bind(this)).catch(function(){}); },
+      batchDel:function(){
+        if(!this.sel.length) return;
+        this.$confirm('确定批量删除?','提示',{type:'warning'}).then(function(){
+          return this.http().post('/chewei/delete',this.sel.map(function(x){return x.id;}));
+        }.bind(this)).then(function(r){ var d=r.data; if(d&&d.code===0){ this.$message.success('已删除'); this.load(); } else this.$message.error((d&&d.msg)||'失败'); }.bind(this)).catch(function(){});
+      },
+      tpl:function(){
+        var t=readToken();
+        axios.get(apiBase()+'/chewei/importTemplate',{responseType:'blob',headers:t?{Token:t}:{}}).then(function(r){
+          var url=URL.createObjectURL(r.data); var a=document.createElement('a'); a.href=url; a.download='chewei_import_template.xlsx';
+          a.click(); URL.revokeObjectURL(url);
+        }).catch(function(){ this.$message.error('模板下载失败'); }.bind(this));
+      },
+      imp:function(ev){
+        var file=ev.target.files[0]; ev.target.value='';
+        if(!file) return;
+        var t=readToken(); var fd=new FormData(); fd.append('file',file);
+        axios.post(apiBase()+'/chewei/import',fd,{headers:t?{Token:t}:{}}).then(function(r){
+          var d=r.data;
+          if(d&&d.code===0){
+            var x=d.data||{}; var msg='成功导入 '+(x.successCount||0)+' 条';
+            if(x.errors&&x.errors.length) msg+='；'+x.errors.join('；');
+            this.$message({message:msg,type:'success',duration:6000});
+            this.load(1);
+          } else this.$message.error((d&&d.msg)||'导入失败');
+        }.bind(this)).catch(function(){ this.$message.error('导入请求失败'); }.bind(this));
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>

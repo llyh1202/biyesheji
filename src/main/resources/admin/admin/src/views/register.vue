@@ -1,4 +1,4 @@
-<template>
+﻿<template>
 	<div>
 		<div class="container" :style='{"minHeight":"100vh","alignItems":"center","background":"url(https://img.tukuppt.com/bg_grid/08/90/52/SULUk9fqy9.jpg!/fh/350)","display":"flex","width":"100%","backgroundSize":"100% 100%","backgroundPosition":"center","backgroundRepeat":"no-repeat","justifyContent":"center"}'>
 			<el-form v-if="pageFlag=='register'" :style='{"border":"10px solid #39b6e2","padding":"90px 60px 40px","boxShadow":"0px 1px 9px #21667f80","margin":"60px 0 20px","borderRadius":"30px","flexWrap":"wrap","background":"url(http://codegen.caihongy.cn/20231218/84c7bb0e65334a18b669a33041d75403.png) no-repeat center top / 100% auto,url(http://codegen.caihongy.cn/20231218/83bfa299c46a43d48aade06fcb1d9431.png) no-repeat center bottom / 100% auto,url(http://codegen.caihongy.cn/20231218/67cb8922dcdb4603ae570289e0708697.png) repeat-y center 10px / 100% auto,#fff","display":"flex","width":"900px","position":"relative","height":"auto"}' ref="rgsForm" class="rgs-form" :model="rgsForm" :rules="rules">
@@ -206,7 +206,7 @@ export default {
 		  width: 100%;
 		}
 		
-		.rgs-form .el-input /deep/ .el-input__inner {
+		.rgs-form .el-input ::v-deep  .el-input__inner {
 						border: 1px solid #D7D7D7;
 						border-radius: 8px;
 						padding: 0 10px;
@@ -216,7 +216,7 @@ export default {
 						height: 44px;
 					}
 		
-		.rgs-form .el-select /deep/ .el-input__inner {
+		.rgs-form .el-select ::v-deep  .el-input__inner {
 						border: 1px solid #D7D7D7;
 						border-radius: 8px;
 						padding: 0 10px;
@@ -226,7 +226,7 @@ export default {
 						height: 44px;
 					}
 		
-		.rgs-form .el-date-editor /deep/ .el-input__inner {
+		.rgs-form .el-date-editor ::v-deep  .el-input__inner {
 						border: 1px solid #D7D7D7;
 						border-radius: 8px;
 						padding: 0 10px 0 30px;
@@ -236,7 +236,7 @@ export default {
 						height: 44px;
 					}
 		
-		.rgs-form .el-date-editor /deep/ .el-input__inner {
+		.rgs-form .el-date-editor ::v-deep  .el-input__inner {
 						border: 1px solid #D7D7D7;
 						border-radius: 8px;
 						padding: 0 10px 0 30px;
@@ -246,7 +246,7 @@ export default {
 						height: 44px;
 					}
 		
-		.rgs-form /deep/ .el-upload--picture-card {
+		.rgs-form ::v-deep  .el-upload--picture-card {
 			background: transparent;
 			border: 0;
 			border-radius: 0;
@@ -256,7 +256,7 @@ export default {
 			vertical-align: middle;
 		}
 		
-		.rgs-form /deep/ .upload .upload-img {
+		.rgs-form ::v-deep  .upload .upload-img {
 		  		  border: 1px dashed #D7D7D7;
 		  		  cursor: pointer;
 		  		  border-radius: 8px;
@@ -268,7 +268,7 @@ export default {
 		  		  height: 80px;
 		  		}
 		
-		.rgs-form /deep/ .el-upload-list .el-upload-list__item {
+		.rgs-form ::v-deep  .el-upload-list .el-upload-list__item {
 		  		  border: 1px dashed #D7D7D7;
 		  		  cursor: pointer;
 		  		  border-radius: 8px;
@@ -280,7 +280,7 @@ export default {
 		  		  height: 80px;
 		  		}
 		
-		.rgs-form /deep/ .el-upload .el-icon-plus {
+		.rgs-form ::v-deep  .el-upload .el-icon-plus {
 		  		  border: 1px dashed #D7D7D7;
 		  		  cursor: pointer;
 		  		  border-radius: 8px;
