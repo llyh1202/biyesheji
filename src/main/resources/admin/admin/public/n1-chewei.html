@@ -26,7 +26,7 @@
     <el-button @click="tpl">下载导入模板</el-button>
     <el-button type="warning" @click="$refs.f.click()">导入 Excel</el-button>
     <input ref="f" type="file" accept=".xlsx,.xls" style="display:none" @change="imp">
-    <span class="hint" style="margin-left:8px;"><a href="./index.html">返回系统</a></span>
+    <span class="hint" style="margin-left:8px;"><a href="./n5-chewei-keshihua.html">N5 车位可视化</a> · <a href="./index.html">返回系统</a></span>
   </div>
   <el-table v-if="hasToken" :data="rows" border @selection-change="s=>sel=s" v-loading="loading" style="width:100%;background:#fff;">
     <el-table-column type="selection" width="45"></el-table-column>
@@ -55,6 +55,8 @@
       <el-form-item label="车位编号" required><el-input v-model="form.cheweibianhao" placeholder="如 A-01"></el-input></el-form-item>
       <el-form-item label="状态"><el-input v-model="form.zhuangtai" placeholder="默认 空闲"></el-input></el-form-item>
       <el-form-item label="关联车位信息ID"><el-input v-model="form.cheweixinxiId" placeholder="可选"></el-input></el-form-item>
+      <el-form-item label="栅格行N5"><el-input v-model="form.wanggeHang" placeholder="可选，平面图用"></el-input></el-form-item>
+      <el-form-item label="栅格列N5"><el-input v-model="form.wanggeLie" placeholder="可选"></el-input></el-form-item>
       <el-form-item label="备注"><el-input type="textarea" v-model="form.beizhu" rows="2"></el-input></el-form-item>
     </el-form>
     <span slot="footer"><el-button @click="dlg=false">取消</el-button><el-button type="primary" @click="save">保存</el-button></span>
@@ -75,7 +77,7 @@
     el:'#app',
     data:function(){
       return {hasToken:false,loading:false,rows:[],total:0,page:1,ps:10,sel:[],qLot:'',qArea:'',qCode:'',dlg:false,
-        form:{id:'',tingchechangmingcheng:'',quyu:'',cheweibianhao:'',zhuangtai:'空闲',cheweixinxiId:'',beizhu:''}};
+        form:{id:'',tingchechangmingcheng:'',quyu:'',cheweibianhao:'',zhuangtai:'空闲',cheweixinxiId:'',wanggeHang:'',wanggeLie:'',beizhu:''}};
     },
     mounted:function(){ this.hasToken=!!readToken(); if(this.hasToken) this.load(1); },
     methods:{
@@ -94,13 +96,15 @@
           else{ this.rows=[]; this.total=0; if(d&&d.msg) this.$message.error(d.msg); }
         }.bind(this)).catch(function(){ this.loading=false; this.$message.error('请求失败'); }.bind(this));
       },
-      resetForm:function(){ this.form={id:'',tingchechangmingcheng:'',quyu:'',cheweibianhao:'',zhuangtai:'空闲',cheweixinxiId:'',beizhu:''}; },
+      resetForm:function(){ this.form={id:'',tingchechangmingcheng:'',quyu:'',cheweibianhao:'',zhuangtai:'空闲',cheweixinxiId:'',wanggeHang:'',wanggeLie:'',beizhu:''}; },
       openAdd:function(){ this.resetForm(); this.dlg=true; },
-      edit:function(row){ this.form=Object.assign({},row); if(this.form.cheweixinxiId==null)this.form.cheweixinxiId=''; this.dlg=true; },
+      edit:function(row){ this.form=Object.assign({},row); if(this.form.cheweixinxiId==null)this.form.cheweixinxiId=''; if(this.form.wanggeHang==null)this.form.wanggeHang=''; else this.form.wanggeHang=String(this.form.wanggeHang); if(this.form.wanggeLie==null)this.form.wanggeLie=''; else this.form.wanggeLie=String(this.form.wanggeLie); this.dlg=true; },
       save:function(){
         if(!this.form.tingchechangmingcheng||!this.form.cheweibianhao){ this.$message.warning('停车场与车位编号必填'); return; }
         var p=Object.assign({},this.form);
         if(p.cheweixinxiId===''||p.cheweixinxiId==null) delete p.cheweixinxiId; else p.cheweixinxiId=Number(p.cheweixinxiId);
+        if(p.wanggeHang===''||p.wanggeHang==null) delete p.wanggeHang; else p.wanggeHang=Number(p.wanggeHang);
+        if(p.wanggeLie===''||p.wanggeLie==null) delete p.wanggeLie; else p.wanggeLie=Number(p.wanggeLie);
         var url=p.id?'/chewei/update':'/chewei/save';
         this.http().post(url,p).then(function(r){ var d=r.data; if(d&&d.code===0){ this.$message.success('保存成功'); this.dlg=false; this.load(); } else this.$message.error((d&&d.msg)||'失败'); }.bind(this));
       },

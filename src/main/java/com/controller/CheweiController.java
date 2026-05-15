@@ -32,6 +32,7 @@ import com.entity.CheweiEntity;
 import com.entity.dto.N4YuliangChaDto;
 import com.entity.dto.N4YuyueReserveDto;
 import com.entity.view.CheweiView;
+import com.service.CheweiKeshihuaN5Service;
 import com.service.CheweiService;
 import com.service.CheweiYuliangN4Service;
 import com.utils.MPUtil;
@@ -41,6 +42,7 @@ import com.utils.R;
 /**
  * 这是N2代码 — 含 N2 车位占用状态：预约/取消预约接口 /chewei/n2/*，新建车位默认「空闲」。
  * 这是N4代码 — 余位校验与时段预约 /chewei/n4/*。
+ * 这是N5代码 — 车位可视化 /chewei/n5/* 与 public/n5-chewei-keshihua.html。
  * 车位编号主数据（N1 车位级主数据；N2 车位占用状态机与预约接口）。
  * 这是我cursor给父亲写的
  */
@@ -52,6 +54,8 @@ public class CheweiController {
 	private CheweiService cheweiService;
 	@Autowired
 	private CheweiYuliangN4Service cheweiYuliangN4Service;
+	@Autowired
+	private CheweiKeshihuaN5Service cheweiKeshihuaN5Service;
 
 	@RequestMapping("/page")
 	public R page(@RequestParam Map<String, Object> params, CheweiEntity chewei, HttpServletRequest request) {
@@ -199,6 +203,19 @@ public class CheweiController {
 		return cheweiYuliangN4Service.reserveWithSlot(body);
 	}
 
+	/** 这是N5代码 — 可视化图例：状态 → 颜色。这是我cursor给父亲写的 */
+	@RequestMapping("/n5/legend")
+	public R n5Legend(HttpServletRequest request) {
+		return cheweiKeshihuaN5Service.legend();
+	}
+
+	/** 这是N5代码 — 区域下车位列表数据（编号、状态色、可选栅格坐标）。这是我cursor给父亲写的 */
+	@RequestMapping("/n5/slots")
+	public R n5Slots(@RequestParam("tingchechangmingcheng") String tingchechangmingcheng,
+			@RequestParam(value = "quyu", required = false) String quyu, HttpServletRequest request) {
+		return cheweiKeshihuaN5Service.slots(tingchechangmingcheng, quyu);
+	}
+
 	/**
 	 * 下载导入模板（.xlsx）
 	 */
@@ -207,13 +224,15 @@ public class CheweiController {
 		try (Workbook wb = new XSSFWorkbook()) {
 			Sheet sheet = wb.createSheet("车位");
 			Row h = sheet.createRow(0);
-			String[] titles = { "停车场名称", "区域", "车位编号", "状态", "备注", "关联车位信息ID" };
+			String[] titles = { "停车场名称", "区域", "车位编号", "状态", "备注", "关联车位信息ID", "栅格行N5", "栅格列N5" };
 			for (int i = 0; i < titles.length; i++) {
 				h.createCell(i).setCellValue(titles[i]);
 			}
 			sheet.setColumnWidth(0, 20 * 256);
 			sheet.setColumnWidth(1, 12 * 256);
 			sheet.setColumnWidth(2, 14 * 256);
+			sheet.setColumnWidth(6, 12 * 256);
+			sheet.setColumnWidth(7, 12 * 256);
 			response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 			response.setHeader("Content-Disposition", "attachment;filename=chewei_import_template.xlsx");
 			wb.write(response.getOutputStream());
@@ -245,8 +264,11 @@ public class CheweiController {
 			String zt = cell(fmt, row, 3);
 			String bz = cell(fmt, row, 4);
 			String cwxCell = cell(fmt, row, 5);
+			String wgHangCell = cell(fmt, row, 6);
+			String wgLieCell = cell(fmt, row, 7);
 			if (StringUtils.isBlank(lot) && StringUtils.isBlank(area) && StringUtils.isBlank(code)
-					&& StringUtils.isBlank(zt) && StringUtils.isBlank(bz) && StringUtils.isBlank(cwxCell)) {
+					&& StringUtils.isBlank(zt) && StringUtils.isBlank(bz) && StringUtils.isBlank(cwxCell)
+					&& StringUtils.isBlank(wgHangCell) && StringUtils.isBlank(wgLieCell)) {
 				continue;
 			}
 			if (StringUtils.isBlank(lot) || StringUtils.isBlank(code)) {
@@ -268,6 +290,20 @@ public class CheweiController {
 					e.setCheweixinxiId(Long.parseLong(cwxCell.replaceAll("\\.0$", "")));
 				} catch (NumberFormatException ex) {
 					errors.add("第" + (i + 1) + "行：关联车位信息ID 格式错误，已忽略该列");
+				}
+			}
+			if (StringUtils.isNotBlank(wgHangCell)) {
+				try {
+					e.setWanggeHang(Integer.parseInt(wgHangCell.replaceAll("\\.0$", "")));
+				} catch (NumberFormatException ex) {
+					errors.add("第" + (i + 1) + "行：栅格行格式错误，已忽略");
+				}
+			}
+			if (StringUtils.isNotBlank(wgLieCell)) {
+				try {
+					e.setWanggeLie(Integer.parseInt(wgLieCell.replaceAll("\\.0$", "")));
+				} catch (NumberFormatException ex) {
+					errors.add("第" + (i + 1) + "行：栅格列格式错误，已忽略");
 				}
 			}
 			cheweiService.insert(e);

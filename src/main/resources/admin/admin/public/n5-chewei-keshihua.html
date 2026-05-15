@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>N5 车位可视化</title>
+  <!-- 这是我cursor给父亲写的 — N5：列表+色块；可选栅格/平面图（wanggeHang/Lie） -->
+  <script>!function(){var d={"8081":1,"8082":1,"5173":1,"9527":1,"9528":1},p=location.port||(location.protocol==="https:"?"443":"80"),h=location.hostname;"localhost"!==h&&"127.0.0.1"!==h||!d[p]?window.__API_BASE__="/springboot673i609q":window.__API_BASE__=location.protocol+"//"+h+":8080/springboot673i609q"}();</script>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui@2.15.14/lib/theme-chalk/index.css">
+  <script src="https://unpkg.com/vue@2.6.14/dist/vue.min.js"></script>
+  <script src="https://unpkg.com/element-ui@2.15.14/lib/index.js"></script>
+  <script src="https://unpkg.com/axios@0.27.2/dist/axios.min.js"></script>
+  <style>
+    body{margin:0;font-family:Helvetica,Arial,sans-serif;background:#f5f7fa;}
+    .wrap{padding:16px;}
+    .bar{margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+    .hint{color:#909399;font-size:13px;}
+    .legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin:12px 0;padding:10px 12px;background:#fff;border-radius:6px;}
+    .leg-item{display:flex;align-items:center;gap:6px;font-size:13px;}
+    .leg-swatch{width:18px;height:18px;border-radius:4px;border:1px solid rgba(0,0,0,.08);}
+    .slot-chip{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:76px;padding:8px 6px;border-radius:6px;color:#fff;text-align:center;font-size:12px;line-height:1.25;box-shadow:0 1px 2px rgba(0,0,0,.12);}
+    .slot-code{font-weight:600;font-size:13px;}
+    .slot-zt{opacity:.92;font-size:11px;margin-top:2px;}
+    .grid-wrap{display:grid;gap:8px;background:#fff;padding:12px;border-radius:6px;}
+    .grid-auto{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));}
+    .plan-wrap{display:grid;gap:4px;background:#ebeef5;padding:10px;border-radius:6px;border:1px solid #dcdfe6;}
+    .plan-cell{min-height:44px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#909399;background:#fafafa;border:1px dashed #dcdfe6;}
+    .plan-cell.filled{border-style:solid;color:#fff;font-weight:600;padding:4px;text-align:center;}
+  </style>
+</head>
+<body>
+<div id="app" class="wrap">
+  <h2 style="margin:0 0 8px;">车位可视化（N5）</h2>
+  <p class="hint" v-if="!hasToken">请先在 <a href="./index.html">管理端首页</a> 登录管理员，再回到本页。</p>
+  <div class="bar" v-if="hasToken">
+    <el-input v-model="qLot" placeholder="停车场名称（精确）" clearable style="width:200px"></el-input>
+    <el-input v-model="qArea" placeholder="区域（可空）" clearable style="width:130px"></el-input>
+    <el-button type="primary" @click="loadSlots" :loading="loading">加载</el-button>
+    <el-radio-group v-model="viewMode" size="small">
+      <el-radio-button label="list">列表</el-radio-button>
+      <el-radio-button label="grid">色块栅格</el-radio-button>
+      <el-radio-button label="plan" :disabled="!meta.hasFullWanggeLayout">平面图</el-radio-button>
+    </el-radio-group>
+    <span class="hint" style="margin-left:4px;">平面图需本区域全部车位填写栅格行/列（N1 编辑或导入模板）。</span>
+    <span class="hint" style="margin-left:auto;"><a href="./n1-chewei.html">N1 车位主数据</a> · <a href="./index.html">返回系统</a></span>
+  </div>
+
+  <div v-if="hasToken && legendHint" class="legend">
+    <span class="hint" style="width:100%;margin-bottom:4px;">{{ legendHint }}</span>
+    <div class="leg-item" v-for="(hex, zt) in legendColors" :key="zt">
+      <span class="leg-swatch" :style="{background: hex}"></span>
+      <span>{{ zt }}</span>
+    </div>
+  </div>
+
+  <p v-if="hasToken && !slots.length && !loading && queried" class="hint">暂无数据，请检查车场名称是否与库中完全一致。</p>
+
+  <el-table v-if="hasToken && viewMode==='list' && slots.length" :data="slots" border size="small" style="width:100%;background:#fff;">
+    <el-table-column prop="cheweibianhao" label="车位编号" width="120"></el-table-column>
+    <el-table-column prop="zhuangtai" label="状态" width="120"></el-table-column>
+    <el-table-column label="色块" width="100">
+      <template slot-scope="{row}">
+        <span class="leg-swatch" :style="{background: row.colorHex}"></span>
+      </template>
+    </el-table-column>
+    <el-table-column prop="wanggeHang" label="栅格行" width="80"></el-table-column>
+    <el-table-column prop="wanggeLie" label="栅格列" width="80"></el-table-column>
+    <el-table-column prop="beizhu" label="备注" min-width="120" show-overflow-tooltip></el-table-column>
+  </el-table>
+
+  <div v-if="hasToken && viewMode==='grid' && slots.length" class="grid-wrap grid-auto">
+    <div v-for="s in slots" :key="s.id" class="slot-chip" :style="{background: s.colorHex}">
+      <span class="slot-code">{{ s.cheweibianhao }}</span>
+      <span class="slot-zt">{{ s.zhuangtai || '—' }}</span>
+    </div>
+  </div>
+
+  <div v-if="hasToken && viewMode==='plan' && meta.hasFullWanggeLayout && planCells.length" class="plan-wrap"
+       :style="planGridStyle">
+    <div v-for="(cell, idx) in planCells" :key="idx"
+         class="plan-cell" :class="{filled: !!cell.slot}"
+         :style="planCellStyle(cell)">
+      <template v-if="cell.slot">
+        <div><div class="slot-code">{{ cell.slot.cheweibianhao }}</div><div class="slot-zt">{{ cell.slot.zhuangtai }}</div></div>
+      </template>
+      <template v-else>空</template>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  function apiBase(){
+    var b = window.__API_BASE__ || '/springboot673i609q';
+    return String(b).replace(/\/$/,'');
+  }
+  function readToken(){
+    var raw = localStorage.getItem('Token');
+    if(!raw) return '';
+    try { var j = JSON.parse(raw); return typeof j==='string'?j:(j&&j.token)||String(j); } catch(e){ return raw.replace(/^"|"$/g,''); }
+  }
+  new Vue({
+    el:'#app',
+    data:function(){
+      return {
+        hasToken:false, loading:false, queried:false,
+        qLot:'', qArea:'',
+        viewMode:'list',
+        legendColors:{}, legendHint:'',
+        slots:[], meta:{total:0,hasFullWanggeLayout:false,wanggeMaxHang:0,wanggeMaxLie:0}
+      };
+    },
+    computed:{
+      planGridStyle:function(){
+        var mh=this.meta.wanggeMaxHang||1, ml=this.meta.wanggeMaxLie||1;
+        return {
+          gridTemplateRows:'repeat('+mh+', minmax(44px, auto))',
+          gridTemplateColumns:'repeat('+ml+', 1fr)'
+        };
+      },
+      planCells:function(){
+        if(!this.meta.hasFullWanggeLayout) return [];
+        var mh=this.meta.wanggeMaxHang, ml=this.meta.wanggeMaxLie;
+        if(!mh||!ml) return [];
+        var map={};
+        for(var i=0;i<this.slots.length;i++){
+          var s=this.slots[i];
+          if(s.wanggeHang!=null&&s.wanggeLie!=null) map[s.wanggeHang+','+s.wanggeLie]=s;
+        }
+        var cells=[];
+        for(var r=1;r<=mh;r++){
+          for(var c=1;c<=ml;c++){
+            cells.push({r:r,c:c,slot:map[r+','+c]||null});
+          }
+        }
+        return cells;
+      }
+    },
+    mounted:function(){
+      this.hasToken=!!readToken();
+      if(this.hasToken) this.loadLegend();
+    },
+    methods:{
+      planCellStyle:function(cell){
+        var base={gridRow:cell.r,gridColumn:cell.c};
+        if(cell.slot) base.background=cell.slot.colorHex;
+        return base;
+      },
+      http:function(){ var t=readToken(); return axios.create({baseURL:apiBase(),timeout:120000,headers:t?{Token:t}:{}}); },
+      loadLegend:function(){
+        this.http().get('/chewei/n5/legend').then(function(r){
+          var d=r.data;
+          if(d&&d.code===0&&d.data){
+            this.legendColors=d.data.zhuangtaiColors||{};
+            this.legendHint=d.data.hint||'';
+          }
+        }.bind(this)).catch(function(){});
+      },
+      loadSlots:function(){
+        if(!this.qLot||!String(this.qLot).trim()){ this.$message.warning('请输入停车场名称（与系统中完全一致）'); return; }
+        this.loading=true; this.queried=true;
+        var params={tingchechangmingcheng:String(this.qLot).trim()};
+        if(this.qArea!=null&&String(this.qArea).trim()!=='') params.quyu=String(this.qArea).trim();
+        this.http().get('/chewei/n5/slots',{params:params}).then(function(r){
+          this.loading=false;
+          var d=r.data;
+          if(d&&d.code===0&&d.data){
+            this.slots=d.data.slots||[];
+            this.meta={
+              total:d.data.total||0,
+              hasFullWanggeLayout:!!d.data.hasFullWanggeLayout,
+              wanggeMaxHang:d.data.wanggeMaxHang||0,
+              wanggeMaxLie:d.data.wanggeMaxLie||0
+            };
+            if(this.viewMode==='plan'&&!this.meta.hasFullWanggeLayout) this.viewMode='grid';
+          } else {
+            this.slots=[]; this.meta={total:0,hasFullWanggeLayout:false,wanggeMaxHang:0,wanggeMaxLie:0};
+            if(d&&d.msg) this.$message.error(d.msg);
+          }
+        }.bind(this)).catch(function(){ this.loading=false; this.$message.error('请求失败'); }.bind(this));
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>

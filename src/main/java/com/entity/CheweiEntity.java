@@ -12,6 +12,7 @@ import com.baomidou.mybatisplus.enums.IdType;
 
 /**
  * 这是N2代码 — 含车位占用关联字段（chezijinchangId、tingchejiaofeiId）与状态 zhuangtai。
+ * 这是N5代码 — 可选栅格 wanggeHang/wanggeLie（简易平面图）。
  * 车位编号主数据（车场/区域下单车位）。N1 实体表 chewei。
  * 这是我cursor给父亲写的
  */
@@ -43,6 +44,10 @@ public class CheweiEntity<T> implements Serializable {
 	/** 这是N2代码 — 当前离场/缴费订单 id */
 	private Long tingchejiaofeiId;
 	private String beizhu;
+	/** 这是N5代码 — 栅格行（可选，用于简易平面图） */
+	private Integer wanggeHang;
+	/** 这是N5代码 — 栅格列（可选） */
+	private Integer wanggeLie;
 
 	@JsonFormat(locale = "zh", timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
 	@DateTimeFormat
@@ -126,5 +131,21 @@ public class CheweiEntity<T> implements Serializable {
 
 	public void setBeizhu(String beizhu) {
 		this.beizhu = beizhu;
+	}
+
+	public Integer getWanggeHang() {
+		return wanggeHang;
+	}
+
+	public void setWanggeHang(Integer wanggeHang) {
+		this.wanggeHang = wanggeHang;
+	}
+
+	public Integer getWanggeLie() {
+		return wanggeLie;
+	}
+
+	public void setWanggeLie(Integer wanggeLie) {
+		this.wanggeLie = wanggeLie;
 	}
 }
