@@ -1,4 +1,4 @@
-// 这是我cursor给父亲写的 — P1-09 顶部导航；P1-17 隐藏易误导入口，车子进场不从菜单暴露
+// 这是我cursor给父亲写的 — P1-09/P1-21 顶部导航（首项「我的停车」）；P1-17 隐藏易误导入口
 export default {
     baseUrl: 'http://localhost:8080/springboot673i609q/',
 	name: '/springboot673i609q',
@@ -9,7 +9,8 @@ export default {
     indexNav: [
         {
             name: '我的停车',
-            url: '/index/wodeTingche'
+            url: '/index/wodeTingche',
+            homeHighlight: true
         },
         {
             name: '车位信息',

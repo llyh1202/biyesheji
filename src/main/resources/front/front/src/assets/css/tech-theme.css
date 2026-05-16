@@ -573,6 +573,76 @@ body {
 	margin-top: 6px;
 }
 
+/* 这是我cursor给父亲写的 — P1-21 首页「我的停车」入口 */
+.tech-hero-actions {
+	display: flex;
+	justify-content: center;
+	gap: 16px;
+	flex-wrap: wrap;
+	margin-top: 28px;
+}
+
+.tech-wode-entry-section {
+	padding: 20px 24px;
+}
+
+.tech-wode-entry-card {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	cursor: pointer;
+	padding: 20px 24px;
+	border-radius: 12px;
+	border: 1px solid rgba(6, 182, 212, 0.35);
+	background: linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(124, 58, 237, 0.06));
+	transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.tech-wode-entry-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 10px 28px rgba(6, 182, 212, 0.18);
+}
+
+.tech-wode-entry-icon {
+	flex-shrink: 0;
+	width: 56px;
+	height: 56px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 12px;
+	background: rgba(6, 182, 212, 0.15);
+	color: var(--tech-primary);
+	font-size: 28px;
+}
+
+.tech-wode-entry-body {
+	flex: 1;
+	min-width: 0;
+}
+
+.tech-wode-entry-body h3 {
+	margin: 0 0 8px;
+	font-size: 18px;
+	color: var(--tech-primary);
+}
+
+.tech-wode-entry-body p {
+	margin: 0;
+	font-size: 14px;
+	color: var(--tech-muted);
+	line-height: 1.5;
+}
+
+.tech-quick-card-highlight {
+	border-color: rgba(6, 182, 212, 0.45);
+	background: linear-gradient(180deg, rgba(6, 182, 212, 0.06), #fff);
+}
+
+.tech-quick-card-highlight i {
+	color: var(--tech-primary);
+}
+
 .tech-home-section {
 	margin-top: 28px;
 	padding: 28px 24px;

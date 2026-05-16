@@ -9,12 +9,29 @@
 			<div class="tech-stat-item"><span class="num">24/7</span><span class="lbl">全天候服务</span></div>
 			<div class="tech-stat-item"><span class="num">在线</span><span class="lbl">缴费与反馈</span></div>
 		</div>
+		<!-- 这是我cursor给父亲写的 — P1-21 首页主入口「我的停车」 -->
+		<div class="tech-hero-actions">
+			<el-button type="primary" size="medium" icon="el-icon-s-order" @click="goWodeTingche">我的停车</el-button>
+			<el-button size="medium" icon="el-icon-location-outline" @click="goMenu('/index/cheweixinxi')">查找车位</el-button>
+		</div>
 	</div>
+
+	<!-- 这是我cursor给父亲写的 — P1-21 我的停车快捷卡片 -->
+	<section class="tech-home-section tech-wode-entry-section animate__animated animate__fadeInUp">
+		<div class="tech-wode-entry-card" @click="goWodeTingche">
+			<div class="tech-wode-entry-icon"><i class="el-icon-s-order"></i></div>
+			<div class="tech-wode-entry-body">
+				<h3>我的停车</h3>
+				<p>待入场 · 停车中 · 待支付一站查看，支持跳转 M2 入场/离场与缴费详情支付。</p>
+			</div>
+			<el-button type="primary" plain size="small" @click.stop="goWodeTingche">进入 →</el-button>
+		</div>
+	</section>
 
 	<section class="tech-home-section animate__animated animate__fadeInUp">
 		<h3 class="tech-home-section-title">功能快捷入口</h3>
 		<div class="tech-quick-grid">
-			<div v-for="(menu, idx) in menuList" :key="idx" class="tech-quick-card" @click="goMenu(menu.url)">
+			<div v-for="(menu, idx) in menuList" :key="idx" class="tech-quick-card" :class="{ 'tech-quick-card-highlight': menu.homeHighlight }" @click="goMenu(menu.url)">
 				<i :class="navIcon(idx)"></i>
 				<span>{{ menu.name }}</span>
 			</div>
@@ -74,6 +91,7 @@
 <script>
 import 'animate.css'
 import Swiper from "swiper";
+import { getVisibleIndexNav } from '@/config/config'
 
   export default {
     //数据集合
@@ -85,19 +103,15 @@ import Swiper from "swiper";
         parkTotal: 0,
         featuredList: [],
         navIcons: [
+          'el-icon-s-order',
           'el-icon-location-outline',
-          'el-icon-chat-line-square',
-          'el-icon-date',
-          'el-icon-truck',
-          'el-icon-coin',
-          'el-icon-time',
-          'el-icon-wallet'
+          'el-icon-chat-line-square'
         ],
         processSteps: [
-          { title: '查询与预约', desc: '浏览车位信息，在 M4 模块选择时段完成预约。' },
-          { title: '入场停车', desc: '按预约时间入场，M2 停车闭环记录进出场状态。' },
-          { title: '费用结算', desc: '离场前使用 M5 试算应缴费用，支持在线支付。' },
-          { title: '离场与补缴', desc: '正常离场；如有超时，可在 N7 完成补缴。' }
+          { title: '我的停车', desc: '登录后进入「我的停车」，查看预约、在场与待支付记录。' },
+          { title: '查询与预约', desc: '浏览车位信息，在详情页预约区选择时段完成预约。' },
+          { title: '入场与离场', desc: '从「我的停车」进入 M2 停车闭环，完成入场、离场与结算。' },
+          { title: '缴费与补缴', desc: '待支付账单在「我的停车」或缴费详情完成支付；超时可在 N7 补缴。' }
         ],
         capabilityList: [
           { title: '我的停车', desc: '查看预约、在场与待缴费，一键进入停车闭环。', path: '/index/wodeTingche' },
@@ -105,18 +119,17 @@ import Swiper from "swiper";
           { title: '用户反馈', desc: '提交使用问题与建议。', path: '/index/messages' }
         ],
         tipsList: [
-          '登录后可使用个人中心查看预约、缴费与反馈记录。',
+          '登录后请优先使用首页或顶栏「我的停车」查看预约、在场与待支付。',
           '预约成功后请按时段入场，超时可能触发 N6 策略并产生补缴。',
-          '缴费前建议先使用 M5 费用试算核对金额。',
+          '缴费请从「我的停车」待支付进入详情完成，勿直接改缴费状态。',
           '遇到问题可通过「用户反馈」提交，我们会尽快处理。'
         ]
       }
     },
     created() {
 		this.baseUrl = this.$config.baseUrl;
-		// 这是我cursor给父亲写的 — P1-17 首页快捷入口与顶栏一致
-		const nav = this.$config.indexNav || []
-		this.menuList = nav.filter(item => item && !item.hidden)
+		// 这是我cursor给父亲写的 — P1-17/P1-21 首页快捷入口与顶栏一致（含「我的停车」）
+		this.menuList = getVisibleIndexNav(this.$config.indexNav)
 		this.getList();
     },
 	mounted() {
@@ -187,6 +200,10 @@ import Swiper from "swiper";
 		},
 		goMenu(path) {
 			this.$router.push(path);
+		},
+		// 这是我cursor给父亲写的 — P1-21
+		goWodeTingche() {
+			this.$router.push({ path: '/index/wodeTingche' });
 		},
 		navIcon(idx) {
 			return this.navIcons[idx] || 'el-icon-menu';
