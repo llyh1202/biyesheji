@@ -457,11 +457,10 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 				return R.error("该入场单已有未支付的离场/缴费单，请先走「结算」关单后再新建离场单");
 			}
 		}
-		try {
-			// 这是N7代码 — 离场前须结清待支付补缴单
-			tingcheBujiaoN7Service.assertNoUnpaidBeforeLichang(body.getChezijinchangId());
-		} catch (IllegalStateException ex) {
-			return R.error(ex.getMessage());
+		// 这是我cursor给父亲写的 — P1-23 离场前 N7 校验：待支付补缴返回 4707 + bujiaoList
+		R unpaidBlock = tingcheBujiaoN7Service.buildUnpaidBujiaoBlockLichang(body.getChezijinchangId());
+		if (unpaidBlock != null) {
+			return unpaidBlock;
 		}
 
 		// 这是M5代码 — 统一计费入口（含 N6 宽限 + 首小时/阶梯/封顶）

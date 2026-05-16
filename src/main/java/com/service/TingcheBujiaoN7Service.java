@@ -25,6 +25,11 @@ public interface TingcheBujiaoN7Service {
 	/** 离场前：是否存在待支付补缴 */
 	void assertNoUnpaidBeforeLichang(Long chezijinchangId);
 
+	/**
+	 * 这是我cursor给父亲写的 — P1-23 离场前 N7 校验：无待支付返回 null；否则返回错误码+补缴单列表
+	 */
+	R buildUnpaidBujiaoBlockLichang(Long chezijinchangId);
+
 	/** 离场建主单后：已支付补缴并入主单金额 */
 	double mergePaidIntoLichangOrder(Long chezijinchangId, Long tingchejiaofeiId, double baseFee);
 }

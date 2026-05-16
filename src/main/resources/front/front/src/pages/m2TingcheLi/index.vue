@@ -142,8 +142,17 @@
       <div v-if="orderAfterLichang" class="m2-result-line">
         缴费单 <b>#{{ orderAfterLichang.id }}</b> · {{ orderAfterLichang.bencitingchefeiyong }} 元 · {{ orderAfterLichang.ispay }}
       </div>
+      <!-- 这是我cursor给父亲写的 — P1-23 离场被未支付补缴拦截时展示列表 -->
+      <el-alert
+        v-if="unpaidBujiaoBlock"
+        :title="unpaidBujiaoMsg"
+        type="error"
+        :closable="false"
+        show-icon
+        class="m2-wizard-alert"
+      />
       <div v-if="bujiaoList.length" class="m2-bujiao-block">
-        <div class="m2-bujiao-title">补缴单（N7）</div>
+        <div class="m2-bujiao-title">补缴单（N7）{{ unpaidBujiaoBlock ? '— 请先支付' : '' }}</div>
         <el-button size="mini" @click="loadBujiao">刷新</el-button>
         <el-button size="mini" type="text" @click="$router.push('/index/n7Bujiao')">去补缴</el-button>
         <el-table :data="bujiaoList" size="small" border class="m2-bujiao-table">
@@ -238,7 +247,9 @@ export default {
       orderAfterLichang: null,
       jiesuanId: '',
       bujiaoList: [],
-      userChepaihao: ''
+      userChepaihao: '',
+      unpaidBujiaoBlock: false,
+      unpaidBujiaoMsg: ''
     }
   },
   computed: {
@@ -537,6 +548,8 @@ export default {
         body.yuyueId = yuyueId
       }
       if (this.lichangForm.lichangshijian) body.lichangshijian = this.lichangForm.lichangshijian
+      this.unpaidBujiaoBlock = false
+      this.unpaidBujiaoMsg = ''
       this.loadingLichang = true
       this.$http.post('n3/tingcheli/lichang', body).then(res => {
         if (res.data && res.data.code === 0) {
@@ -556,11 +569,24 @@ export default {
           this.$message.success(msg)
         } else {
           if (handleAuthFail(this, res.data)) return
+          // 这是我cursor给父亲写的 — P1-23 未支付补缴拦截（code 4707 / bizCode N7_UNPAID_BUJIAO）
+          if (this.applyUnpaidBujiaoLichangError(res.data)) return
           this.$message.error((res.data && res.data.msg) || '离场失败')
         }
       }).catch(err => this.onHttpFail(err, '离场请求失败')).finally(() => {
         this.loadingLichang = false
       })
+    },
+    applyUnpaidBujiaoLichangError(body) {
+      if (!body) return false
+      const code = body.code
+      const biz = body.bizCode
+      if (code !== 4707 && biz !== 'N7_UNPAID_BUJIAO') return false
+      this.unpaidBujiaoBlock = true
+      this.unpaidBujiaoMsg = body.msg || '存在待支付补缴单，请先完成补缴后再离场'
+      this.bujiaoList = body.bujiaoList || []
+      this.$message.warning(this.unpaidBujiaoMsg)
+      return true
     },
     doJiesuan() {
       if (!requireFrontLogin(this)) return

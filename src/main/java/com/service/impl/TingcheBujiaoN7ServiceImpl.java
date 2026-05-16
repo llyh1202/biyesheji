@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
 import com.constant.CheweiZhuangtaiN2;
+import com.constant.N7LichangBizCode;
 import com.constant.TingcheBujiaoLeixingN7;
 import com.constant.TingcheBujiaoZhuangtaiN7;
 import com.constant.YuyueLiuchengJiedianM1;
@@ -214,14 +215,38 @@ public class TingcheBujiaoN7ServiceImpl extends ServiceImpl<TingcheBujiaoDao, Ti
 		return R.ok().put("data", data);
 	}
 
-	@Override
-	public void assertNoUnpaidBeforeLichang(Long chezijinchangId) {
+	/** 这是我cursor给父亲写的 — P1-23 与离场校验共用的待支付补缴查询 */
+	private java.util.List<TingcheBujiaoEntity> listUnpaidByChezijinchang(Long chezijinchangId) {
 		EntityWrapper<TingcheBujiaoEntity> w = new EntityWrapper<TingcheBujiaoEntity>();
 		w.eq("chezijinchang_id", chezijinchangId);
 		w.eq("zhuangtai", TingcheBujiaoZhuangtaiN7.DAI_ZHIFU);
-		int n = selectCount(w);
-		if (n > 0) {
-			throw new IllegalStateException("存在 " + n + " 笔待支付补缴单，请先完成用户补缴或由管理员作废后再离场结算");
+		w.orderBy("id", false);
+		return selectList(w);
+	}
+
+	@Override
+	public R buildUnpaidBujiaoBlockLichang(Long chezijinchangId) {
+		if (chezijinchangId == null) {
+			return null;
+		}
+		java.util.List<TingcheBujiaoEntity> unpaid = listUnpaidByChezijinchang(chezijinchangId);
+		if (unpaid == null || unpaid.isEmpty()) {
+			return null;
+		}
+		int n = unpaid.size();
+		String msg = "存在 " + n + " 笔待支付补缴单，请先完成用户补缴或由管理员作废后再离场结算";
+		return R.error(N7LichangBizCode.UNPAID_BUJIAO, msg)
+				.put("bizCode", N7LichangBizCode.BIZ_KEY)
+				.put("unpaidCount", n)
+				.put("bujiaoList", unpaid);
+	}
+
+	@Override
+	public void assertNoUnpaidBeforeLichang(Long chezijinchangId) {
+		R block = buildUnpaidBujiaoBlockLichang(chezijinchangId);
+		if (block != null) {
+			Object msg = block.get("msg");
+			throw new IllegalStateException(msg != null ? msg.toString() : "存在待支付补缴单，无法离场结算");
 		}
 	}
 
