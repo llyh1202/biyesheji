@@ -408,8 +408,13 @@ export default {
             if (res.data.data.yuyueId) this.lichangForm.yuyueId = String(res.data.data.yuyueId)
             this.loadBujiao()
             this.loadJifeiRule()
+            // 这是我cursor给父亲写的 — P1-12 入场成功自动进入离场步骤
+            if (!this.lichangForm.lichangshijian) {
+              this.lichangForm.lichangshijian = this.formatNow()
+            }
+            this.activeStep = 3
           }
-          this.$message.success('入场成功')
+          this.$message.success('入场成功，已进入离场试算步骤')
         } else {
           if (handleAuthFail(this, res.data)) return
           this.$message.error((res.data && res.data.msg) || '入场失败')
@@ -503,9 +508,14 @@ export default {
           this.orderAfterLichang = order
           this.lastJifeiCalc = d.jifeiCalc || null
           this.previewJifei = this.lastJifeiCalc
-          this.jiesuanId = String(order.id)
+          // 这是我cursor给父亲写的 — P1-12 离场成功自动进入支付并填入 tingchejiaofeiId
+          this.jiesuanId = order.id != null ? String(order.id) : ''
           let msg = '已生成缴费单'
           if (d.bujiaoMerged > 0) msg += '（含已支付补缴 ' + d.bujiaoMerged + ' 元）'
+          if (this.jiesuanId) {
+            this.activeStep = 4
+            msg += '，已进入支付步骤'
+          }
           this.$message.success(msg)
         } else {
           if (handleAuthFail(this, res.data)) return
