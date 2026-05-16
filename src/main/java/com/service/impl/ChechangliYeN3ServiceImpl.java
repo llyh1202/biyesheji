@@ -64,6 +64,187 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 		return s.trim();
 	}
 
+	/** 这是我cursor给父亲写的 — P1-13 登录用户校验 */
+	private R requireLogin(String sessionYonghuzhanghao) {
+		if (StringUtils.isBlank(sessionYonghuzhanghao)) {
+			return R.error(401, "请先登录");
+		}
+		return null;
+	}
+
+	/** 这是我cursor给父亲写的 — P1-13 业务单 yonghuzhanghao 须与当前用户一致（已绑定账号时） */
+	private R assertYonghuOwner(String sessionYonghuzhanghao, String entityYonghuzhanghao, String bizLabel) {
+		R login = requireLogin(sessionYonghuzhanghao);
+		if (login != null) {
+			return login;
+		}
+		String session = sessionYonghuzhanghao.trim();
+		String owner = nz(entityYonghuzhanghao);
+		if (StringUtils.isBlank(owner)) {
+			return R.error("该" + bizLabel + "未绑定用户账号，无法操作");
+		}
+		if (!session.equals(owner)) {
+			return R.error(403, "无权操作他人的" + bizLabel);
+		}
+		return null;
+	}
+
+	private void patchYuyueYonghu(Long yuyueId, String yonghuzhanghao) {
+		if (yuyueId == null || StringUtils.isBlank(yonghuzhanghao)) {
+			return;
+		}
+		CheweiYuyueEntity patch = new CheweiYuyueEntity();
+		patch.setId(yuyueId);
+		patch.setYonghuzhanghao(yonghuzhanghao.trim());
+		cheweiYuyueDao.updateById(patch);
+	}
+
+	private void patchChezijinchangYonghu(Long chezijinchangId, String yonghuzhanghao) {
+		if (chezijinchangId == null || StringUtils.isBlank(yonghuzhanghao)) {
+			return;
+		}
+		ChezijinchangEntity patch = new ChezijinchangEntity();
+		patch.setId(chezijinchangId);
+		patch.setYonghuzhanghao(yonghuzhanghao.trim());
+		chezijinchangService.updateById(patch);
+	}
+
+	private void patchTingchejiaofeiYonghu(Long tingchejiaofeiId, String yonghuzhanghao) {
+		if (tingchejiaofeiId == null || StringUtils.isBlank(yonghuzhanghao)) {
+			return;
+		}
+		TingchejiaofeiEntity patch = new TingchejiaofeiEntity();
+		patch.setId(tingchejiaofeiId);
+		patch.setYonghuzhanghao(yonghuzhanghao.trim());
+		tingchejiaofeiService.updateById(patch);
+	}
+
+	/**
+	 * 这是我cursor给父亲写的 — P1-13 历史预约：从入场单回填；仍为空且待入场时由当前用户认领
+	 */
+	private R assertYuyueOwner(String sessionYonghuzhanghao, CheweiYuyueEntity yuyue) {
+		if (yuyue == null) {
+			return R.error("预约单不存在");
+		}
+		R login = requireLogin(sessionYonghuzhanghao);
+		if (login != null) {
+			return login;
+		}
+		String session = sessionYonghuzhanghao.trim();
+		String owner = nz(yuyue.getYonghuzhanghao());
+		if (StringUtils.isNotBlank(owner)) {
+			if (!session.equals(owner)) {
+				return R.error(403, "无权操作他人的预约单");
+			}
+			return null;
+		}
+		if (yuyue.getChezijinchangId() != null) {
+			ChezijinchangEntity entry = chezijinchangService.selectById(yuyue.getChezijinchangId());
+			if (entry != null && StringUtils.isNotBlank(entry.getYonghuzhanghao())) {
+				String eu = nz(entry.getYonghuzhanghao());
+				if (!session.equals(eu)) {
+					return R.error(403, "无权操作他人的预约单");
+				}
+				patchYuyueYonghu(yuyue.getId(), eu);
+				yuyue.setYonghuzhanghao(eu);
+				return null;
+			}
+		}
+		String lj = nz(yuyue.getLiuchengJiedian());
+		boolean daiRuchang = StringUtils.isBlank(lj) || YuyueLiuchengJiedianM1.YIYUYUE_DAIRUCHANG.equals(lj);
+		if (CheweiYuyueZhuangtaiN4.YOUXIAO.equals(nz(yuyue.getZhuangtai())) && daiRuchang
+				&& yuyue.getChezijinchangId() == null) {
+			patchYuyueYonghu(yuyue.getId(), session);
+			yuyue.setYonghuzhanghao(session);
+			return null;
+		}
+		return R.error("该预约单未绑定用户账号，无法操作");
+	}
+
+	/** 这是我cursor给父亲写的 — P1-13 历史入场单：从预约/缴费单回填；入场中可由当前用户认领 */
+	private R assertChezijinchangOwner(String sessionYonghuzhanghao, ChezijinchangEntity entry) {
+		if (entry == null) {
+			return R.error("入场单不存在");
+		}
+		R login = requireLogin(sessionYonghuzhanghao);
+		if (login != null) {
+			return login;
+		}
+		String session = sessionYonghuzhanghao.trim();
+		String owner = nz(entry.getYonghuzhanghao());
+		if (StringUtils.isNotBlank(owner)) {
+			if (!session.equals(owner)) {
+				return R.error(403, "无权操作他人的入场单");
+			}
+			return null;
+		}
+		EntityWrapper<CheweiYuyueEntity> yw = new EntityWrapper<CheweiYuyueEntity>();
+		yw.eq("chezijinchang_id", entry.getId());
+		yw.last("LIMIT 1");
+		CheweiYuyueEntity y = cheweiYuyueDao.selectOne(yw);
+		if (y != null && StringUtils.isNotBlank(y.getYonghuzhanghao())) {
+			String yu = nz(y.getYonghuzhanghao());
+			if (!session.equals(yu)) {
+				return R.error(403, "无权操作他人的入场单");
+			}
+			patchChezijinchangYonghu(entry.getId(), yu);
+			entry.setYonghuzhanghao(yu);
+			return null;
+		}
+		EntityWrapper<TingchejiaofeiEntity> fw = new EntityWrapper<TingchejiaofeiEntity>();
+		fw.eq("crossrefid", entry.getId());
+		fw.last("LIMIT 1");
+		List<TingchejiaofeiEntity> fees = tingchejiaofeiService.selectList(fw);
+		if (fees != null && !fees.isEmpty() && StringUtils.isNotBlank(fees.get(0).getYonghuzhanghao())) {
+			String fu = nz(fees.get(0).getYonghuzhanghao());
+			if (!session.equals(fu)) {
+				return R.error(403, "无权操作他人的入场单");
+			}
+			patchChezijinchangYonghu(entry.getId(), fu);
+			entry.setYonghuzhanghao(fu);
+			return null;
+		}
+		patchChezijinchangYonghu(entry.getId(), session);
+		entry.setYonghuzhanghao(session);
+		return null;
+	}
+
+	/** 这是我cursor给父亲写的 — P1-13 历史缴费单：从入场单回填 */
+	private R assertTingchejiaofeiOwner(String sessionYonghuzhanghao, TingchejiaofeiEntity order) {
+		if (order == null) {
+			return R.error("缴费单不存在");
+		}
+		R login = requireLogin(sessionYonghuzhanghao);
+		if (login != null) {
+			return login;
+		}
+		String session = sessionYonghuzhanghao.trim();
+		String owner = nz(order.getYonghuzhanghao());
+		if (StringUtils.isNotBlank(owner)) {
+			if (!session.equals(owner)) {
+				return R.error(403, "无权操作他人的缴费单");
+			}
+			return null;
+		}
+		if (order.getCrossrefid() != null) {
+			ChezijinchangEntity entry = chezijinchangService.selectById(order.getCrossrefid());
+			if (entry != null) {
+				R cr = assertChezijinchangOwner(session, entry);
+				if (cr != null) {
+					return cr;
+				}
+				if (StringUtils.isNotBlank(entry.getYonghuzhanghao())) {
+					patchTingchejiaofeiYonghu(order.getId(), entry.getYonghuzhanghao());
+					order.setYonghuzhanghao(entry.getYonghuzhanghao());
+					return null;
+				}
+			}
+		}
+		patchTingchejiaofeiYonghu(order.getId(), session);
+		order.setYonghuzhanghao(session);
+		return null;
+	}
+
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public R ruchang(ChezijinchangEntity entry) {
@@ -87,13 +268,14 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 	}
 
 	@Override
-	public R m2YuyueSnapshot(Long yuyueId) {
+	public R m2YuyueSnapshot(Long yuyueId, String sessionYonghuzhanghao) {
 		if (yuyueId == null) {
 			return R.error("须传入预约单 id：yuyueId");
 		}
 		CheweiYuyueEntity yuyue = cheweiYuyueDao.selectById(yuyueId);
-		if (yuyue == null) {
-			return R.error("预约单不存在");
+		R ownerCheck = assertYuyueOwner(sessionYonghuzhanghao, yuyue);
+		if (ownerCheck != null) {
+			return ownerCheck;
 		}
 		Map<String, Object> data = new HashMap<String, Object>(6);
 		data.put("yuyue", yuyue);
@@ -111,7 +293,12 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public R m2RuchangByYuyue(M2RuchangDto body) {
+	public R m2RuchangByYuyue(M2RuchangDto body, String sessionYonghuzhanghao) {
+		R login = requireLogin(sessionYonghuzhanghao);
+		if (login != null) {
+			return login;
+		}
+		String sessionUser = sessionYonghuzhanghao.trim();
 		if (body == null || body.getYuyueId() == null) {
 			return R.error("须传入预约单 id：yuyueId");
 		}
@@ -119,8 +306,9 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 			return R.error("须填写车牌号 chepaihao");
 		}
 		CheweiYuyueEntity yuyue = cheweiYuyueDao.selectById(body.getYuyueId());
-		if (yuyue == null) {
-			return R.error("预约单不存在");
+		R ownerCheck = assertYuyueOwner(sessionUser, yuyue);
+		if (ownerCheck != null) {
+			return ownerCheck;
 		}
 		if (!CheweiYuyueZhuangtaiN4.YOUXIAO.equals(nz(yuyue.getZhuangtai()))) {
 			return R.error("预约单无效或已取消，无法入场");
@@ -162,7 +350,8 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 		entry.setQuyu(quyu);
 		entry.setCheweishuliang(1);
 		entry.setXiaoshidanjia(danjia);
-		entry.setYonghuzhanghao(nz(body.getYonghuzhanghao()));
+		// 这是我cursor给父亲写的 — P1-13 入场单用户账号以登录 session 为准
+		entry.setYonghuzhanghao(sessionUser);
 		entry.setXingming(nz(body.getXingming()));
 		entry.setShouji(nz(body.getShouji()));
 		entry.setChepaihao(nz(body.getChepaihao()));
@@ -185,13 +374,17 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public R lichang(N3TingcheLichangDto body) {
+	public R lichang(N3TingcheLichangDto body, String sessionYonghuzhanghao) {
 		if (body == null || body.getChezijinchangId() == null) {
 			return R.error("须传入入场单 id：chezijinchangId");
 		}
 		ChezijinchangEntity entry = chezijinchangService.selectById(body.getChezijinchangId());
 		if (entry == null) {
 			return R.error("入场单不存在");
+		}
+		R ownerCheck = assertChezijinchangOwner(sessionYonghuzhanghao, entry);
+		if (ownerCheck != null) {
+			return ownerCheck;
 		}
 		if (entry.getCheweiId() == null) {
 			return R.error("入场单未关联车位，无法生成离场业务单");
@@ -201,8 +394,9 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 		}
 		if (body.getYuyueId() != null) {
 			CheweiYuyueEntity y = cheweiYuyueDao.selectById(body.getYuyueId());
-			if (y == null) {
-				return R.error("预约单不存在");
+			R yuyueOwner = assertYuyueOwner(sessionYonghuzhanghao, y);
+			if (yuyueOwner != null) {
+				return yuyueOwner;
 			}
 			if (y.getChezijinchangId() == null || !y.getChezijinchangId().equals(body.getChezijinchangId())) {
 				return R.error("预约单与入场单不匹配");
@@ -292,7 +486,7 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public R jiesuan(N3TingcheJiesuanDto body) {
+	public R jiesuan(N3TingcheJiesuanDto body, String sessionYonghuzhanghao) {
 		if (body == null || body.getTingchejiaofeiId() == null) {
 			return R.error("须传入缴费单 id：tingchejiaofeiId");
 		}
@@ -300,6 +494,10 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 		TingchejiaofeiEntity current = tingchejiaofeiService.selectById(id);
 		if (current == null) {
 			return R.error("缴费单不存在");
+		}
+		R ownerCheck = assertTingchejiaofeiOwner(sessionYonghuzhanghao, current);
+		if (ownerCheck != null) {
+			return ownerCheck;
 		}
 		if (current.getLichangshijian() == null) {
 			return R.error("须先完成离场记录（含离场时间）后再结算，不能直接关单");
@@ -324,13 +522,17 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 	}
 
 	@Override
-	public R chainSummary(Long chezijinchangId) {
+	public R chainSummary(Long chezijinchangId, String sessionYonghuzhanghao) {
 		if (chezijinchangId == null) {
 			return R.error("须传入 chezijinchangId");
 		}
 		ChezijinchangEntity entry = chezijinchangService.selectById(chezijinchangId);
 		if (entry == null) {
 			return R.error("入场单不存在");
+		}
+		R ownerCheck = assertChezijinchangOwner(sessionYonghuzhanghao, entry);
+		if (ownerCheck != null) {
+			return ownerCheck;
 		}
 		Map<String, Object> data = new HashMap<String, Object>(4);
 		data.put("ruchang", entry);
