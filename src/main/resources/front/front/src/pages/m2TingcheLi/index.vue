@@ -188,7 +188,7 @@
 
 <script>
 // 这是我cursor给父亲写的 — P1-10 / P1-11 M2 步骤向导；P1-15 入场表单自动填充用户信息
-import { requireFrontLogin, handleAuthFail, autofillM2RuchangForm } from '@/common/auth'
+import { requireFrontLogin, handleAuthFail, autofillM2RuchangForm, goWodeTingcheDaiZhifu } from '@/common/auth'
 
 const LIUCHENG_DAIRUCHANG = '已预约待入场'
 
@@ -550,8 +550,10 @@ export default {
       this.loadingJiesuan = true
       this.$http.post('n3/tingcheli/jiesuan', { tingchejiaofeiId: tingchejiaofeiId }).then(res => {
         if (res.data && res.data.code === 0) {
-          this.$message.success('结算成功')
           if (this.orderAfterLichang) this.orderAfterLichang.ispay = '已支付'
+          this.$message.success('结算成功，已返回我的停车')
+          // 这是我cursor给父亲写的 — P1-20 跳转我的停车待支付 Tab 并刷新
+          goWodeTingcheDaiZhifu(this)
         } else {
           if (handleAuthFail(this, res.data)) return
           this.$message.error((res.data && res.data.msg) || '结算失败')

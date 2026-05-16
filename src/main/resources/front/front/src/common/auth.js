@@ -100,3 +100,14 @@ export function handleAuthFail(vm, dataOrErr) {
 	}
 	return false
 }
+
+/** 这是我cursor给父亲写的 — P1-20 支付/关单成功后跳转「我的停车」待支付 Tab 并触发刷新 */
+export function goWodeTingcheDaiZhifu(vm) {
+	if (!vm || !vm.$router) {
+		return
+	}
+	vm.$router.push({
+		path: '/index/wodeTingche',
+		query: { tab: 'daiZhifu', t: String(Date.now()) }
+	}).catch(() => {})
+}

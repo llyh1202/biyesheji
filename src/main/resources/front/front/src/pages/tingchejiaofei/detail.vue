@@ -115,7 +115,7 @@
   import CountDown from '@/components/CountDown';
   import axios from 'axios'
   import Swiper from "swiper";
-  import { requireFrontLogin } from '@/common/auth'
+  import { requireFrontLogin, goWodeTingcheDaiZhifu } from '@/common/auth'
   import { hasLichangForPay, isParkingFeeUnpaid } from '@/common/parkingPay'
   
   export default {
@@ -188,7 +188,9 @@
 			this.$http.post('tingchejiaofei/payComplete', { tingchejiaofeiId: this.detail.id }).then(res => {
 				if (res.data && res.data.code === 0) {
 					this.detail.ispay = '已支付'
-					this.$message.success('支付关单成功')
+					this.$message.success('支付关单成功，已返回我的停车')
+					// 这是我cursor给父亲写的 — P1-20 与 M2 步骤⑤一致：跳转待支付 Tab 并刷新
+					goWodeTingcheDaiZhifu(this)
 				} else {
 					this.$message.error((res.data && res.data.msg) || '关单失败')
 				}

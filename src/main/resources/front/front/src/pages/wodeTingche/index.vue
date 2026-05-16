@@ -117,11 +117,36 @@ export default {
     }
   },
   created() {
-    if (this.hasToken) {
-      this.loadDaiRuchang()
+    this.syncTabFromRoute()
+    this.refreshActiveTab()
+  },
+  watch: {
+    '$route'(to) {
+      if (!to.path || to.path.indexOf('wodeTingche') < 0) {
+        return
+      }
+      this.syncTabFromRoute()
+      this.refreshActiveTab()
     }
   },
   methods: {
+    // 这是我cursor给父亲写的 — P1-20 支持 ?tab=daiZhifu 打开待支付并刷新
+    syncTabFromRoute() {
+      const tab = (this.$route.query.tab || '').trim()
+      if (tab === 'daiZhifu' || tab === 'zaiChang' || tab === 'daiRuchang') {
+        this.activeTab = tab
+      }
+    },
+    refreshActiveTab() {
+      if (!this.hasToken) {
+        return
+      }
+      if (this.activeTab === 'daiRuchang') {
+        this.loadDaiRuchang()
+      } else {
+        this.loadSummary()
+      }
+    },
     onTabClick(tab) {
       if (!this.hasToken) return
       if (tab.name === 'daiRuchang') {
