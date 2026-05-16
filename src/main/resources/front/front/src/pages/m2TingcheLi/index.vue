@@ -77,17 +77,20 @@
       <div slot="header">③ 预约校验后入场</div>
       <div v-if="selectedYuyueId" class="m2-id-chip">预约单 #{{ selectedYuyueId }}</div>
       <el-form label-width="100px" :model="ruchangForm" @submit.native.prevent="doM2Ruchang">
+        <el-form-item label="用户账号">
+          <el-input v-model="ruchangForm.yonghuzhanghao" readonly placeholder="登录后自动填充" />
+        </el-form-item>
         <el-form-item label="进场时间">
           <el-date-picker v-model="ruchangForm.jinchangshijian" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" placeholder="默认当前" style="width:260px" />
         </el-form-item>
         <el-form-item label="车牌号" required>
-          <el-input v-model="ruchangForm.chepaihao" placeholder="必填" />
+          <el-input v-model="ruchangForm.chepaihao" placeholder="登录后从个人资料带出，可修改" />
         </el-form-item>
         <el-form-item label="姓名">
-          <el-input v-model="ruchangForm.xingming" />
+          <el-input v-model="ruchangForm.xingming" placeholder="登录后自动填充" />
         </el-form-item>
         <el-form-item label="手机">
-          <el-input v-model="ruchangForm.shouji" />
+          <el-input v-model="ruchangForm.shouji" placeholder="登录后自动填充" />
         </el-form-item>
         <el-form-item label="车辆图片">
           <el-input v-model="ruchangForm.cheliangtupian" placeholder="可选" />
@@ -182,8 +185,8 @@
 </template>
 
 <script>
-// 这是我cursor给父亲写的 — P1-10 / P1-11 M2 步骤向导
-import { requireFrontLogin, handleAuthFail } from '@/common/auth'
+// 这是我cursor给父亲写的 — P1-10 / P1-11 M2 步骤向导；P1-15 入场表单自动填充用户信息
+import { requireFrontLogin, handleAuthFail, autofillM2RuchangForm } from '@/common/auth'
 
 const LIUCHENG_DAIRUCHANG = '已预约待入场'
 
@@ -239,9 +242,8 @@ export default {
   },
   created() {
     const q = this.$route.query || {}
-    const un = localStorage.getItem('username')
-    if (un) {
-      this.ruchangForm.yonghuzhanghao = un
+    if (this.hasToken) {
+      autofillM2RuchangForm(this, this.ruchangForm, true)
     }
     if (q.yuyueId) {
       this.applyYuyueId(String(q.yuyueId), true)
@@ -322,7 +324,10 @@ export default {
         this.$message.warning('请先加载预约快照')
         return
       }
+      if (!requireFrontLogin(this)) return
       this.activeStep = 2
+      // 这是我cursor给父亲写的 — P1-15 进入入场步骤时刷新用户资料（不覆盖已改字段）
+      autofillM2RuchangForm(this, this.ruchangForm, true)
     },
     afterRuchangNext() {
       if (!(this.ruchangResult && this.ruchangResult.ruchang)) {
@@ -375,6 +380,9 @@ export default {
           this.loadJifeiRule()
           if (skipToLichang) {
             this.activeStep = d.ruchang ? 3 : 2
+            if (this.activeStep === 2 && this.hasToken) {
+              autofillM2RuchangForm(this, this.ruchangForm, true)
+            }
           }
         } else {
           this.$message.error((res.data && res.data.msg) || '加载失败')
@@ -385,21 +393,25 @@ export default {
       if (!requireFrontLogin(this)) return
       const yuyueId = this.parseId(this.ruchangForm.yuyueId || this.selectedYuyueId, '预约单 id')
       if (yuyueId == null) return
-      if (!(this.ruchangForm.chepaihao || '').trim()) {
-        this.$message.error('请填写车牌号')
-        return
-      }
-      const body = {
-        yuyueId: yuyueId,
-        chepaihao: (this.ruchangForm.chepaihao || '').trim(),
-        yonghuzhanghao: (this.ruchangForm.yonghuzhanghao || '').trim(),
-        xingming: (this.ruchangForm.xingming || '').trim(),
-        shouji: (this.ruchangForm.shouji || '').trim(),
-        cheliangtupian: (this.ruchangForm.cheliangtupian || '').trim()
-      }
-      if (this.ruchangForm.jinchangshijian) body.jinchangshijian = this.ruchangForm.jinchangshijian
-      this.loadingRuchang = true
-      this.$http.post('n3/tingcheli/m2/ruchang', body).then(res => {
+      const submit = () => {
+        if (!(this.ruchangForm.chepaihao || '').trim()) {
+          this.$message.error('请填写车牌号，或在个人中心维护车牌后重试')
+          return
+        }
+        const body = { yuyueId: yuyueId }
+        const chepaihao = (this.ruchangForm.chepaihao || '').trim()
+        const yonghuzhanghao = (this.ruchangForm.yonghuzhanghao || '').trim()
+        const xingming = (this.ruchangForm.xingming || '').trim()
+        const shouji = (this.ruchangForm.shouji || '').trim()
+        const cheliangtupian = (this.ruchangForm.cheliangtupian || '').trim()
+        if (chepaihao) body.chepaihao = chepaihao
+        if (yonghuzhanghao) body.yonghuzhanghao = yonghuzhanghao
+        if (xingming) body.xingming = xingming
+        if (shouji) body.shouji = shouji
+        if (cheliangtupian) body.cheliangtupian = cheliangtupian
+        if (this.ruchangForm.jinchangshijian) body.jinchangshijian = this.ruchangForm.jinchangshijian
+        this.loadingRuchang = true
+        this.$http.post('n3/tingcheli/m2/ruchang', body).then(res => {
         if (res.data && res.data.code === 0) {
           this.ruchangResult = res.data.data
           const r = res.data.data && res.data.data.ruchang
@@ -419,9 +431,12 @@ export default {
           if (handleAuthFail(this, res.data)) return
           this.$message.error((res.data && res.data.msg) || '入场失败')
         }
-      }).catch(err => this.onHttpFail(err, '入场请求失败')).finally(() => {
-        this.loadingRuchang = false
-      })
+        }).catch(err => this.onHttpFail(err, '入场请求失败')).finally(() => {
+          this.loadingRuchang = false
+        })
+      }
+      // 这是我cursor给父亲写的 — P1-15 提交前再拉一次 session，与 P1-14 后端补全配合
+      autofillM2RuchangForm(this, this.ruchangForm, true).then(() => submit())
     },
     getM5Context() {
       const r = this.ruchangResult && this.ruchangResult.ruchang
