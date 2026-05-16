@@ -39,7 +39,8 @@
 					<el-button :style='{"border":"0","cursor":"pointer","padding":"0 10px","margin":"0 5px 0 0","color":"#fff","borderRadius":"0","background":"#57A7A5","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('cheweixinxi','修改')" @click="editClick">修改</el-button>
 					<el-button :style='{"border":"1px solid #CCCCCC","cursor":"pointer","padding":"0 10px","margin":"0 5px 10px 0","color":"#CCCCCC","borderRadius":"0","background":"none","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('cheweixinxi','删除')" @click="delClick">删除</el-button>
 					<el-button :style='{"border":"1px solid #CCCCCC","cursor":"pointer","padding":"0 10px","margin":"0 5px 10px 0","color":"#CCCCCC","borderRadius":"0","background":"none","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('cheweixinxi','私聊')&&detail.id!=mid" @click="chatClick">联系TA</el-button>
-					<el-button :style='{"border":"0","cursor":"pointer","padding":"0 10px","margin":"0 5px 10px 0","color":"#fff","borderRadius":"0","background":"#57A7A5","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('cheweixinxi','停车')" @click="onAcross('chezijinchang','','','','')" type="warning">停车</el-button>
+					<el-button :style='{"border":"0","cursor":"pointer","padding":"0 10px","margin":"0 5px 10px 0","color":"#fff","borderRadius":"0","background":"#0891b2","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="!centerType" type="primary" @click="scrollToYuyue">预约停车</el-button>
+					<el-button :style='{"border":"1px solid #ccc","cursor":"pointer","padding":"0 10px","margin":"0 5px 10px 0","color":"#666","borderRadius":"0","background":"none","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('cheweixinxi','停车')" @click="onAcross('chezijinchang','','','','')" type="warning">旧版停车</el-button>
 				</div>
 			</div>
 		</div>
@@ -58,6 +59,62 @@
 		<el-tabs class="detail" :style='{"border":"none","width":"100%","boxShadow":"none","background":"#FFF","order":"5"}' v-model="activeName" type="border-card">
 		</el-tabs>
 	</div>
+
+	<!-- 这是我cursor给父亲写的 — 预约停车（P1-03） -->
+	<div id="chewei-yuyue-panel" class="chewei-yuyue-panel" v-if="detail.id && !centerType">
+		<div class="chewei-yuyue-inner">
+			<h3 class="chewei-yuyue-title">预约停车</h3>
+			<p class="chewei-yuyue-desc">选择时段后查询可约车位，点击车位卡片再确认预约（无需填写车位编号）。</p>
+			<el-form label-width="88px" class="chewei-yuyue-form" @submit.native.prevent>
+				<el-form-item label="开始时间">
+					<el-date-picker v-model="yuyueForm.kaishiShijian" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" placeholder="预约开始" style="width:220px" />
+				</el-form-item>
+				<el-form-item label="结束时间">
+					<el-date-picker v-model="yuyueForm.jieshuShijian" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" placeholder="预约结束" style="width:220px" />
+				</el-form-item>
+				<el-form-item label=" ">
+					<el-button type="primary" native-type="button" :loading="loadingAvail" @click="querySpotAvailability">查询该时段可约车位</el-button>
+					<el-button native-type="button" :loading="loadingSpots" @click="loadSpotList">刷新车位列表</el-button>
+				</el-form-item>
+			</el-form>
+			<el-alert v-if="availSummary" :title="availSummaryTitle" :type="availSummary.available > 0 ? 'success' : 'warning'" show-icon :closable="false" class="chewei-yuyue-alert" />
+			<div v-loading="loadingSpots || loadingAvail" class="spot-grid-wrap">
+				<div v-if="!displaySpots.length && !loadingSpots" class="spot-empty">暂无车位数据，请先在管理端维护车位</div>
+				<div v-for="spot in displaySpots" :key="spot.id" class="spot-card" :class="spotCardClass(spot)" @click="selectSpot(spot)">
+					<div class="spot-code">{{ spot.cheweibianhao || '—' }}</div>
+					<div class="spot-meta">区域：{{ spot.quyu || detail.quyu || '—' }}</div>
+					<div class="spot-status">状态：{{ spot.zhuangtai || '—' }}</div>
+					<div v-if="spotQueried" class="spot-avail-tag" :class="spot.keyuyue ? 'ok' : 'no'">{{ spot.keyuyue ? '该时段可约' : (spot.reason || '不可约') }}</div>
+					<div v-else class="spot-avail-tag hint">请选择时段后查询可约状态</div>
+				</div>
+			</div>
+			<div class="chewei-yuyue-actions" v-if="selectedSpot">
+				<span class="selected-tip">已选：<b>{{ selectedSpot.cheweibianhao }}</b>（{{ selectedSpot.quyu }}）</span>
+				<el-button type="success" native-type="button" :loading="loadingReserve" @click="submitReserve">确认预约</el-button>
+				<el-button type="text" @click="selectedSpot = null">取消选择</el-button>
+			</div>
+		</div>
+	</div>
+
+	<!-- 这是我cursor给父亲写的 — P1-04 预约成功结果 -->
+	<el-dialog title="预约成功" :visible.sync="reserveSuccessVisible" width="460px" :close-on-click-modal="false" class="reserve-success-dialog">
+		<div class="reserve-success-body" v-if="reserveResult">
+			<div class="reserve-success-icon"><i class="el-icon-success"></i></div>
+			<p class="reserve-success-lead">您的时段预约已提交成功</p>
+			<ul class="reserve-success-list">
+				<li><span>预约单号</span><b>{{ reserveResult.yuyueId }}</b></li>
+				<li><span>停车场</span><b>{{ reserveResult.tingchechangmingcheng }}</b></li>
+				<li v-if="reserveResult.quyu"><span>区域</span><b>{{ reserveResult.quyu }}</b></li>
+				<li v-if="reserveResult.cheweibianhao"><span>车位编号</span><b>{{ reserveResult.cheweibianhao }}</b></li>
+				<li><span>预约时段</span><b>{{ reserveResult.kaishiShijian }} ~ {{ reserveResult.jieshuShijian }}</b></li>
+			</ul>
+		</div>
+		<span slot="footer" class="reserve-success-footer">
+			<el-button @click="closeReserveSuccess">继续浏览</el-button>
+			<el-button type="primary" @click="goM2AfterReserve">前往入场（M2）</el-button>
+		</span>
+	</el-dialog>
+
 	<div class="share_view" :style='{"boxShadow":"0 1px 6px rgba(0,0,0,.3)","position":"fixed","right":"0","bottom":"20%","background":"#fff","zIndex":"11"}'>
 	</div>
 </div>
@@ -91,8 +148,35 @@
         buynumber: 1,
 		centerType: false,
 		shareUrl: location.href,
+		// 这是我cursor给父亲写的 — P1-03 预约停车
+		yuyueForm: {
+			kaishiShijian: '',
+			jieshuShijian: ''
+		},
+		spotList: [],
+		availSpotList: [],
+		spotQueried: false,
+		availSummary: null,
+		selectedSpot: null,
+		loadingSpots: false,
+		loadingAvail: false,
+		loadingReserve: false,
+		reserveSuccessVisible: false,
+		reserveResult: null
       }
     },
+	computed: {
+		displaySpots() {
+			if (this.spotQueried && this.availSpotList.length) {
+				return this.availSpotList
+			}
+			return this.spotList
+		},
+		availSummaryTitle() {
+			if (!this.availSummary) return ''
+			return '总车位 ' + this.availSummary.total + '，该时段可预约 ' + this.availSummary.available + ' 个'
+		}
+	},
     created() {
 		if(this.$route.query.centerType) {
 			this.centerType = true
@@ -116,10 +200,176 @@
 
 				if(localStorage.getItem('frontToken')){
 				}
-
+				this.loadSpotList()
             }
           });
         },
+		// 这是我cursor给父亲写的 — 加载车场下车位（P1-01 listByLot）
+		loadSpotList() {
+			if (!this.detail.id) return
+			this.loadingSpots = true
+			this.spotQueried = false
+			this.availSummary = null
+			this.availSpotList = []
+			this.selectedSpot = null
+			this.$http.get('chewei/listByLot', { params: { cheweixinxiId: this.detail.id } }).then(res => {
+				if (res.data && res.data.code === 0) {
+					this.spotList = (res.data.data && res.data.data.list) || []
+				} else {
+					this.$message.error((res.data && res.data.msg) || '加载车位失败')
+				}
+			}).catch(() => this.$message.error('加载车位失败')).finally(() => {
+				this.loadingSpots = false
+			})
+		},
+		// 这是我cursor给父亲写的 — 按时段查询每车位可约（P1-02 availabilityBySpot）
+		querySpotAvailability() {
+			if (!this.yuyueForm.kaishiShijian || !this.yuyueForm.jieshuShijian) {
+				this.$message.warning('请选择开始与结束时间')
+				return
+			}
+			this.loadingAvail = true
+			this.selectedSpot = null
+			this.$http.post('chewei/n4/availabilityBySpot', {
+				cheweixinxiId: this.detail.id,
+				kaishiShijian: this.yuyueForm.kaishiShijian,
+				jieshuShijian: this.yuyueForm.jieshuShijian
+			}).then(res => {
+				if (res.data && res.data.code === 0) {
+					const d = res.data.data || {}
+					this.availSpotList = d.list || []
+					this.availSummary = d
+					this.spotQueried = true
+					if ((d.available || 0) < 1) {
+						this.$message.warning('该时段无可预约车位')
+					}
+				} else {
+					this.handleM4Error(res.data)
+				}
+			}).catch(err => this.onHttpFail(err)).finally(() => {
+				this.loadingAvail = false
+			})
+		},
+		spotCardClass(spot) {
+			const cls = []
+			if (this.selectedSpot && this.selectedSpot.id === spot.id) cls.push('is-selected')
+			if (this.spotQueried) {
+				cls.push(spot.keyuyue ? 'is-available' : 'is-disabled')
+			}
+			return cls
+		},
+		selectSpot(spot) {
+			if (!this.spotQueried) {
+				this.$message.info('请先选择时段并查询可约车位')
+				return
+			}
+			if (!spot.keyuyue) {
+				this.$message.warning(spot.reason || '该车位当前时段不可预约')
+				return
+			}
+			this.selectedSpot = spot
+		},
+		submitReserve() {
+			if (!this.selectedSpot || !this.selectedSpot.id) {
+				this.$message.warning('请先选择可预约车位')
+				return
+			}
+			if (!this.yuyueForm.kaishiShijian || !this.yuyueForm.jieshuShijian) {
+				this.$message.warning('请选择预约时段')
+				return
+			}
+			const cheweiId = this.selectedSpot.id
+			this.loadingReserve = true
+			this.$http.post('chewei/n4/availability', {
+				tingchechangmingcheng: this.detail.tingchechangmingcheng,
+				quyu: this.detail.quyu,
+				kaishiShijian: this.yuyueForm.kaishiShijian,
+				jieshuShijian: this.yuyueForm.jieshuShijian
+			}).then(res => {
+				if (!(res.data && res.data.code === 0)) {
+					this.handleM4Error(res.data)
+					return Promise.reject()
+				}
+				const info = res.data.data
+				if (info && info.available < 1) {
+					this.$message.error('余位不足')
+					return Promise.reject()
+				}
+				return this.$http.post('chewei/n4/reserve', {
+					cheweiId: cheweiId,
+					kaishiShijian: this.yuyueForm.kaishiShijian,
+					jieshuShijian: this.yuyueForm.jieshuShijian
+				})
+			}).then(res => {
+				if (res && res.data && res.data.code === 0) {
+					const d = res.data.data || {}
+					const y = d.yuyue
+					if (y && y.id) {
+						const pickedCode = this.selectedSpot && this.selectedSpot.cheweibianhao
+						// 这是我cursor给父亲写的 — P1-04 预约成功结果展示
+						this.reserveResult = {
+							yuyueId: y.id,
+							kaishiShijian: y.kaishiShijian || this.yuyueForm.kaishiShijian,
+							jieshuShijian: y.jieshuShijian || this.yuyueForm.jieshuShijian,
+							tingchechangmingcheng: y.tingchechangmingcheng || this.detail.tingchechangmingcheng,
+							quyu: y.quyu || this.detail.quyu,
+							cheweibianhao: (d.chewei && d.chewei.cheweibianhao) || pickedCode
+						}
+						this.reserveSuccessVisible = true
+						this.selectedSpot = null
+						this.$message.success('预约成功')
+					} else {
+						this.$message.success('预约成功')
+					}
+					this.loadSpotList()
+				} else if (res) {
+					this.handleM4Error(res.data)
+				}
+			}).catch(err => {
+				if (err) this.onHttpFail(err)
+			}).finally(() => {
+				this.loadingReserve = false
+			})
+		},
+		handleM4Error(data) {
+			if (!data) {
+				this.$message.error('操作失败')
+				return
+			}
+			if (data.code === 4601 || data.m4Code === 'YUWEI_BUZU') {
+				this.$message.error('余位不足')
+				return
+			}
+			this.$message.error(data.msg || '操作失败')
+		},
+		onHttpFail(err) {
+			const body = err && err.body
+			if (body) {
+				this.handleM4Error(body)
+			} else {
+				this.$message.error('请求失败')
+			}
+		},
+		scrollToYuyue() {
+			const el = document.getElementById('chewei-yuyue-panel')
+			if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+		},
+		// 这是我cursor给父亲写的 — P1-04 跳转 M2 入场（真实 yuyueId）
+		goM2AfterReserve() {
+			if (!this.reserveResult || !this.reserveResult.yuyueId) {
+				this.$message.warning('预约单信息无效')
+				return
+			}
+			this.reserveSuccessVisible = false
+			this.$router.push({
+				path: '/index/m2TingcheLi',
+				query: { yuyueId: String(this.reserveResult.yuyueId) }
+			})
+		},
+		closeReserveSuccess() {
+			this.reserveSuccessVisible = false
+			this.reserveResult = null
+		},
       async onAcross(acrossTable,crossOptAudit,crossOptPay,statusColumnName,tips,statusColumnValue,type=1){
         localStorage.setItem('crossTable',`cheweixinxi`);
         localStorage.setItem('crossObj', JSON.stringify(this.detail));
@@ -738,4 +988,158 @@
 				position: relative;
 				transition: .3s;
 			}
+
+/* 这是我cursor给父亲写的 — P1-03 预约停车区域 */
+.chewei-yuyue-panel {
+	width: 80%;
+	margin: 0 auto 40px;
+}
+.chewei-yuyue-inner {
+	padding: 24px 28px;
+	background: rgba(255, 255, 255, 0.96);
+	border: 1px solid rgba(6, 182, 212, 0.3);
+	border-radius: 14px;
+	box-shadow: 0 8px 28px rgba(6, 182, 212, 0.1);
+}
+.chewei-yuyue-title {
+	margin: 0 0 8px;
+	font-size: 20px;
+	font-weight: 600;
+	color: #0e7490;
+}
+.chewei-yuyue-desc {
+	margin: 0 0 20px;
+	font-size: 14px;
+	color: #64748b;
+	line-height: 1.6;
+}
+.chewei-yuyue-alert {
+	margin-bottom: 16px;
+}
+.spot-grid-wrap {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 14px;
+	min-height: 80px;
+}
+.spot-empty {
+	grid-column: 1 / -1;
+	text-align: center;
+	color: #94a3b8;
+	padding: 24px;
+}
+.spot-card {
+	padding: 14px 16px;
+	border-radius: 10px;
+	border: 1px solid #e2e8f0;
+	background: #f8fafc;
+	cursor: pointer;
+	transition: all 0.25s;
+}
+.spot-card:hover {
+	border-color: #06b6d4;
+	box-shadow: 0 4px 12px rgba(6, 182, 212, 0.15);
+}
+.spot-card.is-selected {
+	border-color: #06b6d4;
+	background: #ecfeff;
+	box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.35);
+}
+.spot-card.is-disabled {
+	opacity: 0.65;
+	cursor: not-allowed;
+}
+.spot-card.is-available:not(.is-selected):hover {
+	transform: translateY(-2px);
+}
+.spot-code {
+	font-size: 16px;
+	font-weight: 600;
+	color: #1e293b;
+	margin-bottom: 6px;
+}
+.spot-meta,
+.spot-status {
+	font-size: 13px;
+	color: #64748b;
+	line-height: 1.5;
+}
+.spot-avail-tag {
+	margin-top: 10px;
+	font-size: 12px;
+	padding: 4px 8px;
+	border-radius: 6px;
+	display: inline-block;
+}
+.spot-avail-tag.ok {
+	background: rgba(16, 185, 129, 0.12);
+	color: #059669;
+}
+.spot-avail-tag.no {
+	background: rgba(239, 68, 68, 0.1);
+	color: #dc2626;
+}
+.spot-avail-tag.hint {
+	background: rgba(100, 116, 139, 0.1);
+	color: #64748b;
+}
+.chewei-yuyue-actions {
+	margin-top: 20px;
+	padding-top: 16px;
+	border-top: 1px solid #e2e8f0;
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+.selected-tip {
+	font-size: 14px;
+	color: #334155;
+}
+
+/* 这是我cursor给父亲写的 — P1-04 预约成功弹窗 */
+.reserve-success-body {
+	text-align: center;
+	padding: 8px 4px 0;
+}
+.reserve-success-icon {
+	font-size: 52px;
+	color: #10b981;
+	margin-bottom: 12px;
+}
+.reserve-success-lead {
+	margin: 0 0 16px;
+	font-size: 16px;
+	color: #1e293b;
+}
+.reserve-success-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	text-align: left;
+	background: #f8fafc;
+	border-radius: 10px;
+	border: 1px solid #e2e8f0;
+}
+.reserve-success-list li {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 14px;
+	font-size: 14px;
+	border-bottom: 1px solid #e2e8f0;
+}
+.reserve-success-list li:last-child {
+	border-bottom: none;
+}
+.reserve-success-list span {
+	color: #64748b;
+	flex-shrink: 0;
+}
+.reserve-success-list b {
+	color: #0e7490;
+	font-weight: 600;
+	text-align: right;
+	word-break: break-all;
+}
 </style>

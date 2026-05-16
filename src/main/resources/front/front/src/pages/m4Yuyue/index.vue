@@ -23,9 +23,22 @@
       </el-form-item>
     </el-form>
     <el-alert v-if="availInfo" :title="availTitle" :type="availInfo.available > 0 ? 'success' : 'warning'" show-icon :closable="false" />
-    <p :style='{"marginTop":"12px"}'>
-      <el-button type="text" @click="$router.push('/index/m2TingcheLi')">预约成功后去 M2 闭环</el-button>
-    </p>
+    <!-- 这是我cursor给父亲写的 — P1-04 预约成功结果 -->
+    <el-dialog title="预约成功" :visible.sync="reserveSuccessVisible" width="460px" :close-on-click-modal="false">
+      <div class="reserve-success-body" v-if="reserveResult">
+        <p :style='{"textAlign":"center","color":"#10b981","fontSize":"40px","margin":"0 0 12px"}'><i class="el-icon-success"></i></p>
+        <ul :style='{"listStyle":"none","padding":"12px 16px","margin":0,"background":"#f8fafc","borderRadius":"8px","fontSize":"14px","lineHeight":"2"}'>
+          <li>预约单号：<b>{{ reserveResult.yuyueId }}</b></li>
+          <li>停车场：<b>{{ reserveResult.tingchechangmingcheng }}</b></li>
+          <li v-if="reserveResult.quyu">区域：<b>{{ reserveResult.quyu }}</b></li>
+          <li>预约时段：<b>{{ reserveResult.kaishiShijian }} ~ {{ reserveResult.jieshuShijian }}</b></li>
+        </ul>
+      </div>
+      <span slot="footer">
+        <el-button @click="reserveSuccessVisible = false">关闭</el-button>
+        <el-button type="primary" @click="goM2AfterReserve">前往入场（M2）</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -42,7 +55,9 @@ export default {
       cheweiHint: '',
       availInfo: null,
       loadingAvail: false,
-      loadingReserve: false
+      loadingReserve: false,
+      reserveSuccessVisible: false,
+      reserveResult: null
     }
   },
   computed: {
@@ -121,10 +136,23 @@ export default {
         jieshuShijian: this.form.jieshuShijian
       }).then(res => {
         if (res.data && res.data.code === 0) {
-          const y = res.data.data && res.data.data.yuyue
-          this.$message.success('预约成功' + (y && y.id ? '，预约单 id：' + y.id : ''))
+          const d = res.data.data || {}
+          const y = d.yuyue
+          const cw = d.chewei
           if (y && y.id) {
-            this.$router.push({ path: '/index/m2TingcheLi', query: { yuyueId: y.id } })
+            // 这是我cursor给父亲写的 — P1-04
+            this.reserveResult = {
+              yuyueId: y.id,
+              kaishiShijian: y.kaishiShijian || this.form.kaishiShijian,
+              jieshuShijian: y.jieshuShijian || this.form.jieshuShijian,
+              tingchechangmingcheng: (y.tingchechangmingcheng || (cw && cw.tingchechangmingcheng) || ''),
+              quyu: y.quyu || (cw && cw.quyu) || '',
+              cheweibianhao: cw && cw.cheweibianhao
+            }
+            this.reserveSuccessVisible = true
+            this.$message.success('预约成功')
+          } else {
+            this.$message.success('预约成功')
           }
         } else {
           this.handleM4Error(res.data)
@@ -153,6 +181,14 @@ export default {
       } else {
         this.$message.error('请求失败')
       }
+    },
+    goM2AfterReserve() {
+      if (!this.reserveResult || !this.reserveResult.yuyueId) return
+      this.reserveSuccessVisible = false
+      this.$router.push({
+        path: '/index/m2TingcheLi',
+        query: { yuyueId: String(this.reserveResult.yuyueId) }
+      })
     }
   }
 }
