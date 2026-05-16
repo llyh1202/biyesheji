@@ -1,10 +1,22 @@
 <template>
-  <router-view></router-view>
+  <!-- 这是我cursor给父亲写的 — 用户端科技感全局壳层 -->
+  <div class="tech-app-root">
+    <TechFxBackground />
+    <div class="tech-app-content">
+      <router-view></router-view>
+    </div>
+  </div>
 </template>
 
 <script>
+import TechFxBackground from '@/components/TechFxBackground.vue'
+
 export default {
-  name: 'App'
+  name: 'App',
+  components: { TechFxBackground },
+  mounted() {
+    document.documentElement.classList.add('tech-front-enabled')
+  }
 }
 </script>
 

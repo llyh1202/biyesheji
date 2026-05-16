@@ -1,5 +1,5 @@
 <template>
-  <div :style='{"width":"80%","padding":"20px","margin":"10px auto","position":"relative","background":"#fff","zIndex":1}'>
+  <div class="tech-feature-wrap tech-page-panel" :style='{"width":"80%","padding":"20px","margin":"10px auto","position":"relative","background":"transparent","zIndex":1}'>
     <h2 :style='{"margin":"0 0 8px","fontSize":"20px"}'>停车业务闭环（M2）</h2>
     <p :style='{"color":"#666","margin":"0 0 16px","lineHeight":"1.6"}'>
       预约单 id 填数据库主键<strong>数字</strong>（如 <code>1</code>），不要填表名 <code>chewei_yuyue.1</code>。流程：读预约 → 入场 → 离场生成缴费单 → 关单。

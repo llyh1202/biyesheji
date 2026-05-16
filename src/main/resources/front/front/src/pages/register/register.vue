@@ -1,7 +1,8 @@
 ﻿<template>
-	<div>
+	<!-- 这是我cursor给父亲写的 — 科技感注册页样式壳 -->
+	<div class="tech-auth-page">
 
-	<div class="container" :style='{"minHeight":"100vh","alignItems":"center","background":"url(http://codegen.caihongy.cn/20231121/4577495c378443ad95aab1ad5fe253e2.png)","display":"flex","width":"100%","backgroundSize":"100% 100%","backgroundPosition":"center center","backgroundRepeat":"no-repeat","justifyContent":"flex-end"}'>
+	<div class="container" :style='{"minHeight":"100vh","alignItems":"center","background":"transparent","display":"flex","width":"100%","backgroundSize":"100% 100%","backgroundPosition":"center center","backgroundRepeat":"no-repeat","justifyContent":"center"}'>
 		<el-form class='rgs-form' v-if="pageFlag=='register'" :style='{"padding":"20px","boxShadow":"0px 4px 10px 0px rgba(0,0,0,0.3)","margin":"0 100px","borderRadius":"0","background":"#fff","width":"40%","height":"auto"}' ref="registerForm" :model="registerForm" :rules="rules">
 			<div v-if="false" :style='{"margin":"0 0 10px 0","color":"rgba(64, 158, 255, 1)","textAlign":"center","width":"100%","lineHeight":"44px","fontSize":"20px","textShadow":"4px 4px 2px rgba(64, 158, 255, .5)"}'>USER / REGISTER</div>
 			<div v-if="true" :style='{"margin":"0 auto 20px","color":"#000","textAlign":"center","width":"100%","lineHeight":"44px","fontSize":"22px","textShadow":"none","fontWeight":"500"}'>基于spring Boot+vue的停车场管理系统注册</p></div>

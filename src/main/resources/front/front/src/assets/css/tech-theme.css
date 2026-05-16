@@ -1,0 +1,798 @@
+/* 这是我cursor给父亲写的 — 用户端全局浅色科技主题（仅样式，!important 覆盖内联装饰） */
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+:root {
+	--tech-cyan: #0891b2;
+	--tech-cyan-bright: #06b6d4;
+	--tech-cyan-dim: rgba(6, 182, 212, 0.45);
+	--tech-purple: #7c3aed;
+	--tech-bg-glass: rgba(255, 255, 255, 0.92);
+	--tech-bg-card: #ffffff;
+	--tech-border: rgba(6, 182, 212, 0.35);
+	--tech-glow: 0 8px 32px rgba(6, 182, 212, 0.12), 0 4px 16px rgba(99, 102, 241, 0.08);
+	--tech-text: #1e293b;
+	--tech-muted: #64748b;
+	--tech-primary: #0e7490;
+}
+
+html,
+body {
+	font-family: 'Rajdhani', 'Microsoft YaHei', sans-serif !important;
+	background: #f0f9ff !important;
+	color: var(--tech-text) !important;
+}
+
+.tech-app-root {
+	min-height: 100vh;
+	position: relative;
+}
+
+.tech-app-content {
+	position: relative;
+	z-index: 1;
+	min-height: 100vh;
+}
+
+/* ========== 主布局 index ========== */
+.main-containers .body-containers {
+	background: transparent !important;
+	background-image: none !important;
+	padding-top: 150px !important;
+}
+
+.main-containers .top-container {
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.88)) !important;
+	border: 1px solid var(--tech-border) !important;
+	border-width: 0 0 1px !important;
+	box-shadow: 0 4px 24px rgba(6, 182, 212, 0.1), var(--tech-glow) !important;
+	backdrop-filter: blur(16px) !important;
+	height: 120px !important;
+	padding: 0 8% !important;
+}
+
+.main-containers .top-container span {
+	color: var(--tech-primary) !important;
+	font-family: 'Orbitron', sans-serif !important;
+	font-size: 22px !important;
+	font-weight: 700 !important;
+	text-shadow: none !important;
+	letter-spacing: 1px !important;
+	cursor: pointer !important;
+	transition: transform 0.3s, color 0.3s !important;
+}
+
+.main-containers .top-container span:hover {
+	transform: scale(1.02) !important;
+	color: var(--tech-cyan-bright) !important;
+}
+
+.main-containers .top-container .el-button,
+.main-containers .top-container div[style] {
+	color: var(--tech-text) !important;
+}
+
+.main-containers .menu-preview {
+	background: var(--tech-bg-glass) !important;
+	border: 1px solid var(--tech-border) !important;
+	clip-path: polygon(24px 0, 0 100%, calc(100% - 24px) 100%, 100% 0) !important;
+	box-shadow: var(--tech-glow) !important;
+	backdrop-filter: blur(12px) !important;
+	width: 85% !important;
+}
+
+.menu-preview .el-menu-horizontal-demo .el-menu-item,
+.menu-preview .el-menu-horizontal-demo .el-menu-item span {
+	color: var(--tech-muted) !important;
+	font-size: 16px !important;
+	font-weight: 600 !important;
+	transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.menu-preview .el-menu-horizontal-demo .el-menu-item:hover,
+.menu-preview .el-menu-horizontal-demo .el-menu-item.is-active,
+.menu-preview .el-menu-horizontal-demo .el-menu-item.home:hover,
+.menu-preview .el-menu-horizontal-demo .el-menu-item.home.is-active,
+.menu-preview .el-menu-horizontal-demo .el-menu-item.item:hover,
+.menu-preview .el-menu-horizontal-demo .el-menu-item.item.is-active {
+	background: linear-gradient(90deg, rgba(6, 182, 212, 0.15), rgba(124, 58, 237, 0.1)) !important;
+	color: var(--tech-primary) !important;
+	clip-path: polygon(20px 0, 0 100%, calc(100% - 20px) 100%, 100% 0) !important;
+	text-shadow: none !important;
+}
+
+.banner-preview {
+	padding: 0 8% !important;
+}
+
+.banner-preview .el-carousel {
+	border-radius: 12px !important;
+	overflow: hidden !important;
+	border: 1px solid var(--tech-border) !important;
+	box-shadow: var(--tech-glow) !important;
+}
+
+.banner-preview .el-carousel__arrow {
+	background: rgba(255, 255, 255, 0.9) !important;
+	border: 1px solid var(--tech-cyan) !important;
+	color: var(--tech-primary) !important;
+}
+
+.banner-preview .el-carousel__indicators li,
+.banner-preview .el-carousel__indicators li.is-active {
+	background: var(--tech-cyan-bright) !important;
+	box-shadow: 0 0 6px rgba(6, 182, 212, 0.4) !important;
+}
+
+.bottom-preview > div {
+	background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.95)) !important;
+	border-top: 1px solid var(--tech-border) !important;
+	color: var(--tech-muted) !important;
+}
+
+/* ========== 列表 / 表单通用 ========== */
+.breadcrumb-preview,
+.list-preview,
+.center-preview,
+.detail-preview,
+.add-preview,
+.tech-page-panel {
+	background: var(--tech-bg-glass) !important;
+	border: 1px solid var(--tech-border) !important;
+	border-radius: 12px !important;
+	box-shadow: var(--tech-glow) !important;
+	backdrop-filter: blur(14px) !important;
+}
+
+.breadcrumb-preview {
+	width: 85% !important;
+	margin: 20px auto !important;
+	padding: 16px 24px !important;
+}
+
+.breadcrumb-preview .el-breadcrumb,
+.breadcrumb-preview .el-breadcrumb__inner a,
+.breadcrumb-preview .el-breadcrumb__item {
+	color: var(--tech-muted) !important;
+	font-size: 15px !important;
+}
+
+.breadcrumb-preview .el-breadcrumb__item:last-child .el-breadcrumb__inner {
+	color: var(--tech-primary) !important;
+}
+
+.list-preview {
+	width: 90% !important;
+	margin: 16px auto 40px !important;
+	padding: 24px !important;
+}
+
+.list-preview .lable {
+	color: var(--tech-primary) !important;
+	font-weight: 600 !important;
+}
+
+.list-preview .list4 .item,
+.list-preview .list .item {
+	background: var(--tech-bg-card) !important;
+	border: 1px solid rgba(6, 182, 212, 0.2) !important;
+	border-radius: 12px !important;
+	box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06) !important;
+	transition: transform 0.35s, box-shadow 0.35s, border-color 0.35s !important;
+	overflow: hidden !important;
+}
+
+.list-preview .list4 .item:hover,
+.list-preview .list .item:hover {
+	transform: translateY(-6px) scale(1.01) !important;
+	border-color: var(--tech-cyan-bright) !important;
+	box-shadow: 0 12px 32px rgba(6, 182, 212, 0.18) !important;
+}
+
+.list-preview .list4 .item .content,
+.list-preview .list4 .item .content div,
+.list-preview .list4 .item .name,
+.list-preview .list4 .item .info span,
+.list-preview .list4 .item .info .icon,
+.list-preview .list4 .item .price,
+.list-preview .list4 .item .price span {
+	color: var(--tech-text) !important;
+}
+
+.list-preview .list4 .item .price {
+	background: linear-gradient(90deg, rgba(6, 182, 212, 0.2), rgba(124, 58, 237, 0.15)) !important;
+	border: 1px solid var(--tech-cyan) !important;
+	border-radius: 6px !important;
+	color: var(--tech-primary) !important;
+}
+
+.select2 .label {
+	color: var(--tech-primary) !important;
+}
+
+.select2 .item {
+	color: var(--tech-muted) !important;
+	border: 1px solid transparent !important;
+	border-radius: 20px !important;
+	padding: 4px 14px !important;
+	margin: 2px 6px !important;
+	transition: all 0.25s !important;
+	cursor: pointer !important;
+}
+
+.select2 .item.active,
+.select2 .item:hover {
+	color: #fff !important;
+	background: linear-gradient(135deg, #06b6d4, #6366f1) !important;
+	box-shadow: 0 4px 12px rgba(6, 182, 212, 0.35) !important;
+}
+
+/* ========== Element UI ========== */
+.el-button--primary,
+.list-preview .el-button--primary,
+.list-form-pv .el-button--primary {
+	background: linear-gradient(135deg, #06b6d4, #6366f1) !important;
+	border: none !important;
+	color: #fff !important;
+	font-weight: 700 !important;
+	letter-spacing: 0.5px !important;
+	box-shadow: 0 4px 16px rgba(6, 182, 212, 0.35) !important;
+	transition: transform 0.2s, box-shadow 0.2s !important;
+}
+
+.el-button--primary:hover,
+.list-preview .el-button--primary:hover {
+	transform: translateY(-2px) scale(1.03) !important;
+	box-shadow: 0 6px 20px rgba(6, 182, 212, 0.45) !important;
+}
+
+.el-input__inner,
+.el-textarea__inner,
+.el-select .el-input__inner {
+	background: #fff !important;
+	border: 1px solid rgba(6, 182, 212, 0.35) !important;
+	color: var(--tech-text) !important;
+	border-radius: 8px !important;
+	transition: border-color 0.3s, box-shadow 0.3s !important;
+}
+
+.el-input__inner:focus,
+.el-textarea__inner:focus {
+	border-color: var(--tech-cyan-bright) !important;
+	box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15) !important;
+}
+
+.el-table {
+	background: transparent !important;
+	color: var(--tech-text) !important;
+}
+
+.el-table th,
+.el-table tr {
+	background: #f8fafc !important;
+	color: var(--tech-text) !important;
+}
+
+.el-table--striped .el-table__body tr.el-table__row--striped td {
+	background: rgba(6, 182, 212, 0.04) !important;
+}
+
+.el-table td,
+.el-table th.is-leaf {
+	border-color: rgba(6, 182, 212, 0.12) !important;
+}
+
+.el-table--enable-row-hover .el-table__body tr:hover > td {
+	background: rgba(6, 182, 212, 0.08) !important;
+}
+
+.el-pagination {
+	color: var(--tech-muted) !important;
+}
+
+.el-pagination.is-background .el-pager li:not(.disabled).active {
+	background: linear-gradient(135deg, #06b6d4, #6366f1) !important;
+	color: #fff !important;
+}
+
+.el-pagination.is-background .el-pager li,
+.el-pagination.is-background .btn-prev,
+.el-pagination.is-background .btn-next {
+	background: #fff !important;
+	border: 1px solid rgba(6, 182, 212, 0.25) !important;
+	color: var(--tech-text) !important;
+}
+
+.el-dialog {
+	background: #fff !important;
+	border: 1px solid var(--tech-border) !important;
+	box-shadow: var(--tech-glow) !important;
+	border-radius: 12px !important;
+}
+
+.el-dialog__title,
+.el-dialog__body {
+	color: var(--tech-text) !important;
+}
+
+.el-message-box {
+	background: #fff !important;
+	border: 1px solid var(--tech-border) !important;
+}
+
+.el-tabs__item {
+	color: var(--tech-muted) !important;
+	font-size: 16px !important;
+}
+
+.el-tabs__item.is-active {
+	color: var(--tech-primary) !important;
+}
+
+.el-tabs__active-bar {
+	background: var(--tech-cyan-bright) !important;
+	box-shadow: none !important;
+}
+
+.el-card {
+	background: var(--tech-bg-card) !important;
+	border: 1px solid var(--tech-border) !important;
+	color: var(--tech-text) !important;
+}
+
+.el-form-item__label {
+	color: var(--tech-primary) !important;
+}
+
+/* ========== 登录 / 注册 ========== */
+.tech-auth-page .container {
+	background: transparent !important;
+	justify-content: center !important;
+}
+
+.tech-auth-page .el-form,
+.tech-auth-page .rgs-form {
+	background: var(--tech-bg-glass) !important;
+	border: 1px solid var(--tech-border) !important;
+	border-radius: 16px !important;
+	box-shadow: var(--tech-glow) !important;
+	backdrop-filter: blur(20px) !important;
+	width: 440px !important;
+	max-width: 92vw !important;
+	padding: 48px 32px !important;
+	animation: techCardIn 0.8s ease-out !important;
+}
+
+.tech-auth-page .el-form > div[style*='fontSize'],
+.tech-auth-page .rgs-form > div[style*='fontSize'] {
+	color: var(--tech-primary) !important;
+	font-family: 'Orbitron', sans-serif !important;
+	text-shadow: none !important;
+}
+
+.tech-auth-page input {
+	background: #fff !important;
+	border: 1px solid rgba(6, 182, 212, 0.4) !important;
+	border-width: 0 0 2px 0 !important;
+	color: var(--tech-text) !important;
+	border-radius: 8px !important;
+}
+
+.tech-auth-page .el-button--primary,
+.tech-auth-page .el-button[style*='background'] {
+	background: linear-gradient(135deg, #06b6d4, #7c3aed) !important;
+	color: #fff !important;
+	border: none !important;
+	font-weight: 700 !important;
+	height: 48px !important;
+	box-shadow: 0 4px 16px rgba(6, 182, 212, 0.35) !important;
+}
+
+.tech-auth-page a,
+.tech-auth-page .router-link-active {
+	color: var(--tech-primary) !important;
+}
+
+/* ========== 个人中心 ========== */
+.center-preview .title {
+	background: linear-gradient(90deg, rgba(6, 182, 212, 0.12), transparent) !important;
+	border: 1px solid var(--tech-border) !important;
+	color: var(--tech-primary) !important;
+	font-family: 'Orbitron', sans-serif !important;
+}
+
+.center-preview .info {
+	background: var(--tech-bg-glass) !important;
+	border: 1px solid var(--tech-border) !important;
+	border-radius: 12px !important;
+}
+
+.center-preview .info div[style*='fontSize'] {
+	color: var(--tech-text) !important;
+}
+
+.center-preview .icon {
+	background: linear-gradient(135deg, #06b6d4, #6366f1) !important;
+	box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3) !important;
+}
+
+.center-preview .el-tabs {
+	background: transparent !important;
+}
+
+.center-preview-pv {
+	background: var(--tech-bg-glass) !important;
+	padding: 24px !important;
+	border-radius: 12px !important;
+	border: 1px solid rgba(6, 182, 212, 0.2) !important;
+}
+
+/* ========== 业务扩展页 M/N ========== */
+.m4-yuyue-page,
+.m5-jifei-page,
+.m2-page,
+.n6-page,
+.n7-page,
+.tech-feature-wrap {
+	padding: 24px 8% 48px !important;
+}
+
+.tech-feature-wrap h2 {
+	color: var(--tech-primary) !important;
+	font-family: 'Orbitron', sans-serif !important;
+	text-shadow: none !important;
+}
+
+.tech-feature-wrap p,
+.tech-feature-wrap span[style*='color'] {
+	color: var(--tech-muted) !important;
+}
+
+.tech-feature-wrap .el-card {
+	background: var(--tech-bg-card) !important;
+	border: 1px solid var(--tech-border) !important;
+}
+
+/* ========== 详情 / 新增 / 支付 ========== */
+.detail-preview,
+.add-preview {
+	background: var(--tech-bg-glass) !important;
+	border: 1px solid var(--tech-border) !important;
+	border-radius: 12px !important;
+	padding: 24px !important;
+	margin: 20px auto !important;
+	width: 90% !important;
+	box-shadow: var(--tech-glow) !important;
+}
+
+.detail-preview .attr .el-form-item__content,
+.add-preview .attr .el-form-item__content {
+	color: var(--tech-text) !important;
+}
+
+.container.tech-page-panel .el-alert {
+	background: rgba(6, 182, 212, 0.08) !important;
+	border: 1px solid var(--tech-border) !important;
+	color: var(--tech-primary) !important;
+}
+
+.pay-type-content {
+	background: #f8fafc !important;
+	border-radius: 12px !important;
+	padding: 16px !important;
+	border: 1px solid rgba(6, 182, 212, 0.2) !important;
+}
+
+/* ========== 加载 ========== */
+.el-loading-spinner .el-loading-text {
+	color: var(--tech-primary) !important;
+}
+
+.el-loading-spinner .path {
+	stroke: var(--tech-cyan-bright) !important;
+}
+
+@keyframes techCardIn {
+	from {
+		opacity: 0;
+		transform: translateY(24px) scale(0.96);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+.tech-app-content > * {
+	animation: techPageIn 0.45s ease-out;
+}
+
+/* ========== 系统首页 ========== */
+.tech-home-hero .tech-hero-card {
+	width: 100%;
+	padding: 48px 32px;
+	text-align: center;
+	background: var(--tech-bg-glass);
+	border: 1px solid var(--tech-border);
+	border-radius: 16px;
+	box-shadow: var(--tech-glow);
+	backdrop-filter: blur(16px);
+}
+
+.tech-hero-title {
+	font-family: 'Orbitron', sans-serif;
+	font-size: 38px;
+	letter-spacing: 4px;
+	margin: 0 0 12px;
+	background: linear-gradient(90deg, #0891b2, #7c3aed, #0891b2);
+	background-size: 200% auto;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation: techShine 4s linear infinite;
+}
+
+.tech-hero-sub {
+	color: var(--tech-muted);
+	font-size: 18px;
+	margin: 0 0 32px;
+	line-height: 1.6;
+}
+
+.tech-hero-stats {
+	display: flex;
+	justify-content: center;
+	gap: 24px;
+	flex-wrap: wrap;
+}
+
+.tech-stat-item {
+	min-width: 120px;
+	padding: 16px 20px;
+	border: 1px solid rgba(6, 182, 212, 0.25);
+	border-radius: 10px;
+	background: #fff;
+	transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.tech-stat-item:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
+}
+
+.tech-stat-item .num {
+	display: block;
+	font-family: 'Orbitron', sans-serif;
+	font-size: 28px;
+	color: var(--tech-primary);
+}
+
+.tech-stat-item .lbl {
+	display: block;
+	font-size: 14px;
+	color: var(--tech-muted);
+	margin-top: 6px;
+}
+
+.tech-home-section {
+	margin-top: 28px;
+	padding: 28px 24px;
+	background: var(--tech-bg-glass);
+	border: 1px solid var(--tech-border);
+	border-radius: 14px;
+	box-shadow: var(--tech-glow);
+}
+
+.tech-home-section-title {
+	font-size: 20px;
+	font-weight: 700;
+	color: var(--tech-primary);
+	margin: 0 0 20px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.tech-home-section-title .more-link {
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--tech-cyan-bright);
+	cursor: pointer;
+}
+
+.tech-home-section-title .more-link:hover {
+	text-decoration: underline;
+}
+
+.tech-quick-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: 16px;
+}
+
+.tech-quick-card {
+	cursor: pointer;
+	padding: 20px 12px;
+	text-align: center;
+	background: #fff;
+	border: 1px solid rgba(6, 182, 212, 0.2);
+	border-radius: 12px;
+	transition: all 0.3s;
+}
+
+.tech-quick-card:hover {
+	transform: translateY(-4px);
+	border-color: var(--tech-cyan-bright);
+	box-shadow: 0 8px 20px rgba(6, 182, 212, 0.15);
+}
+
+.tech-quick-card i {
+	font-size: 28px;
+	color: var(--tech-cyan-bright);
+	display: block;
+	margin-bottom: 10px;
+}
+
+.tech-quick-card span {
+	font-size: 14px;
+	color: var(--tech-text);
+	font-weight: 600;
+}
+
+.tech-process-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	justify-content: space-between;
+}
+
+.tech-process-step {
+	flex: 1;
+	min-width: 160px;
+	padding: 16px;
+	background: #fff;
+	border-radius: 10px;
+	border: 1px dashed rgba(6, 182, 212, 0.35);
+	position: relative;
+}
+
+.tech-process-step .step-num {
+	width: 28px;
+	height: 28px;
+	line-height: 28px;
+	text-align: center;
+	border-radius: 50%;
+	background: linear-gradient(135deg, #06b6d4, #6366f1);
+	color: #fff;
+	font-weight: 700;
+	font-size: 14px;
+	margin-bottom: 10px;
+}
+
+.tech-process-step h4 {
+	margin: 0 0 6px;
+	font-size: 16px;
+	color: var(--tech-text);
+}
+
+.tech-process-step p {
+	margin: 0;
+	font-size: 13px;
+	color: var(--tech-muted);
+	line-height: 1.5;
+}
+
+.tech-cap-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 16px;
+}
+
+.tech-cap-card {
+	padding: 18px;
+	background: #fff;
+	border-radius: 12px;
+	border-left: 4px solid var(--tech-cyan-bright);
+	box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+}
+
+.tech-cap-card h4 {
+	margin: 0 0 8px;
+	color: var(--tech-primary);
+	font-size: 16px;
+}
+
+.tech-cap-card p {
+	margin: 0 0 12px;
+	font-size: 13px;
+	color: var(--tech-muted);
+	line-height: 1.55;
+}
+
+.tech-cap-card .el-button {
+	padding: 0;
+}
+
+.tech-featured-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 16px;
+}
+
+.tech-featured-item {
+	cursor: pointer;
+	background: #fff;
+	border-radius: 12px;
+	overflow: hidden;
+	border: 1px solid rgba(6, 182, 212, 0.2);
+	transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.tech-featured-item:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 10px 28px rgba(6, 182, 212, 0.15);
+}
+
+.tech-featured-item .thumb {
+	width: 100%;
+	height: 140px;
+	object-fit: cover;
+	background: #e2e8f0;
+}
+
+.tech-featured-item .info {
+	padding: 12px 14px;
+}
+
+.tech-featured-item .name {
+	font-weight: 600;
+	color: var(--tech-text);
+	font-size: 15px;
+	margin-bottom: 6px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tech-featured-item .meta {
+	font-size: 12px;
+	color: var(--tech-muted);
+}
+
+.tech-tips-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.tech-tips-list li {
+	padding: 12px 0;
+	border-bottom: 1px solid rgba(6, 182, 212, 0.12);
+	font-size: 14px;
+	color: var(--tech-text);
+	line-height: 1.6;
+}
+
+.tech-tips-list li:last-child {
+	border-bottom: none;
+}
+
+.tech-tips-list li i {
+	color: var(--tech-cyan-bright);
+	margin-right: 8px;
+}
+
+@keyframes techShine {
+	0% { background-position: 0% center; }
+	100% { background-position: 200% center; }
+}
+
+@keyframes techPageIn {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}

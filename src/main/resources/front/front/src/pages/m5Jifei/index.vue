@@ -1,6 +1,6 @@
 <template>
   <!-- 这是我cursor给父亲写的 — M5 费用试算 -->
-  <div :style='{"width":"80%","padding":"20px","margin":"10px auto","background":"#fff"}'>
+  <div class="tech-feature-wrap tech-page-panel" :style='{"width":"80%","padding":"20px","margin":"10px auto","background":"transparent"}'>
     <h2 :style='{"margin":"0 0 8px","fontSize":"20px"}'>停车费用试算（M5）</h2>
     <p :style='{"color":"#666","marginBottom":"12px","lineHeight":"1.6"}'>与离场结算同一套规则：N6 宽限期 + 首小时/阶梯/封顶。</p>
     <el-button size="small" @click="fillLot('停车场名称1','A区',1)">示例：停车场1（首小时+封顶）</el-button>

@@ -1,5 +1,6 @@
 <template>
-  <div class="container"  :style='{"margin":"0 200px 20px"}' style="padding: 150px 0;">
+  <!-- 这是我cursor给父亲写的 — 科技感支付页 -->
+  <div class="container tech-page-panel" :style='{"margin":"0 auto","maxWidth":"720px","width":"90%"}' style="padding: 40px 24px;">
     <el-alert title="确认支付前请先核对订单信息" type="success" :closable="false"></el-alert>
     <!-- <div class="top-content">
       <span>收款人</span>

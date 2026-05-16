@@ -1,13 +1,73 @@
 ﻿<template>
-<div class="home-preview" :style='{"width":"100%","margin":"0 auto","flexDirection":"column","background":"#fff","display":"flex"}'>
+<!-- 这是我cursor给父亲写的 — 浅色主题系统首页（展示与导航，业务逻辑不变） -->
+<div class="home-preview tech-home-hero" :style='{"width":"90%","margin":"0 auto","flexDirection":"column","background":"transparent","display":"flex","padding":"24px 0 48px"}'>
+	<div class="tech-hero-card animate__animated animate__fadeInDown">
+		<h1 class="tech-hero-title">智慧停车场</h1>
+		<p class="tech-hero-sub">车位查询 · 时段预约 · 停车闭环 · 费用试算 · 超时补缴，一站式车主服务</p>
+		<div class="tech-hero-stats">
+			<div class="tech-stat-item"><span class="num">{{ parkTotal > 0 ? parkTotal : '—' }}</span><span class="lbl">可预约车位</span></div>
+			<div class="tech-stat-item"><span class="num">24/7</span><span class="lbl">全天候服务</span></div>
+			<div class="tech-stat-item"><span class="num">在线</span><span class="lbl">缴费与反馈</span></div>
+		</div>
+	</div>
 
+	<section class="tech-home-section animate__animated animate__fadeInUp">
+		<h3 class="tech-home-section-title">功能快捷入口</h3>
+		<div class="tech-quick-grid">
+			<div v-for="(menu, idx) in menuList" :key="idx" class="tech-quick-card" @click="goMenu(menu.url)">
+				<i :class="navIcon(idx)"></i>
+				<span>{{ menu.name }}</span>
+			</div>
+		</div>
+	</section>
 
+	<section class="tech-home-section animate__animated animate__fadeInUp">
+		<h3 class="tech-home-section-title">停车服务流程</h3>
+		<div class="tech-process-row">
+			<div v-for="(step, i) in processSteps" :key="i" class="tech-process-step">
+				<div class="step-num">{{ i + 1 }}</div>
+				<h4>{{ step.title }}</h4>
+				<p>{{ step.desc }}</p>
+			</div>
+		</div>
+	</section>
 
+	<section class="tech-home-section animate__animated animate__fadeInUp">
+		<h3 class="tech-home-section-title">核心能力</h3>
+		<div class="tech-cap-grid">
+			<div v-for="cap in capabilityList" :key="cap.path" class="tech-cap-card">
+				<h4>{{ cap.title }}</h4>
+				<p>{{ cap.desc }}</p>
+				<el-button type="text" @click="goMenu(cap.path)">立即前往 →</el-button>
+			</div>
+		</div>
+	</section>
 
-		
+	<section class="tech-home-section animate__animated animate__fadeInUp" v-if="featuredList.length">
+		<h3 class="tech-home-section-title">
+			<span>推荐停车场</span>
+			<span class="more-link" @click="moreBtn('cheweixinxi')">查看更多</span>
+		</h3>
+		<div class="tech-featured-grid">
+			<div v-for="item in featuredList" :key="item.id" class="tech-featured-item" @click="toDetail('cheweixinxiDetail', item)">
+				<img class="thumb" v-if="item.cheweitupian && preHttp(item.cheweitupian)" :src="item.cheweitupian.split(',')[0]" alt="" />
+				<img class="thumb" v-else-if="item.cheweitupian" :src="baseUrl + item.cheweitupian.split(',')[0]" alt="" />
+				<div class="thumb" v-else style="display:flex;align-items:center;justify-content:center;color:#94a3b8;">暂无图片</div>
+				<div class="info">
+					<div class="name">{{ item.tingchechangmingcheng || '停车场' }}</div>
+					<div class="meta" v-if="item.quyu">区域：{{ item.quyu }}</div>
+					<div class="meta" v-if="item.price">参考价：￥{{ item.price }}</div>
+				</div>
+			</div>
+		</div>
+	</section>
 
-
-	
+	<section class="tech-home-section animate__animated animate__fadeInUp">
+		<h3 class="tech-home-section-title">使用须知</h3>
+		<ul class="tech-tips-list">
+			<li v-for="(tip, i) in tipsList" :key="i"><i class="el-icon-info"></i>{{ tip }}</li>
+		</ul>
+	</section>
 </div>
 </template>
 
@@ -21,15 +81,43 @@ import Swiper from "swiper";
       return {
         baseUrl: '',
         newsList: [],
-
-
-
-
-
+        menuList: [],
+        parkTotal: 0,
+        featuredList: [],
+        navIcons: [
+          'el-icon-location-outline',
+          'el-icon-chat-line-square',
+          'el-icon-date',
+          'el-icon-truck',
+          'el-icon-coin',
+          'el-icon-time',
+          'el-icon-wallet'
+        ],
+        processSteps: [
+          { title: '查询与预约', desc: '浏览车位信息，在 M4 模块选择时段完成预约。' },
+          { title: '入场停车', desc: '按预约时间入场，M2 停车闭环记录进出场状态。' },
+          { title: '费用结算', desc: '离场前使用 M5 试算应缴费用，支持在线支付。' },
+          { title: '离场与补缴', desc: '正常离场；如有超时，可在 N7 完成补缴。' }
+        ],
+        capabilityList: [
+          { title: '车位信息', desc: '查看各停车场余位、区域与参考价格。', path: '/index/cheweixinxi' },
+          { title: '时段预约 (M4)', desc: '提前预约停车时段，减少现场等待。', path: '/index/m4Yuyue' },
+          { title: '停车闭环 (M2)', desc: '进出场全流程记录，状态一目了然。', path: '/index/m2TingcheLi' },
+          { title: '费用试算 (M5)', desc: '按规则试算停车费用，缴费更便捷。', path: '/index/m5Jifei' },
+          { title: '超时策略 (N6)', desc: '了解超时计费规则与策略说明。', path: '/index/n6Chaoshi' },
+          { title: '超时补缴 (N7)', desc: '查询并补缴超时产生的差额费用。', path: '/index/n7Bujiao' }
+        ],
+        tipsList: [
+          '登录后可使用个人中心查看预约、缴费与反馈记录。',
+          '预约成功后请按时段入场，超时可能触发 N6 策略并产生补缴。',
+          '缴费前建议先使用 M5 费用试算核对金额。',
+          '遇到问题可通过「用户反馈」提交，我们会尽快处理。'
+        ]
       }
     },
     created() {
 		this.baseUrl = this.$config.baseUrl;
+		this.menuList = this.$config.indexNav || [];
 		this.getList();
     },
 	mounted() {
@@ -90,9 +178,19 @@ import Swiper from "swiper";
           return str && str.substr(0,4)=='http';
       },
 		getList() {
-			let autoSortUrl = "";
-			let data = {}
-			
+			// 这是我cursor给父亲写的 — 首页展示推荐车位（只读列表，不改变业务接口）
+			this.$http.get('cheweixinxi/list', { params: { page: 1, limit: 4 } }).then(res => {
+				if (res.data.code == 0) {
+					this.featuredList = res.data.data.list || [];
+					this.parkTotal = Number(res.data.data.total) || 0;
+				}
+			});
+		},
+		goMenu(path) {
+			this.$router.push(path);
+		},
+		navIcon(idx) {
+			return this.navIcons[idx] || 'el-icon-menu';
 		},
 		toDetail(path, item) {
 			this.$router.push({path: '/index/' + path, query: {id: item.id}});

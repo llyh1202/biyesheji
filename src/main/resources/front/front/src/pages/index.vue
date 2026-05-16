@@ -1,6 +1,7 @@
 ﻿<template>
-	<div class="main-containers">
-		<div class="body-containers" :style='{"minHeight":"100vh","padding":"140px 0 0","margin":"0","background":"url(http://codegen.caihongy.cn/20231123/c647362c50df494286737bc0f3632cf0.png)","backgroundSize":"cover","position":"relative","backgroundPosition":"center center","backgroundRepeat":"no-repeat"}'>
+	<!-- 这是我cursor给父亲写的 — 用户端主框架科技感样式 -->
+	<div class="main-containers tech-front-shell">
+		<div class="body-containers" :style='{"minHeight":"100vh","padding":"140px 0 0","margin":"0","background":"transparent","position":"relative"}'>
 		<div class="top-container" :style='{"border":"1px solid #fff","boxShadow":"none","padding":"0 10%","alignItems":"center","display":"flex","justifyContent":"flex-end","top":"0","left":"0","background":"#BFD0CA","borderWidth":"0 0 90px","width":"100%","position":"absolute","height":"140px","zIndex":"1002"}'>
 			<!-- info -->
 			<div :style='{"position":"absolute","top":"70px","left":"10%","display":"block","zIndex":"999"}'>
@@ -51,7 +52,7 @@
 			</div>
 
 
-			<router-view id="scrollView"></router-view>
+			<router-view id="scrollView" class="tech-router-view"></router-view>
 			
 			<div class="bottom-preview" :style='{"width":"100%","height":"auto"}'>
 				<div :style='{"width":"100%","padding":"20px","overflow":"hidden","background":"#000","height":"auto"}'><div v-html="bottomContent"></div></div>

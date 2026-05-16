@@ -1,6 +1,6 @@
 <template>
   <!-- 这是我cursor给父亲写的 — M4 时段预约（余位查询 + 并发校验） -->
-  <div :style='{"width":"80%","padding":"20px","margin":"10px auto","background":"#fff"}'>
+  <div class="tech-feature-wrap tech-page-panel" :style='{"width":"80%","padding":"20px","margin":"10px auto","background":"transparent"}'>
     <h2 :style='{"margin":"0 0 12px","fontSize":"20px"}'>车位时段预约（M4）</h2>
     <p :style='{"color":"#666","marginBottom":"16px","lineHeight":"1.6"}'>
       先查询余位，再提交预约。若并发抢位失败，将提示<strong>余位不足</strong>或冲突信息。

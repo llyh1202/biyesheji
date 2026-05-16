@@ -1,6 +1,6 @@
 <template>
   <!-- 这是我cursor给父亲写的 — N6 超时策略（前台查看与手动扫描） -->
-  <div :style='{"width":"80%","padding":"20px","margin":"10px auto","background":"#fff"}'>
+  <div class="tech-feature-wrap tech-page-panel" :style='{"width":"80%","padding":"20px","margin":"10px auto","background":"transparent"}'>
     <h2 :style='{"margin":"0 0 12px","fontSize":"20px"}'>超时策略（N6）</h2>
     <p :style='{"color":"#666","lineHeight":"1.6","marginBottom":"16px"}'>
       预约开始后超过「保留时长」仍未入场，系统将自动取消预约并释放车位；若规则配置了违约金，会生成违约缴费单。
