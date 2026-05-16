@@ -24,6 +24,31 @@
 	<div class="type1" :style='{"alignContent":"flex-start","padding":"0","margin":"20px 0 0","flexWrap":"wrap","background":"none","display":"flex","width":"100%","position":"relative","justifyContent":"space-between","height":"auto","order":"3"}'>
 		<div id="tingchejiaofeiChart1" class="echarts1" v-if="isAuth('tingchejiaofei','首页统计')"></div>
 	</div>
+	<!-- 这是我cursor给父亲写的 — M6 收入/周转扩展与统计模块入口 -->
+	<div v-if="isAuth('tingchejiaofei','首页统计')" class="m6-section" :style='{"width":"100%","order":"4"}'>
+		<div class="m6-kpi-row">
+			<div class="m6-kpi-card">
+				<div class="m6-kpi-val">¥{{ m6TodayRevenue }}</div>
+				<div class="m6-kpi-lbl">今日收入（N8）</div>
+			</div>
+			<div class="m6-kpi-card">
+				<div class="m6-kpi-val">¥{{ m6WeekRevenue }}</div>
+				<div class="m6-kpi-lbl">本周收入（N8）</div>
+			</div>
+			<div class="m6-kpi-card">
+				<div class="m6-kpi-val">{{ m6Utilization }}%</div>
+				<div class="m6-kpi-lbl">车位利用率</div>
+			</div>
+			<div class="m6-links">
+				<el-button size="small" type="primary" plain @click="goM6Kanban">运营总览（N8）</el-button>
+				<el-button size="small" type="success" plain @click="goM6Baobiao">多维报表（N9）</el-button>
+			</div>
+		</div>
+		<div class="type2" :style='{"alignContent":"flex-start","padding":"0","margin":"0","flexWrap":"wrap","background":"none","display":"flex","width":"100%","position":"relative","justifyContent":"space-between","height":"auto"}'>
+			<div id="m6RevenueChart" class="echarts1"></div>
+			<div id="m6TurnoverChart" class="echarts2"></div>
+		</div>
+	</div>
 </div>
 </template>
 <script>
@@ -34,6 +59,12 @@ export default {
 	data() {
 		return {
             tingchejiaofeiCount: 0,
+			// 这是我cursor给父亲写的 — M6 首页 KPI
+			m6TodayRevenue: '0.00',
+			m6WeekRevenue: '0.00',
+			m6Utilization: '0.0',
+			m6RevenueChart: null,
+			m6TurnoverChart: null,
 			line: {"backgroundColor":"transparent","yAxis":{"axisLabel":{"borderType":"solid","rotate":0,"padding":0,"shadowOffsetX":0,"margin":15,"backgroundColor":"transparent","borderColor":"#000","shadowOffsetY":0,"color":"#333","shadowBlur":0,"show":true,"inside":false,"ellipsis":"...","overflow":"none","borderRadius":0,"borderWidth":0,"width":"","fontSize":12,"lineHeight":24,"shadowColor":"transparent","fontWeight":"normal","height":""},"axisTick":{"show":true,"length":5,"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"cap":"butt","color":"#333","shadowBlur":0,"width":1,"type":"solid","opacity":1,"shadowColor":"rgba(0,0,0,.5)"},"inside":false},"splitLine":{"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"cap":"butt","color":"#666","shadowBlur":0,"width":1,"type":"solid","opacity":1,"shadowColor":"rgba(0,0,0,.5)"},"show":true},"axisLine":{"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"cap":"butt","color":"#333","shadowBlur":0,"width":1,"type":"solid","opacity":1,"shadowColor":"rgba(0,0,0,.5)"},"show":true},"splitArea":{"show":false,"areaStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"color":"rgba(25,25,25,0.3)","opacity":1,"shadowBlur":10,"shadowColor":"rgba(0,0,0,.5)"}}},"xAxis":{"axisLabel":{"borderType":"solid","rotate":0,"padding":0,"shadowOffsetX":0,"margin":4,"backgroundColor":"transparent","borderColor":"#000","shadowOffsetY":0,"color":"#333","shadowBlur":0,"show":true,"inside":false,"ellipsis":"...","overflow":"none","borderRadius":0,"borderWidth":0,"width":"","fontSize":12,"lineHeight":24,"shadowColor":"transparent","fontWeight":"normal","height":""},"axisTick":{"show":true,"length":5,"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"cap":"butt","color":"#333","shadowBlur":0,"width":1,"type":"solid","opacity":1,"shadowColor":"rgba(0,0,0,.5)"},"inside":false},"splitLine":{"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"cap":"butt","color":"#333","shadowBlur":0,"width":1,"type":"solid","opacity":1,"shadowColor":"rgba(0,0,0,.5)"},"show":false},"axisLine":{"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"cap":"butt","color":"#333","shadowBlur":0,"width":1,"type":"solid","opacity":1,"shadowColor":"rgba(0,0,0,.5)"},"show":true},"splitArea":{"show":false,"areaStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"color":"rgba(25,25,25,.3)","opacity":1,"shadowBlur":10,"shadowColor":"rgba(0,0,0,.5)"}}},"color":["#5470c6","#91cc75","#fac858","#ee6666","#73c0de","#3ba272","#fc8452","#9a60b4","#ea7ccc"],"legend":{"padding":0,"itemGap":10,"shadowOffsetX":0,"backgroundColor":"transparent","borderColor":"#666","shadowOffsetY":0,"orient":"horizontal","shadowBlur":0,"bottom":"auto","itemHeight":14,"show":true,"icon":"roundRect","itemStyle":{"borderType":"solid","shadowOffsetX":0,"borderColor":"inherit","shadowOffsetY":0,"color":"#333","shadowBlur":0,"borderWidth":0,"opacity":1,"shadowColor":"transparent"},"right":"auto","top":"auto","borderRadius":0,"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"color":"inherit","shadowBlur":0,"width":"auto","type":"inherit","opacity":1,"shadowColor":"transparent"},"left":"right","borderWidth":0,"width":"80%","itemWidth":20,"textStyle":{"textBorderWidth":0,"color":"#333","textShadowColor":"transparent","ellipsis":"...","overflow":"none","fontSize":12,"lineHeight":24,"textShadowOffsetX":0,"textShadowOffsetY":0,"textBorderType":"solid","fontWeight":500,"textBorderColor":"transparent","textShadowBlur":0},"shadowColor":"rgba(0,0,0,.3)","height":"auto"},"series":{"showSymbol":true,"symbol":"emptyCircle","symbolSize":4},"tooltip":{"backgroundColor":"#fff","textStyle":{"color":"#333"}},"title":{"borderType":"solid","padding":0,"shadowOffsetX":0,"backgroundColor":"transparent","borderColor":"#666","shadowOffsetY":0,"shadowBlur":0,"bottom":"auto","show":true,"right":"auto","top":"auto","borderRadius":0,"left":"left","borderWidth":0,"textStyle":{"textBorderWidth":0,"color":"#333","textShadowColor":"transparent","fontSize":14,"lineHeight":24,"textShadowOffsetX":0,"textShadowOffsetY":0,"textBorderType":"solid","fontWeight":600,"textBorderColor":"#666","textShadowBlur":0},"shadowColor":"transparent"}},
 			bar: {"backgroundColor":"transparent","yAxis":{"axisLabel":{"borderType":"solid","rotate":0,"padding":0,"shadowOffsetX":0,"margin":12,"backgroundColor":"transparent","borderColor":"#666","shadowOffsetY":0,"color":"#666","shadowBlur":0,"show":true,"inside":false,"ellipsis":"...","overflow":"none","borderRadius":0,"borderWidth":0,"width":"","fontSize":12,"lineHeight":24,"shadowColor":"transparent","fontWeight":"normal","height":""},"axisTick":{"show":true,"length":5,"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"cap":"butt","color":"#333","shadowBlur":0,"width":1,"type":"solid","opacity":1,"shadowColor":"rgba(0,0,0,.5)"},"inside":false},"splitLine":{"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"cap":"butt","color":"#666","shadowBlur":0,"width":1,"type":"solid","opacity":1,"shadowColor":"rgba(0,0,0,.5)"},"show":true},"axisLine":{"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"cap":"butt","color":"#333","shadowBlur":0,"width":1,"type":"solid","opacity":1,"shadowColor":"rgba(0,0,0,.5)"},"show":true},"splitArea":{"show":false,"areaStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"color":"rgba(25,25,25,0.3)","opacity":1,"shadowBlur":10,"shadowColor":"rgba(0,0,0,.5)"}}},"xAxis":{"axisLabel":{"borderType":"solid","rotate":0,"padding":0,"shadowOffsetX":0,"margin":4,"backgroundColor":"transparent","borderColor":"#000","shadowOffsetY":0,"color":"#333","shadowBlur":0,"show":true,"inside":false,"ellipsis":"...","overflow":"none","borderRadius":0,"borderWidth":0,"width":"","fontSize":12,"lineHeight":24,"shadowColor":"transparent","fontWeight":"normal","height":""},"axisTick":{"show":true,"length":5,"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"cap":"butt","color":"#333","shadowBlur":0,"width":1,"type":"solid","opacity":1,"shadowColor":"rgba(0,0,0,.5)"},"inside":false},"splitLine":{"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"cap":"butt","color":"#333","shadowBlur":0,"width":1,"type":"solid","opacity":1,"shadowColor":"rgba(0,0,0,.5)"},"show":false},"axisLine":{"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"cap":"butt","color":"#333","shadowBlur":0,"width":1,"type":"solid","opacity":1,"shadowColor":"rgba(0,0,0,.5)"},"show":true},"splitArea":{"show":false,"areaStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"color":"rgba(25,25,25,.3)","opacity":1,"shadowBlur":10,"shadowColor":"rgba(0,0,0,.5)"}}},"color":["#00ff00","#91cc75","#fac858","#ee6666","#73c0de","#3ba272","#fc8452","#9a60b4","#ea7ccc"],"legend":{"padding":0,"itemGap":10,"shadowOffsetX":0,"backgroundColor":"transparent","borderColor":"#666","shadowOffsetY":0,"orient":"horizontal","shadowBlur":0,"bottom":"auto","itemHeight":2,"show":true,"icon":"roundRect","itemStyle":{"borderType":"solid","shadowOffsetX":0,"borderColor":"inherit","shadowOffsetY":0,"color":"#333","shadowBlur":0,"borderWidth":0,"opacity":1,"shadowColor":"transparent"},"right":"auto","top":"auto","borderRadius":0,"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"color":"inherit","shadowBlur":0,"width":"auto","type":"inherit","opacity":1,"shadowColor":"transparent"},"left":"right","borderWidth":0,"width":"80%","itemWidth":2,"textStyle":{"textBorderWidth":0,"color":"inherit","textShadowColor":"transparent","ellipsis":"...","overflow":"none","fontSize":12,"lineHeight":24,"textShadowOffsetX":0,"textShadowOffsetY":0,"textBorderType":"solid","fontWeight":500,"textBorderColor":"transparent","textShadowBlur":0},"shadowColor":"rgba(0,0,0,.3)","height":"auto"},"series":{"barWidth":"auto","itemStyle":{"borderType":"solid","shadowOffsetX":0,"borderColor":"#666","shadowOffsetY":0,"color":"","shadowBlur":0,"borderWidth":0,"opacity":1,"shadowColor":"#000"},"colorBy":"data","barCategoryGap":"20%"},"tooltip":{"backgroundColor":"#fff","textStyle":{"color":"#333"}},"title":{"borderType":"solid","padding":0,"shadowOffsetX":0,"backgroundColor":"transparent","borderColor":"#666","shadowOffsetY":0,"shadowBlur":0,"bottom":"auto","show":true,"right":"auto","top":"auto","borderRadius":0,"left":"left","borderWidth":0,"textStyle":{"textBorderWidth":0,"color":"#333","textShadowColor":"transparent","fontSize":14,"lineHeight":24,"textShadowOffsetX":0,"textShadowOffsetY":0,"textBorderType":"solid","fontWeight":600,"textBorderColor":"#666","textShadowBlur":0},"shadowColor":"transparent"},"base":{"animate":false,"interval":2000}},
 			pie: {"tooltip":{"backgroundColor":"#fff","textStyle":{"color":"#333"}},"backgroundColor":"transparent","color":["#5470c6","#91cc75","#fac858","#ee6666","#73c0de","#3ba272","#fc8452","#9a60b4","#ea7ccc"],"title":{"borderType":"solid","padding":0,"shadowOffsetX":0,"backgroundColor":"transparent","borderColor":"#666","shadowOffsetY":0,"shadowBlur":0,"bottom":"auto","show":true,"right":"auto","top":"auto","borderRadius":0,"left":"left","borderWidth":0,"textStyle":{"textBorderWidth":0,"color":"#333","textShadowColor":"transparent","fontSize":14,"lineHeight":24,"textShadowOffsetX":0,"textShadowOffsetY":0,"textBorderType":"solid","fontWeight":600,"textBorderColor":"#666","textShadowBlur":0},"shadowColor":"transparent"},"legend":{"padding":0,"itemGap":5,"shadowOffsetX":0,"backgroundColor":"transparent","borderColor":"#666","shadowOffsetY":0,"orient":"horizontal","shadowBlur":0,"bottom":"auto","itemHeight":2,"show":true,"icon":"roundRect","itemStyle":{"borderType":"solid","shadowOffsetX":0,"borderColor":"inherit","shadowOffsetY":0,"color":"inherit","shadowBlur":0,"borderWidth":0,"opacity":1,"shadowColor":"transparent"},"right":0,"top":"auto","borderRadius":0,"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"color":"inherit","shadowBlur":0,"width":"auto","type":"inherit","opacity":1,"shadowColor":"transparent"},"left":"right","borderWidth":0,"width":"80%","itemWidth":2,"textStyle":{"textBorderWidth":0,"color":"inherit","textShadowColor":"transparent","ellipsis":"...","overflow":"none","fontSize":12,"lineHeight":14,"textShadowOffsetX":0,"textShadowOffsetY":0,"textBorderType":"solid","fontWeight":500,"textBorderColor":"transparent","textShadowBlur":0},"shadowColor":"rgba(0,0,0,.3)","height":"auto"},"series":{"itemStyle":{"borderType":"solid","shadowOffsetX":0,"borderColor":"#666","shadowOffsetY":0,"color":"","shadowBlur":0,"borderWidth":0,"opacity":1,"shadowColor":"#000"},"label":{"borderType":"solid","rotate":0,"padding":0,"textBorderWidth":0,"backgroundColor":"transparent","borderColor":"#666","color":"inherit","show":true,"textShadowColor":"transparent","distanceToLabelLine":5,"ellipsis":"...","overflow":"none","borderRadius":0,"borderWidth":0,"fontSize":12,"lineHeight":18,"textShadowOffsetX":0,"position":"outside","textShadowOffsetY":0,"textBorderType":"solid","textBorderColor":"#666","textShadowBlur":0},"labelLine":{"show":true,"length":10,"lineStyle":{"shadowOffsetX":0,"shadowOffsetY":0,"color":"#333","shadowBlur":0,"width":1,"type":"solid","opacity":1,"shadowColor":"#000"},"length2":14,"smooth":false}}},
@@ -46,6 +77,9 @@ export default {
 		this.init();
 		this.gettingchejiaofeiCount();
 		this.tingchejiaofeiChat1();
+		if (this.isAuth('tingchejiaofei', '首页统计')) {
+			this.loadM6HomeCharts();
+		}
 	},
 	methods:{
 		// 统计图动画
@@ -166,13 +200,98 @@ export default {
                 };
                 // 使用刚指定的配置项和数据显示图表。
                 tingchejiaofeiChart1.setOption(option);
-                window.onresize = function() {
+                const resizeAll = function() {
                     tingchejiaofeiChart1.resize();
-                };
+                    if (this.m6RevenueChart) this.m6RevenueChart.resize();
+                    if (this.m6TurnoverChart) this.m6TurnoverChart.resize();
+                }.bind(this);
+                window.onresize = resizeAll;
             }
         });
       })
     },
+		// 这是我cursor给父亲写的 — M6 首页图表
+		goM6Kanban() {
+			this.$router.push({ path: '/yunyingkanban' });
+		},
+		goM6Baobiao() {
+			this.$router.push({ path: '/duoweibaobiao' });
+		},
+		fmtM6Money(v) {
+			const n = Number(v);
+			if (isNaN(n)) return '0.00';
+			return n.toFixed(2);
+		},
+		loadM6HomeCharts() {
+			this.$http.get('chewei/m6/home/charts').then(({ data }) => {
+				if (!data || data.code !== 0 || !data.data) return;
+				const d = data.data;
+				this.m6TodayRevenue = this.fmtM6Money(d.todayRevenue);
+				this.m6WeekRevenue = this.fmtM6Money(d.weekRevenue);
+				this.m6Utilization = Number(d.utilizationRate || 0).toFixed(1);
+				this.$nextTick(() => {
+					this.renderM6RevenueLine(d.revenueTrend || []);
+					this.renderM6TurnoverBar(d.turnoverTop || []);
+				});
+			});
+		},
+		renderM6RevenueLine(trend) {
+			const el = document.getElementById('m6RevenueChart');
+			if (!el) return;
+			if (this.m6RevenueChart) this.m6RevenueChart.dispose();
+			this.m6RevenueChart = echarts.init(el, 'macarons');
+			const xAxis = [];
+			const yAxis = [];
+			for (let i = 0; i < trend.length; i++) {
+				xAxis.push(trend[i].riqi);
+				yAxis.push(parseFloat(trend[i].revenue || 0));
+			}
+			const titleObj = Object.assign({}, this.line.title, { text: '近7日收入趋势（M6/N9）' });
+			const xAxisObj = Object.assign({}, this.line.xAxis, { type: 'category', data: xAxis });
+			const yAxisObj = Object.assign({}, this.line.yAxis, { type: 'value' });
+			const seriesObj = Object.assign({}, this.line.series, {
+				data: yAxis,
+				type: 'line',
+				smooth: true,
+				areaStyle: { opacity: 0.15 }
+			});
+			this.m6RevenueChart.setOption({
+				backgroundColor: this.line.backgroundColor,
+				color: this.line.color,
+				title: titleObj,
+				legend: this.line.legend,
+				tooltip: Object.assign({ trigger: 'axis' }, this.line.tooltip || {}),
+				xAxis: xAxisObj,
+				yAxis: yAxisObj,
+				series: [seriesObj]
+			});
+		},
+		renderM6TurnoverBar(bars) {
+			const el = document.getElementById('m6TurnoverChart');
+			if (!el) return;
+			if (this.m6TurnoverChart) this.m6TurnoverChart.dispose();
+			this.m6TurnoverChart = echarts.init(el, 'macarons');
+			const labels = [];
+			const rates = [];
+			for (let i = 0; i < bars.length; i++) {
+				labels.push(bars[i].label || '-');
+				rates.push(parseFloat(bars[i].turnoverRate || 0));
+			}
+			const titleObj = Object.assign({}, this.bar.title, { text: '车场/区域周转率 TOP（M6/N9）' });
+			const yAxisObj = Object.assign({}, this.bar.yAxis, { type: 'category', data: labels });
+			const xAxisObj = Object.assign({}, this.bar.xAxis, { type: 'value', name: '次/位/日' });
+			const seriesObj = Object.assign({}, this.bar.series, { data: rates, type: 'bar' });
+			this.m6TurnoverChart.setOption({
+				backgroundColor: this.bar.backgroundColor,
+				color: this.bar.color,
+				title: titleObj,
+				legend: this.bar.legend,
+				tooltip: Object.assign({ trigger: 'axis' }, this.bar.tooltip || {}),
+				xAxis: xAxisObj,
+				yAxis: yAxisObj,
+				series: [seriesObj]
+			});
+		},
 
 
   }
@@ -483,6 +602,44 @@ export default {
 	.type5 .echarts5:hover {
 			}
 	
+	// 这是我cursor给父亲写的 — M6 首页样式
+	.m6-section {
+		margin-top: 8px;
+	}
+	.m6-kpi-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: stretch;
+		gap: 12px;
+		margin-bottom: 8px;
+	}
+	.m6-kpi-card {
+		flex: 1;
+		min-width: 140px;
+		background: rgba(255, 255, 255, 0.95);
+		border-radius: 8px;
+		padding: 14px 16px;
+		box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12);
+	}
+	.m6-kpi-val {
+		font-size: 20px;
+		font-weight: bold;
+		color: #303133;
+		line-height: 1.3;
+	}
+	.m6-kpi-lbl {
+		margin-top: 6px;
+		font-size: 13px;
+		color: #909399;
+	}
+	.m6-links {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+		margin-left: auto;
+	}
+
 	.echarts-flag-2 {
 	  display: flex;
 	  flex-wrap: wrap;
