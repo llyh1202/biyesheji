@@ -39,8 +39,8 @@
 					<el-button :style='{"border":"0","cursor":"pointer","padding":"0 10px","margin":"0 5px 0 0","color":"#fff","borderRadius":"0","background":"#57A7A5","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('cheweixinxi','修改')" @click="editClick">修改</el-button>
 					<el-button :style='{"border":"1px solid #CCCCCC","cursor":"pointer","padding":"0 10px","margin":"0 5px 10px 0","color":"#CCCCCC","borderRadius":"0","background":"none","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('cheweixinxi','删除')" @click="delClick">删除</el-button>
 					<el-button :style='{"border":"1px solid #CCCCCC","cursor":"pointer","padding":"0 10px","margin":"0 5px 10px 0","color":"#CCCCCC","borderRadius":"0","background":"none","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('cheweixinxi','私聊')&&detail.id!=mid" @click="chatClick">联系TA</el-button>
-					<el-button :style='{"border":"0","cursor":"pointer","padding":"0 10px","margin":"0 5px 10px 0","color":"#fff","borderRadius":"0","background":"#0891b2","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="!centerType" type="primary" @click="scrollToYuyue">预约停车</el-button>
-					<el-button :style='{"border":"1px solid #ccc","cursor":"pointer","padding":"0 10px","margin":"0 5px 10px 0","color":"#666","borderRadius":"0","background":"none","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('cheweixinxi','停车')" @click="onAcross('chezijinchang','','','','')" type="warning">旧版停车</el-button>
+					<!-- 这是我cursor给父亲写的 — P1-16 原「停车」改为预约停车，跳转本车场预约区，不走 chezijinchang 跨表 -->
+					<el-button :style='{"border":"0","cursor":"pointer","padding":"0 10px","margin":"0 5px 10px 0","color":"#fff","borderRadius":"0","background":"#0891b2","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="!centerType && showReserveParkingBtn" type="primary" @click="scrollToYuyue">预约停车</el-button>
 				</div>
 			</div>
 		</div>
@@ -60,7 +60,7 @@
 		</el-tabs>
 	</div>
 
-	<!-- 这是我cursor给父亲写的 — 预约停车（P1-03） -->
+	<!-- 这是我cursor给父亲写的 — P1-03/P1-16 本车场车位预约区（指令 03） -->
 	<div id="chewei-yuyue-panel" class="chewei-yuyue-panel" v-if="detail.id && !centerType">
 		<div class="chewei-yuyue-inner">
 			<h3 class="chewei-yuyue-title">预约停车</h3>
@@ -175,6 +175,13 @@
 		availSummaryTitle() {
 			if (!this.availSummary) return ''
 			return '总车位 ' + this.availSummary.total + '，该时段可预约 ' + this.availSummary.available + ' 个'
+		},
+		/** 这是我cursor给父亲写的 — P1-16 沿用原「停车」菜单权限展示预约入口 */
+		showReserveParkingBtn() {
+			if (typeof this.btnAuth !== 'function') {
+				return true
+			}
+			return this.btnAuth('cheweixinxi', '停车')
 		}
 	},
     created() {
@@ -350,9 +357,16 @@
 				this.$message.error('请求失败')
 			}
 		},
+		// 这是我cursor给父亲写的 — P1-16 滚动至本页预约区并高亮
 		scrollToYuyue() {
 			const el = document.getElementById('chewei-yuyue-panel')
-			if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+			if (!el) {
+				this.$message.warning('预约区域未就绪，请刷新页面后重试')
+				return
+			}
+			el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+			el.classList.add('chewei-yuyue-panel--focus')
+			window.setTimeout(() => el.classList.remove('chewei-yuyue-panel--focus'), 2200)
 		},
 		// 这是我cursor给父亲写的 — P1-04 跳转 M2 入场（真实 yuyueId）
 		goM2AfterReserve() {
@@ -370,27 +384,6 @@
 			this.reserveSuccessVisible = false
 			this.reserveResult = null
 		},
-      async onAcross(acrossTable,crossOptAudit,crossOptPay,statusColumnName,tips,statusColumnValue,type=1){
-        localStorage.setItem('crossTable',`cheweixinxi`);
-        localStorage.setItem('crossObj', JSON.stringify(this.detail));
-        localStorage.setItem('statusColumnName',statusColumnName);
-        localStorage.setItem('statusColumnValue',statusColumnValue);
-        localStorage.setItem('tips',tips);
-        if(statusColumnName!=''&&!statusColumnName.startsWith("[")) {
-            var obj = JSON.parse(localStorage.getItem('crossObj'));
-            for (var o in obj){
-                if(o==statusColumnName && obj[o]==statusColumnValue){
-                    this.$message({
-                        type: 'error',
-                        message: tips,
-                        duration: 1500
-                    });
-                    return
-                }
-            }
-        }
-        this.$router.push({path: '/index/' + acrossTable + 'Add', query: {type: 'cross'}});
-      },
       curChange(page) {
         this.getDiscussList(page);
       },
@@ -989,10 +982,15 @@
 				transition: .3s;
 			}
 
-/* 这是我cursor给父亲写的 — P1-03 预约停车区域 */
+/* 这是我cursor给父亲写的 — P1-03/P1-16 预约停车区域 */
 .chewei-yuyue-panel {
 	width: 80%;
 	margin: 0 auto 40px;
+	scroll-margin-top: 72px;
+	transition: box-shadow 0.35s ease;
+}
+.chewei-yuyue-panel--focus .chewei-yuyue-inner {
+	box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.45), 0 8px 28px rgba(6, 182, 212, 0.18);
 }
 .chewei-yuyue-inner {
 	padding: 24px 28px;
