@@ -154,11 +154,20 @@ public class TingcheBujiaoN7ServiceImpl extends ServiceImpl<TingcheBujiaoDao, Ti
 
 	@Override
 	public R listByUser(String yonghuzhanghao) {
+		return listByUser(yonghuzhanghao, null);
+	}
+
+	@Override
+	public R listByUser(String yonghuzhanghao, String zhuangtai) {
 		EntityWrapper<TingcheBujiaoEntity> w = new EntityWrapper<TingcheBujiaoEntity>();
 		if (StringUtils.isNotBlank(yonghuzhanghao)) {
 			w.eq("yonghuzhanghao", yonghuzhanghao);
 		}
-		w.ne("zhuangtai", TingcheBujiaoZhuangtaiN7.YI_ZUOFEI);
+		if (StringUtils.isNotBlank(zhuangtai)) {
+			w.eq("zhuangtai", zhuangtai.trim());
+		} else {
+			w.ne("zhuangtai", TingcheBujiaoZhuangtaiN7.YI_ZUOFEI);
+		}
 		w.orderBy("id", false);
 		return R.ok().put("data", selectList(w));
 	}

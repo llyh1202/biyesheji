@@ -49,7 +49,8 @@ public class TingcheBujiaoN7Controller {
 	@IgnoreAuth
 	@RequestMapping("/bujiao/list")
 	public R list(@RequestParam(value = "chezijinchangId", required = false) Long chezijinchangId,
-			@RequestParam(value = "yonghuzhanghao", required = false) String yonghuzhanghao, HttpServletRequest request) {
+			@RequestParam(value = "yonghuzhanghao", required = false) String yonghuzhanghao,
+			@RequestParam(value = "zhuangtai", required = false) String zhuangtai, HttpServletRequest request) {
 		if (chezijinchangId != null) {
 			return tingcheBujiaoN7Service.listByChezijinchang(chezijinchangId);
 		}
@@ -57,7 +58,8 @@ public class TingcheBujiaoN7Controller {
 		if (user == null || user.isEmpty()) {
 			user = sessionUsername(request);
 		}
-		return tingcheBujiaoN7Service.listByUser(user);
+		// 这是我cursor给父亲写的 — P1-25 我的停车待补缴 Tab 可传 zhuangtai=待支付
+		return tingcheBujiaoN7Service.listByUser(user, zhuangtai);
 	}
 
 	@IgnoreAuth

@@ -315,7 +315,7 @@ public class CheweiController {
 		return cheweiYuliangN4Service.myYuyuePage(params, yonghuzhanghao.trim(), zhuangtai);
 	}
 
-	/** 这是我cursor给父亲写的 — P1-08 我的停车汇总：待入场预约、在场入场、待支付缴费 */
+	/** 这是我cursor给父亲写的 — P1-08/P1-25 我的停车汇总：待入场、在场、待支付缴费、待补缴 */
 	@RequestMapping("/my/parkingSummary")
 	public R myParkingSummary(HttpServletRequest request) {
 		String yonghuzhanghao = (String) request.getSession().getAttribute("username");

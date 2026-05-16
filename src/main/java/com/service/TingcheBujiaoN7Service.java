@@ -20,6 +20,9 @@ public interface TingcheBujiaoN7Service {
 
 	R listByUser(String yonghuzhanghao);
 
+	/** 这是我cursor给父亲写的 — P1-25 按用户查补缴单，zhuangtai 为空则排除已作废 */
+	R listByUser(String yonghuzhanghao, String zhuangtai);
+
 	R overtimeCheck(Long chezijinchangId);
 
 	/** 离场前：是否存在待支付补缴 */

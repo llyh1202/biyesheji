@@ -16,6 +16,8 @@ public class P1MyParkingSummaryDto implements Serializable {
 	private List<P1MyRuchangItemDto> zaiChangRuchangList = new ArrayList<P1MyRuchangItemDto>();
 	/** 待支付缴费单 */
 	private List<P1MyJiaofeiItemDto> daiZhifuJiaofeiList = new ArrayList<P1MyJiaofeiItemDto>();
+	/** 这是我cursor给父亲写的 — P1-25 待支付补缴单（N7） */
+	private List<P1MyBujiaoItemDto> daiBujiaoList = new ArrayList<P1MyBujiaoItemDto>();
 
 	public List<P1MyYuyueItemDto> getDaiRuchangYuyueList() {
 		return daiRuchangYuyueList;
@@ -39,5 +41,13 @@ public class P1MyParkingSummaryDto implements Serializable {
 
 	public void setDaiZhifuJiaofeiList(List<P1MyJiaofeiItemDto> daiZhifuJiaofeiList) {
 		this.daiZhifuJiaofeiList = daiZhifuJiaofeiList;
+	}
+
+	public List<P1MyBujiaoItemDto> getDaiBujiaoList() {
+		return daiBujiaoList;
+	}
+
+	public void setDaiBujiaoList(List<P1MyBujiaoItemDto> daiBujiaoList) {
+		this.daiBujiaoList = daiBujiaoList;
 	}
 }

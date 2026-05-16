@@ -18,11 +18,15 @@ import com.dao.CheweiYuyueDao;
 import com.entity.CheweiEntity;
 import com.entity.CheweiYuyueEntity;
 import com.entity.ChezijinchangEntity;
+import com.entity.TingcheBujiaoEntity;
 import com.entity.TingchejiaofeiEntity;
+import com.entity.dto.P1MyBujiaoItemDto;
 import com.entity.dto.P1MyJiaofeiItemDto;
 import com.entity.dto.P1MyParkingSummaryDto;
 import com.entity.dto.P1MyRuchangItemDto;
 import com.entity.dto.P1MyYuyueItemDto;
+import com.constant.TingcheBujiaoZhuangtaiN7;
+import com.dao.TingcheBujiaoDao;
 import com.service.CheweiMyParkingP1Service;
 import com.service.CheweiService;
 import com.service.ChezijinchangService;
@@ -45,6 +49,8 @@ public class CheweiMyParkingP1ServiceImpl implements CheweiMyParkingP1Service {
 	private TingchejiaofeiService tingchejiaofeiService;
 	@Autowired
 	private CheweiService cheweiService;
+	@Autowired
+	private TingcheBujiaoDao tingcheBujiaoDao;
 
 	@Override
 	public R myParkingSummary(String yonghuzhanghao) {
@@ -56,6 +62,8 @@ public class CheweiMyParkingP1ServiceImpl implements CheweiMyParkingP1Service {
 		summary.setDaiRuchangYuyueList(loadDaiRuchangYuyue(user));
 		summary.setZaiChangRuchangList(loadZaiChangRuchang(user));
 		summary.setDaiZhifuJiaofeiList(loadDaiZhifuJiaofei(user));
+		// 这是我cursor给父亲写的 — P1-25 待补缴（N7 待支付）
+		summary.setDaiBujiaoList(loadDaiBujiao(user));
 		return R.ok().put("data", summary);
 	}
 
@@ -152,6 +160,71 @@ public class CheweiMyParkingP1ServiceImpl implements CheweiMyParkingP1Service {
 			}
 		}
 		return exited;
+	}
+
+	private List<P1MyBujiaoItemDto> loadDaiBujiao(String user) {
+		EntityWrapper<TingcheBujiaoEntity> w = new EntityWrapper<TingcheBujiaoEntity>();
+		w.eq("yonghuzhanghao", user);
+		w.eq("zhuangtai", TingcheBujiaoZhuangtaiN7.DAI_ZHIFU);
+		w.orderBy("id", false);
+		w.last("LIMIT " + LIST_CAP);
+		List<TingcheBujiaoEntity> rows = tingcheBujiaoDao.selectList(w);
+		if (rows == null || rows.isEmpty()) {
+			return new ArrayList<P1MyBujiaoItemDto>(0);
+		}
+		Map<Long, ChezijinchangEntity> entryMap = loadRuchangMap(collectEntryIdsFromBujiao(rows));
+		List<P1MyBujiaoItemDto> list = new ArrayList<P1MyBujiaoItemDto>(rows.size());
+		for (TingcheBujiaoEntity b : rows) {
+			P1MyBujiaoItemDto item = new P1MyBujiaoItemDto();
+			item.setId(b.getId());
+			item.setDanhao(b.getDanhao());
+			item.setChezijinchangId(b.getChezijinchangId());
+			item.setLeixing(b.getLeixing());
+			item.setJine(b.getJine());
+			item.setZhuangtai(b.getZhuangtai());
+			item.setYuanyin(b.getYuanyin());
+			item.setChepaihao(b.getChepaihao());
+			if (b.getChezijinchangId() != null) {
+				ChezijinchangEntity entry = entryMap.get(b.getChezijinchangId());
+				if (entry != null) {
+					item.setTingchechangmingcheng(entry.getTingchechangmingcheng());
+					item.setQuyu(entry.getQuyu());
+					if (StringUtils.isBlank(item.getChepaihao())) {
+						item.setChepaihao(entry.getChepaihao());
+					}
+				}
+			}
+			list.add(item);
+		}
+		return list;
+	}
+
+	private Set<Long> collectEntryIdsFromBujiao(List<TingcheBujiaoEntity> rows) {
+		Set<Long> ids = new HashSet<Long>();
+		if (rows != null) {
+			for (TingcheBujiaoEntity b : rows) {
+				if (b.getChezijinchangId() != null) {
+					ids.add(b.getChezijinchangId());
+				}
+			}
+		}
+		return ids;
+	}
+
+	private Map<Long, ChezijinchangEntity> loadRuchangMap(Set<Long> entryIds) {
+		Map<Long, ChezijinchangEntity> map = new HashMap<Long, ChezijinchangEntity>();
+		if (entryIds == null || entryIds.isEmpty()) {
+			return map;
+		}
+		List<ChezijinchangEntity> list = chezijinchangService.selectBatchIds(new ArrayList<Long>(entryIds));
+		if (list != null) {
+			for (ChezijinchangEntity c : list) {
+				if (c.getId() != null) {
+					map.put(c.getId(), c);
+				}
+			}
+		}
+		return map;
 	}
 
 	private List<P1MyJiaofeiItemDto> loadDaiZhifuJiaofei(String user) {

@@ -1,8 +1,8 @@
 <template>
-  <!-- 这是我cursor给父亲写的 — P1-09 我的停车（Tab：待入场 / 停车中 / 待支付） -->
+  <!-- 这是我cursor给父亲写的 — P1-09/P1-25 我的停车（Tab：待入场 / 停车中 / 待支付 / 待补缴） -->
   <div class="tech-feature-wrap tech-page-panel wode-tingche-page">
     <h2 class="wode-tingche-title">我的停车</h2>
-    <p class="wode-tingche-desc">查看预约、在场与待支付记录；待支付请进入缴费详情页支付，或在 M2 使用「模拟结算关单」。</p>
+    <p class="wode-tingche-desc">查看预约、在场、待支付与待补缴记录；待补缴请至 N7 补缴页完成支付后再离场结算。</p>
 
     <el-alert
       v-if="!hasToken"
@@ -69,6 +69,32 @@
         </div>
       </el-tab-pane>
 
+      <el-tab-pane label="待补缴" name="daiBujiao">
+        <el-button type="primary" size="small" native-type="button" :loading="loadingBujiao" @click="loadDaiBujiao">刷新</el-button>
+        <div v-loading="loadingBujiao" class="wode-tingche-list">
+          <el-empty v-if="!loadingBujiao && daiBujiaoList.length === 0" description="暂无待支付补缴单" />
+          <el-card v-for="row in daiBujiaoList" :key="'b-' + row.id" shadow="hover" class="wode-tingche-card">
+            <div class="wode-tingche-card-head">
+              <span class="wode-tingche-tag">{{ row.danhao || ('补缴 #' + row.id) }}</span>
+              <span class="wode-tingche-status wode-tingche-status-warn">{{ row.zhuangtai || '待支付' }}</span>
+            </div>
+            <ul class="wode-tingche-meta">
+              <li v-if="row.leixing"><span>类型</span><b>{{ row.leixing }}</b></li>
+              <li><span>金额</span><b class="wode-tingche-fee">{{ row.jine != null ? row.jine + ' 元' : '—' }}</b></li>
+              <li v-if="row.chezijinchangId"><span>入场单</span><b>#{{ row.chezijinchangId }}</b></li>
+              <li v-if="row.tingchechangmingcheng"><span>停车场</span><b>{{ row.tingchechangmingcheng }}</b></li>
+              <li v-if="row.quyu"><span>区域</span><b>{{ row.quyu }}</b></li>
+              <li v-if="row.chepaihao"><span>车牌</span><b>{{ row.chepaihao }}</b></li>
+              <li v-if="row.yuanyin"><span>说明</span><b>{{ row.yuanyin }}</b></li>
+            </ul>
+            <div class="wode-tingche-actions">
+              <el-button type="warning" size="small" @click="goBujiaoPay(row)">去补缴</el-button>
+              <el-button v-if="row.chezijinchangId" type="text" size="small" @click="goLichangAfterBujiao(row)">补缴后离场</el-button>
+            </div>
+          </el-card>
+        </div>
+      </el-tab-pane>
+
       <el-tab-pane label="待支付" name="daiZhifu">
         <el-button type="primary" size="small" native-type="button" :loading="loadingSummary" @click="loadSummary">刷新</el-button>
         <div v-loading="loadingSummary" class="wode-tingche-list">
@@ -107,9 +133,11 @@ export default {
       hasToken: !!localStorage.getItem('frontToken'),
       loadingYuyue: false,
       loadingSummary: false,
+      loadingBujiao: false,
       daiRuchangList: [],
       zaiChangList: [],
       daiZhifuList: [],
+      daiBujiaoList: [],
       yuyuePage: 1,
       yuyueLimit: 10,
       yuyueTotal: 0,
@@ -133,7 +161,7 @@ export default {
     // 这是我cursor给父亲写的 — P1-20 支持 ?tab=daiZhifu 打开待支付并刷新
     syncTabFromRoute() {
       const tab = (this.$route.query.tab || '').trim()
-      if (tab === 'daiZhifu' || tab === 'zaiChang' || tab === 'daiRuchang') {
+      if (tab === 'daiZhifu' || tab === 'zaiChang' || tab === 'daiRuchang' || tab === 'daiBujiao') {
         this.activeTab = tab
       }
     },
@@ -143,6 +171,8 @@ export default {
       }
       if (this.activeTab === 'daiRuchang') {
         this.loadDaiRuchang()
+      } else if (this.activeTab === 'daiBujiao') {
+        this.loadDaiBujiao()
       } else {
         this.loadSummary()
       }
@@ -151,6 +181,8 @@ export default {
       if (!this.hasToken) return
       if (tab.name === 'daiRuchang') {
         this.loadDaiRuchang()
+      } else if (tab.name === 'daiBujiao') {
+        this.loadDaiBujiao()
       } else {
         this.loadSummary()
       }
@@ -185,7 +217,37 @@ export default {
         this.loadingYuyue = false
       })
     },
-    /** P1-08 我的停车汇总（停车中 / 待支付） */
+    /** 这是我cursor给父亲写的 — P1-25 待补缴：优先 N7 按用户+待支付；失败时回退 P1-08 汇总 */
+    loadDaiBujiao() {
+      if (!this.hasToken) return
+      this.loadingBujiao = true
+      this.$http.get('chewei/n7/bujiao/list', { params: { zhuangtai: '待支付' } }).then(res => {
+        if (res.data && res.data.code === 0) {
+          this.daiBujiaoList = res.data.data || []
+          return
+        }
+        return this.fillDaiBujiaoFromSummary((res.data && res.data.msg) || 'N7 列表加载失败')
+      }).catch(() => {
+        return this.fillDaiBujiaoFromSummary('N7 列表请求失败')
+      }).finally(() => {
+        this.loadingBujiao = false
+      })
+    },
+    fillDaiBujiaoFromSummary(warnMsg) {
+      return this.$http.get('chewei/my/parkingSummary').then(res => {
+        if (res.data && res.data.code === 0) {
+          const d = res.data.data || {}
+          this.daiBujiaoList = d.daiBujiaoList || []
+          this.zaiChangList = d.zaiChangRuchangList || this.zaiChangList
+          this.daiZhifuList = d.daiZhifuJiaofeiList || this.daiZhifuList
+          this.summaryLoaded = true
+          if (warnMsg) this.$message.warning(warnMsg + '，已使用汇总接口数据')
+        } else {
+          this.$message.error((res.data && res.data.msg) || '加载待补缴失败')
+        }
+      }).catch(err => this.onHttpFail(err))
+    },
+    /** P1-08 我的停车汇总（停车中 / 待支付 / 待补缴） */
     loadSummary() {
       if (!this.hasToken) return
       this.loadingSummary = true
@@ -194,6 +256,9 @@ export default {
           const d = res.data.data || {}
           this.zaiChangList = d.zaiChangRuchangList || []
           this.daiZhifuList = d.daiZhifuJiaofeiList || []
+          if (d.daiBujiaoList) {
+            this.daiBujiaoList = d.daiBujiaoList
+          }
           this.summaryLoaded = true
         } else {
           this.$message.error((res.data && res.data.msg) || '加载汇总失败')
@@ -213,6 +278,20 @@ export default {
     goPay(row) {
       if (!row || !row.id) return
       this.$router.push({ path: '/index/tingchejiaofeiDetail', query: { id: String(row.id) } })
+    },
+    goBujiaoPay(row) {
+      const query = { fromM2: '0' }
+      if (row && row.chezijinchangId) {
+        query.chezijinchangId = String(row.chezijinchangId)
+      }
+      this.$router.push({ path: '/index/n7Bujiao', query })
+    },
+    goLichangAfterBujiao(row) {
+      if (!row || !row.chezijinchangId) return
+      this.$router.push({
+        path: '/index/m2TingcheLi',
+        query: { chezijinchangId: String(row.chezijinchangId) }
+      })
     },
     onHttpFail(err) {
       const body = err && err.body
@@ -267,6 +346,9 @@ export default {
 .wode-tingche-status {
   font-size: 13px;
   color: #10b981;
+}
+.wode-tingche-status-warn {
+  color: #d97706;
 }
 .wode-tingche-meta {
   list-style: none;
