@@ -32,7 +32,7 @@ import com.service.TingchejiaofeiService;
 import com.utils.R;
 
 /**
- * 这是N3代码 — 入场/离场/结算编排实现；这是M2代码 — 预约校验后入场与闭环离场校验。
+ * 这是N3代码 — 入场/离场/结算编排实现；这是M2代码 — 预约校验后入场与闭环离场校验；这是M3代码 — 结算关单触发支付态与 N2 一致。
  * 这是我cursor给父亲写的
  */
 @Service("chechangliYeN3Service")

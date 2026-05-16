@@ -30,6 +30,7 @@ public interface CheweiZhuangtaiN2Service {
 
 	/**
 	 * 缴费单更新后：若从未支付变为已支付，则车位进入「已结算」并解除占用关联。
+	 * 这是M3代码 — 支付成功须具备离场与入场关联，且仅当车位为「已离场待结算」并绑定本单时才释放占用，并联动 M1 完结。
 	 */
 	void afterTingchejiaofeiUpdatedIfPaid(TingchejiaofeiEntity before, TingchejiaofeiEntity after);
 }

@@ -14,7 +14,8 @@ import com.service.CheweiZhuangtaiN2Service;
 import com.service.ChezijinchangService;
 
 /**
- * 这是N2代码 — 车位占用状态机实现；联动 M1 时段预约单流程与支付态。这是我cursor给父亲写的
+ * 这是N2代码 — 车位占用状态机实现；联动 M1 时段预约单流程与支付态；这是M3代码 — 支付成功与车位释放、订单完结强一致。
+ * 这是我cursor给父亲写的
  */
 @Service("cheweiZhuangtaiN2Service")
 public class CheweiZhuangtaiN2ServiceImpl implements CheweiZhuangtaiN2Service {
@@ -127,22 +128,33 @@ public class CheweiZhuangtaiN2ServiceImpl implements CheweiZhuangtaiN2Service {
 		if (!"已支付".equals(now)) {
 			return;
 		}
-		cheweiYuliangN4Service.m1SyncAfterParkingFeePaid(after.getId());
+		// M3：支付完结前置，与 N3 离场闭环一致，禁止「只改 ispay」绕过业务态
+		if (after.getLichangshijian() == null) {
+			throw new IllegalStateException("支付成功前须先有离场时间；请完成离场算费后再支付或结算");
+		}
+		if (after.getCrossrefid() == null) {
+			throw new IllegalStateException("缴费单须关联入场单 crossrefid 后方可释放车位占用（N3/M3 闭环）");
+		}
 		Long cheweiId = resolveCheweiIdForOrder(after);
 		if (cheweiId == null) {
-			return;
+			throw new IllegalStateException("无法解析车位 id，不能释放占用：请补全 cheweiId 或 crossrefid 对应入场单");
 		}
 		CheweiEntity cw = cheweiService.selectById(cheweiId);
 		if (cw == null) {
-			return;
+			throw new IllegalStateException("车位不存在，无法释放占用");
 		}
 		String z = nz(cw.getZhuangtai());
-		if (!CheweiZhuangtaiN2.YI_LICHANG_DAI_JIESUAN.equals(z)) {
-			// 允许管理员手工改支付后状态不一致时仍释放
-			if (!CheweiZhuangtaiN2.YI_RUCHANG.equals(z)) {
-				return;
-			}
+		if (CheweiZhuangtaiN2.YI_JIESUAN.equals(z)) {
+			cheweiYuliangN4Service.m1SyncAfterParkingFeePaid(after.getId());
+			return;
 		}
+		if (!CheweiZhuangtaiN2.YI_LICHANG_DAI_JIESUAN.equals(z)) {
+			throw new IllegalStateException("支付成功时车位须为「已离场待结算」，当前为「" + z + "」；不可在已入场等状态下仅靠改 ispay 完结订单");
+		}
+		if (cw.getTingchejiaofeiId() == null || !cw.getTingchejiaofeiId().equals(after.getId())) {
+			throw new IllegalStateException("当前车位绑定的缴费单与本单不一致，拒绝释放占用");
+		}
+		cheweiYuliangN4Service.m1SyncAfterParkingFeePaid(after.getId());
 		cw.setZhuangtai(CheweiZhuangtaiN2.YI_JIESUAN);
 		cw.setChezijinchangId(null);
 		cw.setTingchejiaofeiId(null);

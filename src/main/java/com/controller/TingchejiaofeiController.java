@@ -51,6 +51,7 @@ import com.config.AlipayConfig;
 
 /**
  * 这是N2代码 — 缴费单 save/update 联动车位状态；这是N3代码 — 禁止仅有离场时间却无 crossrefid 的单点建单。
+ * 这是M3代码 — 支付成功（含支付宝回调）统一驱动 N2 占用释放与 M1 订单完结，禁止只改 ispay。
  * 停车缴费
  * 后端接口
  * @author 
@@ -222,11 +223,18 @@ public class TingchejiaofeiController {
         return R.ok();
     }
 
-    /** 这是N2代码 — 离场单首次写入、支付状态变更时联动车位。这是我cursor给父亲写的 */
+    /** 这是N2/M3代码 — 离场单首次写入、支付状态变更时联动车位与预约完结。这是我cursor给父亲写的 */
     private R applyN2AfterTingchejiaofeiSave(TingchejiaofeiEntity old, TingchejiaofeiEntity current) {
         try {
             if (old == null) {
                 cheweiZhuangtaiN2Service.afterTingchejiaofeiInserted(current);
+                TingchejiaofeiEntity reloaded = tingchejiaofeiService.selectById(current.getId());
+                if (reloaded != null && "已支付".equals(nz(reloaded.getIspay()))) {
+                    TingchejiaofeiEntity paidBefore = new TingchejiaofeiEntity();
+                    paidBefore.setId(reloaded.getId());
+                    paidBefore.setIspay("未支付");
+                    cheweiZhuangtaiN2Service.afterTingchejiaofeiUpdatedIfPaid(paidBefore, reloaded);
+                }
             } else {
                 if (old.getLichangshijian() == null && current.getLichangshijian() != null) {
                     cheweiZhuangtaiN2Service.afterTingchejiaofeiInserted(current);
@@ -238,6 +246,10 @@ public class TingchejiaofeiController {
             return R.error(ex.getMessage());
         }
         return null;
+    }
+
+    private static String nz(String s) {
+        return StringUtils.isBlank(s) ? "" : s.trim();
     }
 
     private void fillCheweiIdFromCrossref(TingchejiaofeiEntity t) {
@@ -373,10 +385,16 @@ public class TingchejiaofeiController {
                 TingchejiaofeiEntity tingchejiaofei = tingchejiaofeiService.selectOne(new EntityWrapper<TingchejiaofeiEntity>().eq("dingdanhao", out_trade_no));
                 if(tingchejiaofei!=null) {
                     TingchejiaofeiEntity before = tingchejiaofeiService.selectById(tingchejiaofei.getId());
+                    fillCheweiIdFromCrossref(tingchejiaofei);
                     tingchejiaofei.setIspay("已支付");
                     tingchejiaofeiService.updateById(tingchejiaofei);
                     TingchejiaofeiEntity after = tingchejiaofeiService.selectById(tingchejiaofei.getId());
-                    cheweiZhuangtaiN2Service.afterTingchejiaofeiUpdatedIfPaid(before, after);
+                    try {
+                        cheweiZhuangtaiN2Service.afterTingchejiaofeiUpdatedIfPaid(before, after);
+                    } catch (IllegalStateException ex) {
+                        TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+                        throw ex;
+                    }
                 }
             }
 
