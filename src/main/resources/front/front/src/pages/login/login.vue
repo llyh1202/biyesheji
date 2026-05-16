@@ -35,6 +35,7 @@
 
 <script>
 import menu from '@/config/menu'
+import { fetchFrontUserSession } from '@/common/auth'
 export default {
 	//数据集合
 	data() {
@@ -164,12 +165,20 @@ export default {
 		        localStorage.setItem('frontSessionTable', this.loginForm.tableName);
 		        localStorage.setItem('frontRole', this.role);
 		        localStorage.setItem('keyPath', 0);
-		        this.$router.push('/');
-		        this.$message({
-		          message: '登录成功',
-		          type: 'success',
-		          duration: 1500,
-		        });
+		        // 这是我cursor给父亲写的 — P1-22 登录后立即拉取 yonghu 资料（含车牌号）
+		        const goHome = () => {
+		          this.$router.push('/');
+		          this.$message({
+		            message: '登录成功',
+		            type: 'success',
+		            duration: 1500,
+		          });
+		        };
+		        if (this.loginForm.tableName === 'yonghu') {
+		          fetchFrontUserSession(this).finally(goHome);
+		        } else {
+		          goHome();
+		        }
 		      } else {
 		        this.$message.error(res.data.msg);
 		      }

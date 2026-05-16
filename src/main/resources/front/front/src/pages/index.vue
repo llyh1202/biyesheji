@@ -67,6 +67,7 @@ import Vue from 'vue'
 import Swiper from "swiper";
 import axios from 'axios'
 import { getVisibleIndexNav } from '@/config/config'
+import { fetchFrontUserSession } from '@/common/auth'
 
 export default {
     data() {
@@ -177,22 +178,21 @@ export default {
 		},
 
 		async getSession() {
-			await this.$http.get(`${localStorage.getItem('UserTableName')}/session`, {emulateJSON: true}).then(async res => {
-				if (res.data.code == 0) {
-					localStorage.setItem('sessionForm',JSON.stringify(res.data.data))
-					localStorage.setItem('frontUserid', res.data.data.id);
-					if(res.data.data.vip) {
-						localStorage.setItem('vip', res.data.data.vip);
-					}
-					if(res.data.data.touxiang) {
-						this.headportrait = res.data.data.touxiang
-						localStorage.setItem('frontHeadportrait', res.data.data.touxiang);
-					} else if(res.data.data.headportrait) {
-						this.headportrait = res.data.data.headportrait
-						localStorage.setItem('frontHeadportrait', res.data.data.headportrait);
-					}
+			// 这是我cursor给父亲写的 — P1-22 刷新用户资料（含车牌号）到 sessionForm
+			const data = await fetchFrontUserSession(this)
+			if (data) {
+				localStorage.setItem('frontUserid', data.id);
+				if (data.vip) {
+					localStorage.setItem('vip', data.vip);
 				}
-			});
+				if (data.touxiang) {
+					this.headportrait = data.touxiang
+					localStorage.setItem('frontHeadportrait', data.touxiang);
+				} else if (data.headportrait) {
+					this.headportrait = data.headportrait
+					localStorage.setItem('frontHeadportrait', data.headportrait);
+				}
+			}
 		},
         handleSelect(keyPath) {
             if (keyPath) {

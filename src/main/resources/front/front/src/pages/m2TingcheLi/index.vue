@@ -76,6 +76,15 @@
     <el-card v-show="activeStep === 2" shadow="never" class="m2-wizard-card">
       <div slot="header">③ 预约校验后入场</div>
       <div v-if="selectedYuyueId" class="m2-id-chip">预约单 #{{ selectedYuyueId }}</div>
+      <!-- 这是我cursor给父亲写的 — P1-22 展示用户绑定车牌 -->
+      <el-alert
+        v-if="userChepaihao"
+        :title="'当前绑定车牌：' + userChepaihao"
+        type="info"
+        :closable="false"
+        show-icon
+        class="m2-wizard-alert"
+      />
       <el-form label-width="100px" :model="ruchangForm" @submit.native.prevent="doM2Ruchang">
         <el-form-item label="用户账号">
           <el-input v-model="ruchangForm.yonghuzhanghao" readonly placeholder="登录后自动填充" />
@@ -188,7 +197,7 @@
 
 <script>
 // 这是我cursor给父亲写的 — P1-10 / P1-11 M2 步骤向导；P1-15 入场表单自动填充用户信息
-import { requireFrontLogin, handleAuthFail, autofillM2RuchangForm, goWodeTingcheDaiZhifu } from '@/common/auth'
+import { requireFrontLogin, handleAuthFail, autofillM2RuchangForm, goWodeTingcheDaiZhifu, getYonghuChepaihao } from '@/common/auth'
 
 const LIUCHENG_DAIRUCHANG = '已预约待入场'
 
@@ -228,7 +237,8 @@ export default {
       },
       orderAfterLichang: null,
       jiesuanId: '',
-      bujiaoList: []
+      bujiaoList: [],
+      userChepaihao: ''
     }
   },
   computed: {
@@ -245,7 +255,10 @@ export default {
   created() {
     const q = this.$route.query || {}
     if (this.hasToken) {
-      autofillM2RuchangForm(this, this.ruchangForm, true)
+      // 这是我cursor给父亲写的 — P1-22 登录后默认填入 yonghu 车牌号
+      autofillM2RuchangForm(this, this.ruchangForm, true).then(() => {
+        this.syncUserChepaihaoDisplay()
+      })
     }
     if (q.yuyueId) {
       this.applyYuyueId(String(q.yuyueId), true)
@@ -257,6 +270,9 @@ export default {
     }
   },
   methods: {
+    syncUserChepaihaoDisplay() {
+      this.userChepaihao = getYonghuChepaihao() || (this.ruchangForm.chepaihao || '').trim()
+    },
     parseId(val, label) {
       if (val === null || val === undefined || String(val).trim() === '') {
         if (label) this.$message.warning('请填写' + label + '（纯数字）')
@@ -328,8 +344,10 @@ export default {
       }
       if (!requireFrontLogin(this)) return
       this.activeStep = 2
-      // 这是我cursor给父亲写的 — P1-15 进入入场步骤时刷新用户资料（不覆盖已改字段）
-      autofillM2RuchangForm(this, this.ruchangForm, true)
+      // 这是我cursor给父亲写的 — P1-15/P1-22 进入入场步骤时刷新用户资料（含车牌，不覆盖已改字段）
+      autofillM2RuchangForm(this, this.ruchangForm, true).then(() => {
+        this.syncUserChepaihaoDisplay()
+      })
     },
     afterRuchangNext() {
       if (!(this.ruchangResult && this.ruchangResult.ruchang)) {
@@ -383,7 +401,9 @@ export default {
           if (skipToLichang) {
             this.activeStep = d.ruchang ? 3 : 2
             if (this.activeStep === 2 && this.hasToken) {
-              autofillM2RuchangForm(this, this.ruchangForm, true)
+              autofillM2RuchangForm(this, this.ruchangForm, true).then(() => {
+                this.syncUserChepaihaoDisplay()
+              })
             }
           }
         } else {

@@ -30,7 +30,7 @@
 		<div :style='{"padding":"0 0","borderColor":"#efefef","flexWrap":"wrap","borderWidth":"0","flexDirection":"column","display":"flex","width":"calc(100% / 3)","lineHeight":"40px","borderStyle":"solid","height":"50%"}' v-if="userTableName=='yonghu'">
 			<span class="icon iconfont icon-kuaijiezhifu" :style='{"padding":"0 0","margin":"10px","color":"#fff","borderRadius":"50%","textAlign":"center","background":"#57A7A5","width":"55px","fontSize":"24px","lineHeight":"55px","height":"55px"}'></span>
 			<div :style='{"width":"calc(100% - 75px)","fontSize":"16px","color":"#000","height":"50%"}'>车牌号</div>
-			<div :style='{"width":"calc(100% - 75px)","fontSize":"14px","color":"#333","textAlign":"left","height":"50%"}'>{{sessionForm.chepaihao}}</div>
+			<div :style='{"width":"calc(100% - 75px)","fontSize":"14px","color":"#333","textAlign":"left","height":"50%"}'>{{ sessionForm.chepaihao || '未填写' }}</div>
 		</div>
 		
 	</div>
@@ -53,7 +53,7 @@
             <el-input v-model="sessionForm.shouji" placeholder="手机" ></el-input>
           </el-form-item>
           <el-form-item :style='{"padding":"10px","margin":"0 0 10px","background":"none"}' v-if="userTableName=='yonghu'" label="车牌号" prop="chepaihao">
-            <el-input v-model="sessionForm.chepaihao" placeholder="车牌号" ></el-input>
+            <el-input v-model="sessionForm.chepaihao" placeholder="登录后自动带出，可修改后保存" ></el-input>
           </el-form-item>
           <el-form-item :style='{"padding":"10px","margin":"0 0 10px","background":"none"}' v-if="userTableName=='yonghu'" label="头像" prop="touxiang">
 			<file-upload
@@ -97,6 +97,7 @@
   import config from '@/config/config'
   import menu from '@/config/menu'
   import Vue from 'vue'
+  import { fetchFrontUserSession } from '@/common/auth'
   export default {
     //数据集合
     data() {
@@ -187,10 +188,29 @@
 		}
 
       this.init();
-      this.sessionForm = JSON.parse(localStorage.getItem('sessionForm'))
+      // 这是我cursor给父亲写的 — P1-22 个人中心从 yonghu/session 展示并填入车牌号
+      this.loadSessionUser();
     },
     //方法集合
     methods: {
+      loadSessionUser() {
+        const raw = localStorage.getItem('sessionForm');
+        if (raw) {
+          try {
+            this.sessionForm = JSON.parse(raw);
+          } catch (e) {
+            this.sessionForm = {};
+          }
+        }
+        if (!localStorage.getItem('frontToken') || this.userTableName !== 'yonghu') {
+          return;
+        }
+        fetchFrontUserSession(this).then(data => {
+          if (data) {
+            this.sessionForm = Object.assign({}, this.sessionForm || {}, data);
+          }
+        });
+      },
       init() {
         if ('yonghu' == this.userTableName) {
           this.dynamicProp.xingbie = '男,女'.split(',');

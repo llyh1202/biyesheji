@@ -1,6 +1,7 @@
 /**
  * 这是我cursor给父亲写的 — P1-10 用户端 frontToken 登录校验（与 main.js Token 头一致）
  * P1-15 M2 入场表单从 localStorage / session 接口补全用户信息
+ * P1-22 登录后从 yonghu/session 带出车牌号（个人中心展示、M2 默认填入）
  */
 
 /** 从 localStorage 读取 sessionForm（index 页 getSession 写入） */
@@ -56,19 +57,31 @@ export function fillRuchangUserFields(form, user, onlyEmpty) {
 	assign('chepaihao', u.chepaihao)
 }
 
-/** 这是我cursor给父亲写的 — P1-15 M2 入场：先 sessionForm，必要时请求 /session */
+/** 这是我cursor给父亲写的 — P1-22 读取用户资料中的车牌号 */
+export function getYonghuChepaihao(user) {
+	const u = user || readSessionFormUser() || {}
+	if (u.chepaihao === undefined || u.chepaihao === null) return ''
+	return String(u.chepaihao).trim()
+}
+
+/** 这是我cursor给父亲写的 — P1-15/P1-22 M2 入场：优先 sessionForm，缺车牌时请求 /session */
 export function autofillM2RuchangForm(vm, form, onlyEmpty) {
-	if (!form) return Promise.resolve()
-	let user = readSessionFormUser()
-	const hasProfile = user && (user.xingming || user.shouji || user.chepaihao)
-	if (hasProfile) {
-		fillRuchangUserFields(form, user, onlyEmpty)
-		return Promise.resolve(user)
+	if (!form || !localStorage.getItem('frontToken')) {
+		return Promise.resolve(null)
 	}
-	return fetchFrontUserSession(vm).then(fresh => {
-		fillRuchangUserFields(form, fresh || user, onlyEmpty)
-		return fresh || user
-	})
+	let user = readSessionFormUser()
+	const formNeedPlate = !(String(form.chepaihao || '').trim())
+	const userPlate = getYonghuChepaihao(user)
+	const shouldFetch = !user || (!userPlate && formNeedPlate)
+
+	const apply = u => {
+		fillRuchangUserFields(form, u, onlyEmpty)
+		return u
+	}
+	if (!shouldFetch) {
+		return Promise.resolve(apply(user))
+	}
+	return fetchFrontUserSession(vm).then(fresh => apply(fresh || user))
 }
 
 /** 未登录时提示并跳转登录页，已登录返回 true */
