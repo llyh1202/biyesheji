@@ -154,7 +154,7 @@
       <div v-if="bujiaoList.length" class="m2-bujiao-block">
         <div class="m2-bujiao-title">补缴单（N7）{{ unpaidBujiaoBlock ? '— 请先支付' : '' }}</div>
         <el-button size="mini" @click="loadBujiao">刷新</el-button>
-        <el-button size="mini" type="text" @click="$router.push('/index/n7Bujiao')">去补缴</el-button>
+        <el-button size="mini" type="text" @click="goN7BujiaoFromM2">去补缴</el-button>
         <el-table :data="bujiaoList" size="small" border class="m2-bujiao-table">
           <el-table-column prop="danhao" label="单号" />
           <el-table-column prop="leixing" label="类型" width="90" />
@@ -206,7 +206,17 @@
 
 <script>
 // 这是我cursor给父亲写的 — P1-10 / P1-11 M2 步骤向导；P1-15 入场表单自动填充用户信息
-import { requireFrontLogin, handleAuthFail, autofillM2RuchangForm, goWodeTingcheDaiZhifu, getYonghuChepaihao } from '@/common/auth'
+import {
+  requireFrontLogin,
+  handleAuthFail,
+  autofillM2RuchangForm,
+  goWodeTingcheDaiZhifu,
+  getYonghuChepaihao,
+  isUnpaidBujiaoLichangError,
+  saveM2LichangReturnContext,
+  readM2LichangReturnContext,
+  clearM2LichangReturnContext
+} from '@/common/auth'
 
 const LIUCHENG_DAIRUCHANG = '已预约待入场'
 
@@ -279,8 +289,45 @@ export default {
     } else if (this.hasToken) {
       this.loadPendingYuyueList()
     }
+    this.handleM2ReturnFromN7(q)
   },
   methods: {
+    // 这是我cursor给父亲写的 — P1-24 从 N7 补缴完成回 M2 离场步骤
+    handleM2ReturnFromN7(q) {
+      const query = q || this.$route.query || {}
+      if (query.bujiaoDone !== '1' && query.bujiaoDone !== 1) return
+      const ctx = readM2LichangReturnContext()
+      clearM2LichangReturnContext()
+      this.unpaidBujiaoBlock = false
+      this.unpaidBujiaoMsg = ''
+      const step = parseInt(query.step, 10)
+      this.activeStep = (!isNaN(step) && step >= 0 && step <= 4) ? step : 3
+      const cid = query.chezijinchangId || (ctx && ctx.chezijinchangId)
+      if (cid) {
+        this.lichangForm.chezijinchangId = String(cid)
+      }
+      const yid = query.yuyueId || (ctx && ctx.yuyueId)
+      if (yid) {
+        this.applyYuyueId(String(yid), false)
+      }
+      if (ctx && ctx.lichangshijian) {
+        this.lichangForm.lichangshijian = ctx.lichangshijian
+      }
+      this.loadBujiao()
+      this.$message.success('补缴已结清，请再次点击「生成缴费单」完成离场')
+    },
+    goN7BujiaoFromM2() {
+      const cid = (this.lichangForm.chezijinchangId || '').trim()
+      saveM2LichangReturnContext({
+        fromM2: true,
+        chezijinchangId: cid,
+        yuyueId: (this.lichangForm.yuyueId || this.selectedYuyueId || '').trim(),
+        lichangshijian: this.lichangForm.lichangshijian || ''
+      })
+      const query = { fromM2: '1' }
+      if (cid) query.chezijinchangId = cid
+      this.$router.push({ path: '/index/n7Bujiao', query })
+    },
     syncUserChepaihaoDisplay() {
       this.userChepaihao = getYonghuChepaihao() || (this.ruchangForm.chepaihao || '').trim()
     },
@@ -578,14 +625,21 @@ export default {
       })
     },
     applyUnpaidBujiaoLichangError(body) {
-      if (!body) return false
-      const code = body.code
-      const biz = body.bizCode
-      if (code !== 4707 && biz !== 'N7_UNPAID_BUJIAO') return false
+      if (!isUnpaidBujiaoLichangError(body)) return false
       this.unpaidBujiaoBlock = true
       this.unpaidBujiaoMsg = body.msg || '存在待支付补缴单，请先完成补缴后再离场'
       this.bujiaoList = body.bujiaoList || []
-      this.$message.warning(this.unpaidBujiaoMsg)
+      const unpaidCount = body.unpaidCount != null ? body.unpaidCount : this.bujiaoList.length
+      const hint = `${this.unpaidBujiaoMsg}\n\n共 ${unpaidCount} 笔待支付补缴。请前往 N7 补缴页完成支付，完成后将自动返回本页继续离场。`
+      // 这是我cursor给父亲写的 — P1-24 弹窗引导跳转 N7 补缴
+      this.$confirm(hint, '须先完成补缴', {
+        confirmButtonText: '去补缴',
+        cancelButtonText: '稍后再说',
+        type: 'warning',
+        dangerouslyUseHTMLString: false
+      }).then(() => {
+        this.goN7BujiaoFromM2()
+      }).catch(() => {})
       return true
     },
     doJiesuan() {

@@ -2,6 +2,7 @@
  * 这是我cursor给父亲写的 — P1-10 用户端 frontToken 登录校验（与 main.js Token 头一致）
  * P1-15 M2 入场表单从 localStorage / session 接口补全用户信息
  * P1-22 登录后从 yonghu/session 带出车牌号（个人中心展示、M2 默认填入）
+ * P1-24 M2 离场待补缴 → N7 补缴后回 M2
  */
 
 /** 从 localStorage 读取 sessionForm（index 页 getSession 写入） */
@@ -112,6 +113,36 @@ export function handleAuthFail(vm, dataOrErr) {
 		return true
 	}
 	return false
+}
+
+const M2_LICHANG_RETURN_KEY = 'm2LichangReturnContext'
+
+/** 这是我cursor给父亲写的 — P1-24 保存 M2 离场上下文，供 N7 补缴完成后回跳 */
+export function saveM2LichangReturnContext(ctx) {
+	if (!ctx) return
+	try {
+		localStorage.setItem(M2_LICHANG_RETURN_KEY, JSON.stringify(ctx))
+	} catch (e) { /* ignore */ }
+}
+
+export function readM2LichangReturnContext() {
+	try {
+		const raw = localStorage.getItem(M2_LICHANG_RETURN_KEY)
+		if (!raw) return null
+		return JSON.parse(raw)
+	} catch (e) {
+		return null
+	}
+}
+
+export function clearM2LichangReturnContext() {
+	localStorage.removeItem(M2_LICHANG_RETURN_KEY)
+}
+
+/** N7 待支付补缴业务码（与后端 N7LichangBizCode 一致） */
+export function isUnpaidBujiaoLichangError(body) {
+	if (!body) return false
+	return body.code === 4707 || body.bizCode === 'N7_UNPAID_BUJIAO'
 }
 
 /** 这是我cursor给父亲写的 — P1-20 支付/关单成功后跳转「我的停车」待支付 Tab 并触发刷新 */
