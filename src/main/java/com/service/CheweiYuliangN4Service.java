@@ -1,5 +1,6 @@
 package com.service;
 
+import com.entity.dto.N4SpotAvailChaDto;
 import com.entity.dto.N4YuliangChaDto;
 import com.entity.dto.N4YuyueReserveDto;
 import com.utils.R;
@@ -14,6 +15,11 @@ public interface CheweiYuliangN4Service {
 	 * 统计车场/区域在给定时段内可预约余位数（总车位 − 已占用：已入场、待结算、已预约、有效时段预约重叠）。
 	 */
 	R availability(N4YuliangChaDto body);
+
+	/**
+	 * 这是我cursor给父亲写的 — 给定时段与车场条件，返回每个车位是否可约（复用 N4 余位/重叠判断）。
+	 */
+	R availabilityBySpot(N4SpotAvailChaDto body);
 
 	/**
 	 * 余位足够且目标车位在时段内可用时：写入时段预约并置车位为「已预约未入场」。

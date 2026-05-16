@@ -31,6 +31,7 @@ import com.constant.CheweiZhuangtaiN2;
 import com.entity.CheweiEntity;
 import com.entity.CheweixinxiEntity;
 import com.entity.dto.CheweiByLotItemDto;
+import com.entity.dto.N4SpotAvailChaDto;
 import com.entity.dto.N4YuliangChaDto;
 import com.entity.dto.N4YuyueReserveDto;
 import com.entity.view.CheweiView;
@@ -274,6 +275,13 @@ public class CheweiController {
 	@RequestMapping("/n4/availability")
 	public R n4Availability(@RequestBody N4YuliangChaDto body, HttpServletRequest request) {
 		return cheweiYuliangN4Service.availability(body);
+	}
+
+	/** 这是我cursor给父亲写的 — 按车位返回指定时段是否可约（复用 N4 余位/重叠逻辑，供前端选位） */
+	@IgnoreAuth
+	@RequestMapping("/n4/availabilityBySpot")
+	public R n4AvailabilityBySpot(@RequestBody N4SpotAvailChaDto body, HttpServletRequest request) {
+		return cheweiYuliangN4Service.availabilityBySpot(body);
 	}
 
 	/** 这是N4/M4代码 — 带时段预约：余位校验 + 并发控制后写 chewei_yuyue。这是我cursor给父亲写的 */

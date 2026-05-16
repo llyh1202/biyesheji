@@ -23,10 +23,14 @@ import com.dao.CheweiDao;
 import com.dao.CheweiYuyueDao;
 import com.entity.CheweiEntity;
 import com.entity.CheweiYuyueEntity;
+import com.entity.CheweixinxiEntity;
+import com.entity.dto.CheweiSpotAvailItemDto;
+import com.entity.dto.N4SpotAvailChaDto;
 import com.entity.dto.N4YuliangChaDto;
 import com.entity.dto.N4YuyueReserveDto;
 import com.service.CheweiService;
 import com.service.CheweiYuliangN4Service;
+import com.service.CheweixinxiService;
 import com.utils.R;
 
 /**
@@ -40,6 +44,8 @@ public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, Chew
 	private CheweiService cheweiService;
 	@Autowired
 	private CheweiDao cheweiDao;
+	@Autowired
+	private CheweixinxiService cheweixinxiService;
 
 	private static String nz(String s) {
 		return s == null ? "" : s.trim();
@@ -135,6 +141,130 @@ public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, Chew
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * 这是我cursor给父亲写的 — 与 reserveWithSlot 一致的可约判定，并返回不可约原因。
+	 */
+	private String spotUnavailReason(CheweiEntity cw, Date start, Date end, List<CheweiYuyueEntity> yuyues) {
+		if (cw == null) {
+			return "车位不存在";
+		}
+		String z = StringUtils.isBlank(cw.getZhuangtai()) ? CheweiZhuangtaiN2.KONGXIAN : cw.getZhuangtai().trim();
+		if (CheweiZhuangtaiN2.YI_RUCHANG.equals(z)) {
+			return "车位已入场，该时段不可预约";
+		}
+		if (CheweiZhuangtaiN2.YI_LICHANG_DAI_JIESUAN.equals(z)) {
+			return "车位已离场待结算，该时段不可预约";
+		}
+		if (hasOverlappingYuyue(cw.getId(), start, end, yuyues)) {
+			return "该时段与已有有效预约冲突";
+		}
+		if (CheweiZhuangtaiN2.YUYUE_WEIRUCHANG.equals(z)) {
+			return "车位已预约未入场";
+		}
+		if (!CheweiZhuangtaiN2.KONGXIAN.equals(z) && !CheweiZhuangtaiN2.YI_JIESUAN.equals(z)) {
+			return "仅「空闲」或「已结算」车位可预约，当前为「" + z + "」";
+		}
+		return null;
+	}
+
+	/** 这是我cursor给父亲写的 — 按 cheweixinxiId 或车场名+区域解析车位列表 */
+	private R listSpotsForLotQuery(Long cheweixinxiId, String tingchechangmingcheng, String quyu,
+			List<CheweiEntity> outSpots, Map<String, Object> scopeMeta) {
+		String lot = nz(tingchechangmingcheng);
+		String area = normalizeQuyu(quyu);
+		List<CheweiEntity> rows;
+		if (cheweixinxiId != null) {
+			CheweixinxiEntity info = cheweixinxiService.selectById(cheweixinxiId);
+			if (info == null) {
+				return R.error("车位信息不存在：cheweixinxiId=" + cheweixinxiId);
+			}
+			lot = nz(info.getTingchechangmingcheng());
+			area = normalizeQuyu(info.getQuyu());
+			if (StringUtils.isBlank(lot)) {
+				return R.error("该车场信息缺少停车场名称，无法查询车位");
+			}
+			EntityWrapper<CheweiEntity> byInfoId = new EntityWrapper<CheweiEntity>();
+			byInfoId.eq("cheweixinxi_id", cheweixinxiId);
+			byInfoId.orderBy("cheweibianhao", true);
+			rows = cheweiService.selectList(byInfoId);
+			if (rows == null || rows.isEmpty()) {
+				EntityWrapper<CheweiEntity> byLot = new EntityWrapper<CheweiEntity>();
+				byLot.eq("tingchechangmingcheng", lot);
+				byLot.eq("quyu", area);
+				byLot.orderBy("cheweibianhao", true);
+				rows = cheweiService.selectList(byLot);
+			}
+			scopeMeta.put("cheweixinxiId", cheweixinxiId);
+		} else {
+			if (StringUtils.isBlank(lot)) {
+				return R.error("请传入 cheweixinxiId，或 tingchechangmingcheng（及可选 quyu）");
+			}
+			EntityWrapper<CheweiEntity> ew = new EntityWrapper<CheweiEntity>();
+			ew.eq("tingchechangmingcheng", lot);
+			ew.eq("quyu", area);
+			ew.orderBy("cheweibianhao", true);
+			rows = cheweiService.selectList(ew);
+		}
+		if (rows == null || rows.isEmpty()) {
+			return R.error("该车场/区域下无车位主数据，请先维护车位");
+		}
+		outSpots.addAll(rows);
+		scopeMeta.put("tingchechangmingcheng", lot);
+		scopeMeta.put("quyu", area);
+		return null;
+	}
+
+	@Override
+	public R availabilityBySpot(N4SpotAvailChaDto body) {
+		if (body == null) {
+			return R.error("请求体不能为空");
+		}
+		R wv = validateWindow(body.getKaishiShijian(), body.getJieshuShijian());
+		if (wv != null) {
+			return wv;
+		}
+		List<CheweiEntity> spots = new ArrayList<CheweiEntity>();
+		Map<String, Object> scopeMeta = new HashMap<String, Object>(4);
+		R scopeErr = listSpotsForLotQuery(body.getCheweixinxiId(), body.getTingchechangmingcheng(), body.getQuyu(),
+				spots, scopeMeta);
+		if (scopeErr != null) {
+			return scopeErr;
+		}
+		List<Long> ids = new ArrayList<Long>(spots.size());
+		for (CheweiEntity c : spots) {
+			ids.add(c.getId());
+		}
+		List<CheweiYuyueEntity> yuyues = listActiveYuyueForCheweiIds(ids);
+		List<CheweiSpotAvailItemDto> list = new ArrayList<CheweiSpotAvailItemDto>(spots.size());
+		int available = 0;
+		for (CheweiEntity cw : spots) {
+			CheweiSpotAvailItemDto item = new CheweiSpotAvailItemDto();
+			item.setId(cw.getId());
+			item.setCheweibianhao(cw.getCheweibianhao());
+			item.setQuyu(cw.getQuyu() == null ? "" : cw.getQuyu());
+			String z = StringUtils.isBlank(cw.getZhuangtai()) ? CheweiZhuangtaiN2.KONGXIAN : cw.getZhuangtai().trim();
+			item.setZhuangtai(z);
+			String reason = spotUnavailReason(cw, body.getKaishiShijian(), body.getJieshuShijian(), yuyues);
+			boolean keyuyue = reason == null;
+			item.setKeyuyue(keyuyue);
+			item.setReason(reason);
+			if (keyuyue) {
+				available++;
+			}
+			list.add(item);
+		}
+		Map<String, Object> data = new HashMap<String, Object>(12);
+		data.putAll(scopeMeta);
+		data.put("kaishiShijian", body.getKaishiShijian());
+		data.put("jieshuShijian", body.getJieshuShijian());
+		data.put("total", spots.size());
+		data.put("available", available);
+		data.put("unavailable", spots.size() - available);
+		data.put("yuweiBuzu", available < 1);
+		data.put("list", list);
+		return R.ok().put("data", data);
 	}
 
 	@Override
