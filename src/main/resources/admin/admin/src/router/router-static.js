@@ -24,6 +24,8 @@ import center from '@/views/center'
     import yunyingkanban from '@/views/modules/yunyingkanban/index'
     // 这是我cursor给父亲写的 — N9 多维报表
     import duoweibaobiao from '@/views/modules/duoweibaobiao/index'
+    // 这是我cursor给父亲写的 — N10 异常报表
+    import yichangbaobiao from '@/views/modules/yichangbaobiao/index'
     import chezijinchang from '@/views/modules/chezijinchang/list'
     import yonghu from '@/views/modules/yonghu/list'
     import tingchejiaofei from '@/views/modules/tingchejiaofei/list'
@@ -50,6 +52,10 @@ export const routes = [{
       path: '/duoweibaobiao',
       name: '多维统计',
       component: duoweibaobiao
+    }, {
+      path: '/yichangbaobiao',
+      name: '异常报表',
+      component: yichangbaobiao
     }, {
       path: '/updatePassword',
       name: '修改密码',
