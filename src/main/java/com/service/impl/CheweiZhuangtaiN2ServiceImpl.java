@@ -9,12 +9,12 @@ import com.entity.CheweiEntity;
 import com.entity.ChezijinchangEntity;
 import com.entity.TingchejiaofeiEntity;
 import com.service.CheweiService;
+import com.service.CheweiYuliangN4Service;
 import com.service.CheweiZhuangtaiN2Service;
 import com.service.ChezijinchangService;
 
 /**
- * 这是N2代码 — 车位占用状态机实现。
- * 这是我cursor给父亲写的
+ * 这是N2代码 — 车位占用状态机实现；联动 M1 时段预约单流程与支付态。这是我cursor给父亲写的
  */
 @Service("cheweiZhuangtaiN2Service")
 public class CheweiZhuangtaiN2ServiceImpl implements CheweiZhuangtaiN2Service {
@@ -23,6 +23,8 @@ public class CheweiZhuangtaiN2ServiceImpl implements CheweiZhuangtaiN2Service {
 	private CheweiService cheweiService;
 	@Autowired
 	private ChezijinchangService chezijinchangService;
+	@Autowired
+	private CheweiYuliangN4Service cheweiYuliangN4Service;
 
 	private static String nz(String s) {
 		if (StringUtils.isBlank(s)) {
@@ -62,6 +64,8 @@ public class CheweiZhuangtaiN2ServiceImpl implements CheweiZhuangtaiN2Service {
 		cw.setChezijinchangId(entry.getId());
 		cw.setTingchejiaofeiId(null);
 		cheweiService.updateById(cw);
+		java.util.Date jt = entry.getJinchangshijian() != null ? entry.getJinchangshijian() : new java.util.Date();
+		cheweiYuliangN4Service.m1SyncAfterRuchang(entry.getCheweiId(), entry.getId(), jt);
 	}
 
 	@Override
@@ -88,6 +92,9 @@ public class CheweiZhuangtaiN2ServiceImpl implements CheweiZhuangtaiN2Service {
 		cw.setZhuangtai(CheweiZhuangtaiN2.YI_LICHANG_DAI_JIESUAN);
 		cw.setTingchejiaofeiId(order.getId());
 		cheweiService.updateById(cw);
+		if (order.getCrossrefid() != null) {
+			cheweiYuliangN4Service.m1SyncAfterLichangOrder(cheweiId, order.getCrossrefid(), order.getId());
+		}
 	}
 
 	@Override
@@ -103,6 +110,7 @@ public class CheweiZhuangtaiN2ServiceImpl implements CheweiZhuangtaiN2Service {
 		if (!"已支付".equals(now)) {
 			return;
 		}
+		cheweiYuliangN4Service.m1SyncAfterParkingFeePaid(after.getId());
 		Long cheweiId = resolveCheweiIdForOrder(after);
 		if (cheweiId == null) {
 			return;

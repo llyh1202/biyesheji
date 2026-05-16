@@ -15,6 +15,8 @@ import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
 import com.constant.CheweiYuyueZhuangtaiN4;
 import com.constant.CheweiZhuangtaiN2;
+import com.constant.YuyueLiuchengJiedianM1;
+import com.constant.YuyueZhifuZhuangtaiM1;
 import com.dao.CheweiYuyueDao;
 import com.entity.CheweiEntity;
 import com.entity.CheweiYuyueEntity;
@@ -25,8 +27,7 @@ import com.service.CheweiYuliangN4Service;
 import com.utils.R;
 
 /**
- * 这是N4代码 — 余位与时段预约实现。
- * 这是我cursor给父亲写的
+ * 这是N4代码 — 余位与时段预约实现；含 M1 预约单与入场/离场/支付流水同步。这是我cursor给父亲写的
  */
 @Service("cheweiYuliangN4Service")
 public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, CheweiYuyueEntity>
@@ -200,6 +201,8 @@ public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, Chew
 		row.setKaishiShijian(body.getKaishiShijian());
 		row.setJieshuShijian(body.getJieshuShijian());
 		row.setZhuangtai(CheweiYuyueZhuangtaiN4.YOUXIAO);
+		row.setYuyueZhifuZhuangtai(YuyueZhifuZhuangtaiM1.WUXU_YUFU);
+		row.setLiuchengJiedian(YuyueLiuchengJiedianM1.YIYUYUE_DAIRUCHANG);
 		row.setAddtime(new Date());
 		insert(row);
 
@@ -222,7 +225,79 @@ public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, Chew
 		List<CheweiYuyueEntity> list = selectList(w);
 		for (CheweiYuyueEntity y : list) {
 			y.setZhuangtai(CheweiYuyueZhuangtaiN4.YI_QUXIAO);
+			y.setLiuchengJiedian(YuyueLiuchengJiedianM1.YI_QUXIAO);
 			updateById(y);
 		}
+	}
+
+	@Override
+	public void m1SyncAfterRuchang(Long cheweiId, Long chezijinchangId, Date jinchang) {
+		if (cheweiId == null || chezijinchangId == null || jinchang == null) {
+			return;
+		}
+		EntityWrapper<CheweiYuyueEntity> w = new EntityWrapper<CheweiYuyueEntity>();
+		w.eq("chewei_id", cheweiId);
+		w.eq("zhuangtai", CheweiYuyueZhuangtaiN4.YOUXIAO);
+		w.isNull("chezijinchang_id");
+		w.le("kaishi_shijian", jinchang);
+		w.gt("jieshu_shijian", jinchang);
+		w.last("ORDER BY id DESC LIMIT 1");
+		CheweiYuyueEntity y = selectOne(w);
+		if (y == null) {
+			return;
+		}
+		y.setChezijinchangId(chezijinchangId);
+		y.setLiuchengJiedian(YuyueLiuchengJiedianM1.YIRUCHANG);
+		updateById(y);
+	}
+
+	@Override
+	public void m1SyncAfterLichangOrder(Long cheweiId, Long chezijinchangId, Long tingchejiaofeiId) {
+		if (cheweiId == null || chezijinchangId == null || tingchejiaofeiId == null) {
+			return;
+		}
+		EntityWrapper<CheweiYuyueEntity> w = new EntityWrapper<CheweiYuyueEntity>();
+		w.eq("chewei_id", cheweiId);
+		w.eq("chezijinchang_id", chezijinchangId);
+		w.eq("zhuangtai", CheweiYuyueZhuangtaiN4.YOUXIAO);
+		w.isNull("tingchejiaofei_id");
+		w.last("ORDER BY id DESC LIMIT 1");
+		CheweiYuyueEntity y = selectOne(w);
+		if (y == null) {
+			return;
+		}
+		y.setTingchejiaofeiId(tingchejiaofeiId);
+		y.setLiuchengJiedian(YuyueLiuchengJiedianM1.YILICHANG_DAIZHIFU);
+		y.setYuyueZhifuZhuangtai(YuyueZhifuZhuangtaiM1.WEI_ZHIFU);
+		updateById(y);
+	}
+
+	@Override
+	public void m1SyncAfterParkingFeePaid(Long tingchejiaofeiId) {
+		if (tingchejiaofeiId == null) {
+			return;
+		}
+		EntityWrapper<CheweiYuyueEntity> w = new EntityWrapper<CheweiYuyueEntity>();
+		w.eq("tingchejiaofei_id", tingchejiaofeiId);
+		w.eq("zhuangtai", CheweiYuyueZhuangtaiN4.YOUXIAO);
+		w.last("ORDER BY id DESC LIMIT 1");
+		CheweiYuyueEntity y = selectOne(w);
+		if (y == null) {
+			return;
+		}
+		y.setLiuchengJiedian(YuyueLiuchengJiedianM1.YIWANCHENG);
+		y.setYuyueZhifuZhuangtai(YuyueZhifuZhuangtaiM1.YI_ZHIFU);
+		updateById(y);
+	}
+
+	@Override
+	public R m1YuyueListByChewei(Long cheweiId) {
+		if (cheweiId == null) {
+			return R.error("须传入车位 id：cheweiId");
+		}
+		EntityWrapper<CheweiYuyueEntity> w = new EntityWrapper<CheweiYuyueEntity>();
+		w.eq("chewei_id", cheweiId);
+		w.orderBy("id", false);
+		return R.ok().put("data", selectList(w));
 	}
 }

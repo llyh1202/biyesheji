@@ -11,6 +11,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 /**
  * 这是N4代码 — 车位时段预约实体。
+ * 这是M1代码 — 扩展：预约支付态、流程节点、关联入场单/停车费单（与 N2/N3 流水一致）。
  * 这是我cursor给父亲写的
  */
 @TableName("chewei_yuyue")
@@ -32,6 +33,12 @@ public class CheweiYuyueEntity implements Serializable {
 	private Date jieshuShijian;
 
 	private String zhuangtai;
+	/** 这是M1代码 — 预约链路支付状态（与 tingchejiaofei.ispay 区分又可对齐） */
+	private String yuyueZhifuZhuangtai;
+	/** 这是M1代码 — 当前业务节点：已预约待入场→已入场→已离场待支付→已完成 */
+	private String liuchengJiedian;
+	private Long chezijinchangId;
+	private Long tingchejiaofeiId;
 
 	@JsonFormat(locale = "zh", timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
 	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -91,6 +98,38 @@ public class CheweiYuyueEntity implements Serializable {
 
 	public void setZhuangtai(String zhuangtai) {
 		this.zhuangtai = zhuangtai;
+	}
+
+	public String getYuyueZhifuZhuangtai() {
+		return yuyueZhifuZhuangtai;
+	}
+
+	public void setYuyueZhifuZhuangtai(String yuyueZhifuZhuangtai) {
+		this.yuyueZhifuZhuangtai = yuyueZhifuZhuangtai;
+	}
+
+	public String getLiuchengJiedian() {
+		return liuchengJiedian;
+	}
+
+	public void setLiuchengJiedian(String liuchengJiedian) {
+		this.liuchengJiedian = liuchengJiedian;
+	}
+
+	public Long getChezijinchangId() {
+		return chezijinchangId;
+	}
+
+	public void setChezijinchangId(Long chezijinchangId) {
+		this.chezijinchangId = chezijinchangId;
+	}
+
+	public Long getTingchejiaofeiId() {
+		return tingchejiaofeiId;
+	}
+
+	public void setTingchejiaofeiId(Long tingchejiaofeiId) {
+		this.tingchejiaofeiId = tingchejiaofeiId;
 	}
 
 	public Date getAddtime() {

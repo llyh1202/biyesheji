@@ -24,4 +24,16 @@ public interface CheweiYuliangN4Service {
 	 * 取消该车位的所有「有效」时段预约（供 N2 取消预约时联动）。
 	 */
 	void cancelActiveYuyueForChewei(Long cheweiId);
+
+	/** 这是M1代码 — 入场后把有效时段预约单挂上入场单 id，并推进流程节点。这是我cursor给父亲写的 */
+	void m1SyncAfterRuchang(Long cheweiId, Long chezijinchangId, java.util.Date jinchang);
+
+	/** 这是M1代码 — 生成离场/缴费单后挂 tingchejiaofei_id，节点进入待支付停车费。这是我cursor给父亲写的 */
+	void m1SyncAfterLichangOrder(Long cheweiId, Long chezijinchangId, Long tingchejiaofeiId);
+
+	/** 这是M1代码 — 停车费已支付后推进预约单节点与预约侧支付态。这是我cursor给父亲写的 */
+	void m1SyncAfterParkingFeePaid(Long tingchejiaofeiId);
+
+	/** 这是M1代码 — 查询某车位时段预约单列表（含扩展字段），按 id 倒序。这是我cursor给父亲写的 */
+	R m1YuyueListByChewei(Long cheweiId);
 }
