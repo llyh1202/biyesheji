@@ -26,6 +26,8 @@ import m2TingcheLi from '../pages/m2TingcheLi/index'
 import n6Chaoshi from '../pages/n6Chaoshi/index'
 // 这是我cursor给父亲写的 — N7 补缴
 import n7Bujiao from '../pages/n7Bujiao/index'
+// 这是我cursor给父亲写的 — M4 预约校验
+import m4Yuyue from '../pages/m4Yuyue/index'
 
 const originalPush = VueRouter.prototype.push
 VueRouter.prototype.push = function push(location) {
@@ -118,6 +120,10 @@ export default new VueRouter({
 				{
 					path: 'n7Bujiao',
 					component: n7Bujiao
+				},
+				{
+					path: 'm4Yuyue',
+					component: m4Yuyue
 				},
 			]
 		},

@@ -8,15 +8,18 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
+import com.constant.CheweiYuyueM4Codes;
 import com.constant.CheweiYuyueZhuangtaiN4;
 import com.constant.CheweiZhuangtaiN2;
 import com.constant.YuyueLiuchengJiedianM1;
 import com.constant.YuyueZhifuZhuangtaiM1;
+import com.dao.CheweiDao;
 import com.dao.CheweiYuyueDao;
 import com.entity.CheweiEntity;
 import com.entity.CheweiYuyueEntity;
@@ -27,7 +30,7 @@ import com.service.CheweiYuliangN4Service;
 import com.utils.R;
 
 /**
- * 这是N4代码 — 余位与时段预约实现；含 M1 预约单与入场/离场/支付流水同步。这是我cursor给父亲写的
+ * 这是N4/M4代码 — 余位与时段预约；M4 区域行锁 + 车位乐观锁防超卖。这是我cursor给父亲写的
  */
 @Service("cheweiYuliangN4Service")
 public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, CheweiYuyueEntity>
@@ -35,6 +38,8 @@ public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, Chew
 
 	@Autowired
 	private CheweiService cheweiService;
+	@Autowired
+	private CheweiDao cheweiDao;
 
 	private static String nz(String s) {
 		return s == null ? "" : s.trim();
@@ -67,6 +72,26 @@ public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, Chew
 		w.eq("tingchechangmingcheng", lot);
 		w.eq("quyu", quyuNorm);
 		return cheweiService.selectList(w);
+	}
+
+	/** 这是M4代码 — 统一返回「余位不足」供前端识别 */
+	private R m4YuweiBuzu(String detail) {
+		return R.error(CheweiYuyueM4Codes.CODE_YUWEI_BUZU, CheweiYuyueM4Codes.MSG_YUWEI_BUZU)
+				.put("m4Code", CheweiYuyueM4Codes.KEY_YUWEI_BUZU).put("detail", detail);
+	}
+
+	private R m4Chongtu(String msg) {
+		return R.error(CheweiYuyueM4Codes.CODE_CHONGTU, msg).put("m4Code", CheweiYuyueM4Codes.KEY_CHONGTU);
+	}
+
+	private int countAvailableInScope(List<CheweiEntity> spots, Date start, Date end, List<CheweiYuyueEntity> yuyues) {
+		int available = 0;
+		for (CheweiEntity c : spots) {
+			if (!isSpotUnavailableInWindow(c, start, end, yuyues)) {
+				available++;
+			}
+		}
+		return available;
 	}
 
 	private List<CheweiYuyueEntity> listActiveYuyueForCheweiIds(List<Long> cheweiIds) {
@@ -148,6 +173,7 @@ public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, Chew
 		data.put("total", total);
 		data.put("unavailable", unavailable);
 		data.put("available", available);
+		data.put("yuweiBuzu", available < 1);
 		return R.ok().put("data", data);
 	}
 
@@ -161,37 +187,48 @@ public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, Chew
 		if (wv != null) {
 			return wv;
 		}
-		CheweiEntity cw = cheweiService.selectById(body.getCheweiId());
-		if (cw == null) {
+		CheweiEntity probe = cheweiService.selectById(body.getCheweiId());
+		if (probe == null) {
 			return R.error("车位不存在");
 		}
-		String lot = nz(cw.getTingchechangmingcheng());
-		String quyuNorm = normalizeQuyu(cw.getQuyu());
+		String lot = nz(probe.getTingchechangmingcheng());
+		String quyuNorm = normalizeQuyu(probe.getQuyu());
 		if (StringUtils.isBlank(lot)) {
 			return R.error("车位缺少停车场名称，无法做余位统计");
 		}
-		List<CheweiEntity> spots = listCheweiInScope(lot, quyuNorm);
+		// 这是M4代码 — 锁定区域内所有车位行后再算余位，防止并发超卖
+		List<CheweiEntity> spots = cheweiDao.selectListInScopeForUpdate(lot, quyuNorm);
+		if (spots == null || spots.isEmpty()) {
+			return R.error("该车场/区域下无车位主数据，请先维护车位");
+		}
+		CheweiEntity cw = null;
+		for (CheweiEntity c : spots) {
+			if (body.getCheweiId().equals(c.getId())) {
+				cw = c;
+				break;
+			}
+		}
+		if (cw == null) {
+			return R.error("目标车位不在该车场/区域下");
+		}
 		List<Long> ids = new ArrayList<Long>(spots.size());
 		for (CheweiEntity c : spots) {
 			ids.add(c.getId());
 		}
 		List<CheweiYuyueEntity> yuyues = listActiveYuyueForCheweiIds(ids);
-		int available = 0;
-		for (CheweiEntity c : spots) {
-			if (!isSpotUnavailableInWindow(c, body.getKaishiShijian(), body.getJieshuShijian(), yuyues)) {
-				available++;
-			}
-		}
+		int available = countAvailableInScope(spots, body.getKaishiShijian(), body.getJieshuShijian(), yuyues);
 		if (available < 1) {
-			return R.error("余位不足：该时段车场/区域内可预约车位为 0（总 " + spots.size() + "，已占用 " + (spots.size() - available)
-					+ "），禁止下单");
+			return m4YuweiBuzu("该时段车场/区域内可预约车位为 0（总 " + spots.size() + "）");
 		}
 		if (isSpotUnavailableInWindow(cw, body.getKaishiShijian(), body.getJieshuShijian(), yuyues)) {
-			return R.error("该车位在选定时段内不可用（已入场/待结算/已有预约或时段冲突）");
+			return m4YuweiBuzu("该车位在选定时段内已被占用");
+		}
+		if (hasOverlappingYuyue(cw.getId(), body.getKaishiShijian(), body.getJieshuShijian(), yuyues)) {
+			return m4Chongtu("该车位时段与已有有效预约冲突");
 		}
 		String z = StringUtils.isBlank(cw.getZhuangtai()) ? CheweiZhuangtaiN2.KONGXIAN : cw.getZhuangtai().trim();
 		if (!CheweiZhuangtaiN2.KONGXIAN.equals(z) && !CheweiZhuangtaiN2.YI_JIESUAN.equals(z)) {
-			return R.error("仅「空闲」或「已结算」车位可预约，当前为「" + z + "」");
+			return m4Chongtu("仅「空闲」或「已结算」车位可预约，当前为「" + z + "」");
 		}
 
 		CheweiYuyueEntity row = new CheweiYuyueEntity();
@@ -204,13 +241,22 @@ public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, Chew
 		row.setYuyueZhifuZhuangtai(YuyueZhifuZhuangtaiM1.WUXU_YUFU);
 		row.setLiuchengJiedian(YuyueLiuchengJiedianM1.YIYUYUE_DAIRUCHANG);
 		row.setAddtime(new Date());
-		insert(row);
+		try {
+			insert(row);
+		} catch (DuplicateKeyException ex) {
+			return m4Chongtu("重复预约请求，请勿重复提交");
+		}
 
 		cw.setZhuangtai(CheweiZhuangtaiN2.YUYUE_WEIRUCHANG);
-		cheweiService.updateById(cw);
-		Map<String, Object> data = new HashMap<String, Object>(4);
-		data.put("chewei", cw);
+		boolean updated = cheweiService.updateById(cw);
+		if (!updated) {
+			throw new IllegalStateException("车位状态已被其他用户修改，请刷新后重试");
+		}
+		CheweiEntity cwAfter = cheweiService.selectById(cw.getId());
+		Map<String, Object> data = new HashMap<String, Object>(6);
+		data.put("chewei", cwAfter != null ? cwAfter : cw);
 		data.put("yuyue", row);
+		data.put("availableAfter", available - 1);
 		return R.ok().put("data", data);
 	}
 

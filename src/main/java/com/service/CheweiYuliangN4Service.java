@@ -5,7 +5,7 @@ import com.entity.dto.N4YuyueReserveDto;
 import com.utils.R;
 
 /**
- * 这是N4代码 — 预约前余位校验与时段预约落库。
+ * 这是N4/M4代码 — 预约前余位校验、并发控制与时段预约落库。
  * 这是我cursor给父亲写的
  */
 public interface CheweiYuliangN4Service {

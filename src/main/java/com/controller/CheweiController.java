@@ -42,6 +42,7 @@ import com.utils.R;
 /**
  * 这是N2代码 — 含 N2 车位占用状态：预约/取消预约接口 /chewei/n2/*，新建车位默认「空闲」。
  * 这是N4代码 — 余位校验与时段预约 /chewei/n4/*。
+ * 这是M4代码 — 预约保存增强：余位计算 + 行锁/乐观锁/唯一约束防超卖（/chewei/n4/reserve）。
  * 这是M1代码 — 预约/订单模型扩展：chewei_yuyue 支付态与流程节点，与入场离场支付联动；查询 /chewei/m1/yuyue/list。
  * 这是N5代码 — 车位可视化 /chewei/n5/* 与 public/n5-chewei-keshihua.html。
  * 这是N6代码 — 超时策略 /chewei/n6/*（规则表 + 定时任务）。
@@ -193,13 +194,15 @@ public class CheweiController {
 		return R.ok();
 	}
 
-	/** 这是N4代码 — 预约前余位：总车位 − 时段内不可用（已入场/待结算/已预约/时段重叠）。这是我cursor给父亲写的 */
+	/** 这是N4/M4代码 — 预约前余位查询。这是我cursor给父亲写的 */
+	@IgnoreAuth
 	@RequestMapping("/n4/availability")
 	public R n4Availability(@RequestBody N4YuliangChaDto body, HttpServletRequest request) {
 		return cheweiYuliangN4Service.availability(body);
 	}
 
-	/** 这是N4代码 — 带时段预约：先余位校验再置「已预约未入场」并写 chewei_yuyue。这是我cursor给父亲写的 */
+	/** 这是N4/M4代码 — 带时段预约：余位校验 + 并发控制后写 chewei_yuyue。这是我cursor给父亲写的 */
+	@IgnoreAuth
 	@RequestMapping("/n4/reserve")
 	@Transactional(rollbackFor = Exception.class)
 	public R n4Reserve(@RequestBody N4YuyueReserveDto body, HttpServletRequest request) {

@@ -13,7 +13,15 @@
 		<result property="chezijinchangId" column="chezijinchang_id"/>
 		<result property="tingchejiaofeiId" column="tingchejiaofei_id"/>
 		<result property="beizhu" column="beizhu"/>
+		<result property="banben" column="banben"/>
 	</resultMap>
+
+	<!-- 这是M4代码 — 预约事务内锁定车场/区域下全部车位行 -->
+	<select id="selectListInScopeForUpdate" resultMap="cheweiMap">
+		SELECT * FROM chewei
+		WHERE tingchechangmingcheng = #{lot} AND quyu = #{quyu}
+		FOR UPDATE
+	</select>
 
 	<select id="selectListVO" resultType="com.entity.vo.CheweiVO">
 		SELECT * FROM chewei chewei

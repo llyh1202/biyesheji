@@ -21,4 +21,7 @@ public interface CheweiDao extends BaseMapper<CheweiEntity> {
 	List<CheweiView> selectListView(Pagination page, @Param("ew") Wrapper<CheweiEntity> wrapper);
 
 	CheweiView selectView(@Param("ew") Wrapper<CheweiEntity> wrapper);
+
+	/** 这是M4代码 — 区域下车位行锁，防止并发超卖余位 */
+	List<CheweiEntity> selectListInScopeForUpdate(@Param("lot") String lot, @Param("quyu") String quyu);
 }

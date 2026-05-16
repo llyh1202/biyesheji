@@ -11,6 +11,10 @@ export default {
             url: '/index/messages'
         },
         {
+            name: '时段预约(M4)',
+            url: '/index/m4Yuyue'
+        },
+        {
             name: '停车闭环(M2)',
             url: '/index/m2TingcheLi'
         },

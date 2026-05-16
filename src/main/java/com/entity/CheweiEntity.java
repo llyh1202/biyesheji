@@ -2,6 +2,7 @@ package com.entity;
 
 import com.baomidou.mybatisplus.annotations.TableId;
 import com.baomidou.mybatisplus.annotations.TableName;
+import com.baomidou.mybatisplus.annotations.Version;
 import java.lang.reflect.InvocationTargetException;
 import java.io.Serializable;
 import java.util.Date;
@@ -13,6 +14,7 @@ import com.baomidou.mybatisplus.enums.IdType;
 /**
  * 这是N2代码 — 含车位占用关联字段（chezijinchangId、tingchejiaofeiId）与状态 zhuangtai。
  * 这是N5代码 — 可选栅格 wanggeHang/wanggeLie（简易平面图）。
+ * 这是M4代码 — banben 乐观锁版本号，预约保存时防并发超卖。
  * 车位编号主数据（车场/区域下单车位）。N1 实体表 chewei。
  * 这是我cursor给父亲写的
  */
@@ -44,6 +46,9 @@ public class CheweiEntity<T> implements Serializable {
 	/** 这是N2代码 — 当前离场/缴费订单 id */
 	private Long tingchejiaofeiId;
 	private String beizhu;
+	/** 这是M4代码 — 乐观锁版本（@Version） */
+	@Version
+	private Integer banben;
 	/** 这是N5代码 — 栅格行（可选，用于简易平面图） */
 	private Integer wanggeHang;
 	/** 这是N5代码 — 栅格列（可选） */
@@ -131,6 +136,14 @@ public class CheweiEntity<T> implements Serializable {
 
 	public void setBeizhu(String beizhu) {
 		this.beizhu = beizhu;
+	}
+
+	public Integer getBanben() {
+		return banben;
+	}
+
+	public void setBanben(Integer banben) {
+		this.banben = banben;
 	}
 
 	public Integer getWanggeHang() {
