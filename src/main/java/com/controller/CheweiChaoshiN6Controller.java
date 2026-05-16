@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.annotation.IgnoreAuth;
 import com.entity.CheweiChaoshiGuizeEntity;
 import com.service.CheweiChaoshiN6Service;
 import com.utils.R;
@@ -21,6 +22,7 @@ public class CheweiChaoshiN6Controller {
 	@Autowired
 	private CheweiChaoshiN6Service cheweiChaoshiN6Service;
 
+	@IgnoreAuth
 	@RequestMapping("/guize/list")
 	public R guizeList() {
 		return cheweiChaoshiN6Service.listGuize();
@@ -55,6 +57,7 @@ public class CheweiChaoshiN6Controller {
 	}
 
 	/** 手动执行一次超时扫描（与定时任务逻辑相同） */
+	@IgnoreAuth
 	@RequestMapping("/timeout/run")
 	public R timeoutRun() {
 		return cheweiChaoshiN6Service.processScheduledTimeouts();

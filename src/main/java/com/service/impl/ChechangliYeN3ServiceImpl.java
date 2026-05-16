@@ -24,6 +24,7 @@ import com.entity.dto.M2RuchangDto;
 import com.entity.dto.N3TingcheJiesuanDto;
 import com.entity.dto.N3TingcheLichangDto;
 import com.service.CheweiChaoshiN6Service;
+import com.service.TingcheBujiaoN7Service;
 import com.service.CheweiService;
 import com.service.ChechangliYeN3Service;
 import com.service.ChezijinchangService;
@@ -33,7 +34,7 @@ import com.service.TingchejiaofeiService;
 import com.utils.R;
 
 /**
- * 这是N3代码 — 入场/离场/结算编排实现；这是M2/M3/N6代码 — 预约入场、支付联动、离场计费宽限期。
+ * 这是N3代码 — 入场/离场/结算编排实现；这是M2/M3/N6/N7代码 — 预约入场、支付联动、离场计费与补缴并入。
  * 这是我cursor给父亲写的
  */
 @Service("chechangliYeN3Service")
@@ -53,6 +54,8 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 	private CheweixinxiService cheweixinxiService;
 	@Autowired
 	private CheweiChaoshiN6Service cheweiChaoshiN6Service;
+	@Autowired
+	private TingcheBujiaoN7Service tingcheBujiaoN7Service;
 
 	private static String nz(String s) {
 		if (StringUtils.isBlank(s)) {
@@ -225,6 +228,12 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 				return R.error("该入场单已有未支付的离场/缴费单，请先走「结算」关单后再新建离场单");
 			}
 		}
+		try {
+			// 这是N7代码 — 离场前须结清待支付补缴单
+			tingcheBujiaoN7Service.assertNoUnpaidBeforeLichang(body.getChezijinchangId());
+		} catch (IllegalStateException ex) {
+			return R.error(ex.getMessage());
+		}
 
 		int danjia = entry.getXiaoshidanjia() != null && entry.getXiaoshidanjia() > 0 ? entry.getXiaoshidanjia() : 1;
 		double hours = (lichang.getTime() - entry.getJinchangshijian().getTime()) / (1000.0 * 3600.0);
@@ -254,13 +263,24 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 		order.setIspay("未支付");
 
 		tingchejiaofeiService.insert(order);
+		// 这是N7代码 — 已支付补缴金额并入离场主单
+		double totalFee = tingcheBujiaoN7Service.mergePaidIntoLichangOrder(body.getChezijinchangId(), order.getId(), fee);
+		if (Math.abs(totalFee - fee) > 1e-6) {
+			order.setBencitingchefeiyong(totalFee);
+			tingchejiaofeiService.updateById(order);
+		}
 		try {
 			cheweiZhuangtaiN2Service.afterTingchejiaofeiInserted(order);
 		} catch (IllegalStateException ex) {
 			TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
 			return R.error(ex.getMessage());
 		}
-		return R.ok().put("data", order);
+		Map<String, Object> payload = new HashMap<String, Object>(4);
+		payload.put("order", order);
+		payload.put("baseParkingFee", fee);
+		payload.put("bujiaoMerged", totalFee - fee);
+		payload.put("totalFee", totalFee);
+		return R.ok().put("data", payload);
 	}
 
 	@Override
@@ -323,6 +343,7 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 		if (ylist != null && !ylist.isEmpty()) {
 			data.put("yuyue", ylist.get(0));
 		}
+		data.put("bujiaoList", tingcheBujiaoN7Service.listByChezijinchang(chezijinchangId).get("data"));
 		return R.ok().put("data", data);
 	}
 }

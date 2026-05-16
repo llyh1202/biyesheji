@@ -22,6 +22,10 @@ import tingchejiaofeiList from '../pages/tingchejiaofei/list'
 import tingchejiaofeiDetail from '../pages/tingchejiaofei/detail'
 import tingchejiaofeiAdd from '../pages/tingchejiaofei/add'
 import m2TingcheLi from '../pages/m2TingcheLi/index'
+// 这是我cursor给父亲写的 — N6 超时策略
+import n6Chaoshi from '../pages/n6Chaoshi/index'
+// 这是我cursor给父亲写的 — N7 补缴
+import n7Bujiao from '../pages/n7Bujiao/index'
 
 const originalPush = VueRouter.prototype.push
 VueRouter.prototype.push = function push(location) {
@@ -106,6 +110,14 @@ export default new VueRouter({
 				{
 					path: 'm2TingcheLi',
 					component: m2TingcheLi
+				},
+				{
+					path: 'n6Chaoshi',
+					component: n6Chaoshi
+				},
+				{
+					path: 'n7Bujiao',
+					component: n7Bujiao
 				},
 			]
 		},

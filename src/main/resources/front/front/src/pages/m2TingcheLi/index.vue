@@ -67,6 +67,18 @@
     </el-card>
 
     <el-card shadow="never" :style='{"marginBottom":"16px"}'>
+      <div slot="header">2.5 补缴单（N7）</div>
+      <el-button size="small" native-type="button" @click="loadBujiao">刷新补缴单</el-button>
+      <el-button size="small" type="text" @click="$router.push('/index/n7Bujiao')">去补缴</el-button>
+      <el-table v-if="bujiaoList.length" :data="bujiaoList" size="small" border :style='{"marginTop":"10px"}'>
+        <el-table-column prop="danhao" label="单号" />
+        <el-table-column prop="leixing" label="类型" width="90" />
+        <el-table-column prop="jine" label="金额" width="70" />
+        <el-table-column prop="zhuangtai" label="状态" width="90" />
+      </el-table>
+    </el-card>
+
+    <el-card shadow="never" :style='{"marginBottom":"16px"}'>
       <div slot="header">3. 离场 → 生成缴费单（触发结算）</div>
       <el-form inline @submit.native.prevent="doLichang">
         <el-form-item label="入场单 id">
@@ -130,7 +142,8 @@ export default {
         lichangshijian: ''
       },
       orderAfterLichang: null,
-      jiesuanId: ''
+      jiesuanId: '',
+      bujiaoList: []
     }
   },
   created() {
@@ -208,6 +221,10 @@ export default {
             this.yuyueIdInput = String(d.yuyue.id)
             this.snapshot = { yuyue: d.yuyue, chewei: d.chewei, hint: '已从业务链带出关联预约单。' }
           }
+          if (d.bujiaoList) {
+            this.bujiaoList = d.bujiaoList
+          }
+          this.loadBujiao()
           this.$message.success('已加载入场业务链')
         } else {
           this.$message.error((res.data && res.data.msg) || '加载失败')
@@ -246,6 +263,7 @@ export default {
             if (res.data.data.yuyueId) {
               this.lichangForm.yuyueId = String(res.data.data.yuyueId)
             }
+            this.loadBujiao()
           }
           this.$message.success('入场成功')
         } else {
@@ -277,9 +295,15 @@ export default {
       this.loadingLichang = true
       this.$http.post('n3/tingcheli/lichang', body).then(res => {
         if (res.data && res.data.code === 0) {
-          this.orderAfterLichang = res.data.data
-          this.jiesuanId = String(res.data.data.id)
-          this.$message.success('已生成缴费单')
+          const d = res.data.data || {}
+          const order = d.order || d
+          this.orderAfterLichang = order
+          this.jiesuanId = String(order.id)
+          let msg = '已生成缴费单'
+          if (d.bujiaoMerged > 0) {
+            msg += '（含已支付补缴 ' + d.bujiaoMerged + ' 元）'
+          }
+          this.$message.success(msg)
         } else {
           this.$message.error((res.data && res.data.msg) || '离场失败')
         }
@@ -313,6 +337,17 @@ export default {
         return
       }
       this.$router.push({ path: '/index/tingchejiaofeiDetail', query: { id: id } })
+    },
+    loadBujiao() {
+      const id = this.parseId(this.lichangForm.chezijinchangId, '入场单 id')
+      if (id == null) {
+        return
+      }
+      this.$http.get('chewei/n7/bujiao/list', { params: { chezijinchangId: id } }).then(res => {
+        if (res.data && res.data.code === 0) {
+          this.bujiaoList = res.data.data || []
+        }
+      })
     }
   }
 }
