@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 /**
  * 这是M2代码 — 按预约单入场的请求体：先读预约、校验车位与时段，再写入场单并绑定该预约。
- * 这是我cursor给父亲写的
+ * 这是我cursor给父亲写的 — P1-14：yonghuzhanghao/xingming/shouji/chepaihao 可省略，由后端按 session 与用户表补全
  */
 public class M2RuchangDto implements Serializable {
 	private static final long serialVersionUID = 1L;

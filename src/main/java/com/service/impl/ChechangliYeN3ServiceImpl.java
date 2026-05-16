@@ -20,6 +20,7 @@ import com.entity.CheweiYuyueEntity;
 import com.entity.CheweixinxiEntity;
 import com.entity.ChezijinchangEntity;
 import com.entity.TingchejiaofeiEntity;
+import com.entity.YonghuEntity;
 import com.entity.dto.M2RuchangDto;
 import com.entity.dto.N3TingcheJiesuanDto;
 import com.entity.dto.N3TingcheLichangDto;
@@ -31,6 +32,7 @@ import com.service.ChezijinchangService;
 import com.service.CheweixinxiService;
 import com.service.CheweiZhuangtaiN2Service;
 import com.service.TingchejiaofeiService;
+import com.service.YonghuService;
 import com.utils.R;
 
 /**
@@ -56,6 +58,8 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 	private TingcheJifeiM5Service tingcheJifeiM5Service;
 	@Autowired
 	private TingcheBujiaoN7Service tingcheBujiaoN7Service;
+	@Autowired
+	private YonghuService yonghuService;
 
 	private static String nz(String s) {
 		if (StringUtils.isBlank(s)) {
@@ -291,6 +295,36 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 		return R.ok().put("data", data);
 	}
 
+	/**
+	 * 这是我cursor给父亲写的 — P1-14：请求体缺省时从 session/用户表补全；车牌优先 yonghu.chepaihao
+	 */
+	private void fillM2RuchangFromSession(M2RuchangDto body, String sessionUser) {
+		if (body == null || StringUtils.isBlank(sessionUser)) {
+			return;
+		}
+		String session = sessionUser.trim();
+		if (StringUtils.isBlank(body.getYonghuzhanghao())) {
+			body.setYonghuzhanghao(session);
+		}
+		EntityWrapper<YonghuEntity> uw = new EntityWrapper<YonghuEntity>();
+		uw.eq("yonghuzhanghao", session);
+		YonghuEntity yonghu = yonghuService.selectOne(uw);
+		if (yonghu == null) {
+			return;
+		}
+		if (StringUtils.isBlank(body.getXingming()) && StringUtils.isNotBlank(yonghu.getXingming())) {
+			body.setXingming(yonghu.getXingming().trim());
+		}
+		if (StringUtils.isBlank(body.getShouji()) && StringUtils.isNotBlank(yonghu.getShouji())) {
+			body.setShouji(yonghu.getShouji().trim());
+		}
+		if (StringUtils.isNotBlank(yonghu.getChepaihao())) {
+			body.setChepaihao(yonghu.getChepaihao().trim());
+		} else if (StringUtils.isNotBlank(body.getChepaihao())) {
+			body.setChepaihao(body.getChepaihao().trim());
+		}
+	}
+
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public R m2RuchangByYuyue(M2RuchangDto body, String sessionYonghuzhanghao) {
@@ -302,8 +336,9 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 		if (body == null || body.getYuyueId() == null) {
 			return R.error("须传入预约单 id：yuyueId");
 		}
+		fillM2RuchangFromSession(body, sessionUser);
 		if (StringUtils.isBlank(body.getChepaihao())) {
-			return R.error("须填写车牌号 chepaihao");
+			return R.error("须填写车牌号 chepaihao（可在个人资料中维护车牌，或入场时传入）");
 		}
 		CheweiYuyueEntity yuyue = cheweiYuyueDao.selectById(body.getYuyueId());
 		R ownerCheck = assertYuyueOwner(sessionUser, yuyue);
@@ -350,7 +385,7 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 		entry.setQuyu(quyu);
 		entry.setCheweishuliang(1);
 		entry.setXiaoshidanjia(danjia);
-		// 这是我cursor给父亲写的 — P1-13 入场单用户账号以登录 session 为准
+		// 这是我cursor给父亲写的 — P1-13/P1-14 用户信息与 session、用户表补全后写入入场单
 		entry.setYonghuzhanghao(sessionUser);
 		entry.setXingming(nz(body.getXingming()));
 		entry.setShouji(nz(body.getShouji()));

@@ -58,7 +58,7 @@ public class ChechangliYeN3Controller {
 	}
 
 	/**
-	 * 这是我cursor给父亲写的 — P1-13 校验预约归属后写入场单
+	 * 这是我cursor给父亲写的 — P1-13 校验预约归属后写入场单；P1-14 未传用户信息时由服务层从 session/用户表补全
 	 */
 	@RequestMapping("/m2/ruchang")
 	public R m2Ruchang(@RequestBody M2RuchangDto body, HttpServletRequest request) {
