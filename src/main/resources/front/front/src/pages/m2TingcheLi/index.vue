@@ -6,7 +6,7 @@
     </p>
     <el-alert
       v-if="!hasToken"
-      title="未登录时部分接口可能失败；建议先登录用户账号后再操作。"
+      title="入场、离场、结算须先登录；未登录将跳转登录页。"
       type="warning"
       :closable="false"
       show-icon
@@ -122,6 +122,9 @@
 </template>
 
 <script>
+// 这是我cursor给父亲写的 — P1-10 M2 闭环关键接口须登录
+import { requireFrontLogin, handleAuthFail } from '@/common/auth'
+
 export default {
   data() {
     return {
@@ -202,7 +205,14 @@ export default {
       return parseInt(s, 10)
     },
     onHttpFail(err, fallback) {
-      const msg = (err && err.body && err.body.msg) || (err && err.message) || fallback || '请求失败，请确认后端已启动且地址为 ' + (this.$config.baseUrl || '')
+      if (handleAuthFail(this, err)) {
+        return
+      }
+      const body = err && err.body
+      if (body && handleAuthFail(this, body)) {
+        return
+      }
+      const msg = (body && body.msg) || (err && err.message) || fallback || '请求失败，请确认后端已启动且地址为 ' + (this.$config.baseUrl || '')
       this.$message.error(msg)
     },
     loadSnapshot() {
@@ -259,6 +269,9 @@ export default {
       })
     },
     doM2Ruchang() {
+      if (!requireFrontLogin(this)) {
+        return
+      }
       const yuyueId = this.parseId(this.ruchangForm.yuyueId, '预约单 id')
       if (yuyueId == null) {
         return
@@ -293,6 +306,9 @@ export default {
           }
           this.$message.success('入场成功')
         } else {
+          if (handleAuthFail(this, res.data)) {
+            return
+          }
           this.$message.error((res.data && res.data.msg) || '入场失败')
         }
       }).catch(err => {
@@ -369,6 +385,9 @@ export default {
       }).catch(err => this.onHttpFail(err, '试算失败')).finally(() => { this.loadingPreview = false })
     },
     doLichang() {
+      if (!requireFrontLogin(this)) {
+        return
+      }
       const chezijinchangId = this.parseId(this.lichangForm.chezijinchangId, '入场单 id')
       if (chezijinchangId == null) {
         return
@@ -400,6 +419,9 @@ export default {
           }
           this.$message.success(msg)
         } else {
+          if (handleAuthFail(this, res.data)) {
+            return
+          }
           this.$message.error((res.data && res.data.msg) || '离场失败')
         }
       }).catch(err => {
@@ -409,6 +431,9 @@ export default {
       })
     },
     doJiesuan() {
+      if (!requireFrontLogin(this)) {
+        return
+      }
       const tingchejiaofeiId = this.parseId(this.jiesuanId, '缴费单 id')
       if (tingchejiaofeiId == null) {
         return
@@ -418,6 +443,9 @@ export default {
         if (res.data && res.data.code === 0) {
           this.$message.success('结算成功')
         } else {
+          if (handleAuthFail(this, res.data)) {
+            return
+          }
           this.$message.error((res.data && res.data.msg) || '结算失败')
         }
       }).catch(err => {

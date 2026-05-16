@@ -5,6 +5,14 @@
     <p :style='{"color":"#666","marginBottom":"16px","lineHeight":"1.6"}'>
       先查询余位，再提交预约。若并发抢位失败，将提示<strong>余位不足</strong>或冲突信息。
     </p>
+    <el-alert
+      v-if="!hasToken"
+      title="提交预约须先登录；未登录将跳转登录页。"
+      type="warning"
+      :closable="false"
+      show-icon
+      :style='{"marginBottom":"16px"}'
+    />
     <el-form label-width="120px" :model="form">
       <el-form-item label="车位 id" required>
         <el-input v-model="form.cheweiId" placeholder="chewei 表主键数字" />
@@ -44,9 +52,12 @@
 
 <script>
 // 这是我cursor给父亲写的 — M4 预约
+import { requireFrontLogin, handleAuthFail } from '@/common/auth'
+
 export default {
   data() {
     return {
+      hasToken: !!localStorage.getItem('frontToken'),
       form: {
         cheweiId: '',
         kaishiShijian: '',
@@ -123,6 +134,10 @@ export default {
       })
     },
     submitReserve() {
+      // 这是我cursor给父亲写的 — P1-10 n4/reserve 须登录
+      if (!requireFrontLogin(this)) {
+        return
+      }
       const id = this.parseCheweiId()
       if (id == null) return
       if (!this.form.kaishiShijian || !this.form.jieshuShijian) {
@@ -168,6 +183,9 @@ export default {
         this.$message.error('操作失败')
         return
       }
+      if (handleAuthFail(this, data)) {
+        return
+      }
       if (data.code === 4601 || data.m4Code === 'YUWEI_BUZU') {
         this.$message.error('余位不足')
         return
@@ -175,6 +193,9 @@ export default {
       this.$message.error(data.msg || '预约失败')
     },
     onHttpFail(err) {
+      if (handleAuthFail(this, err)) {
+        return
+      }
       const body = err && err.body
       if (body) {
         this.handleM4Error(body)
