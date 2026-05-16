@@ -29,12 +29,15 @@ import com.annotation.IgnoreAuth;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.constant.CheweiZhuangtaiN2;
 import com.entity.CheweiEntity;
+import com.entity.CheweixinxiEntity;
+import com.entity.dto.CheweiByLotItemDto;
 import com.entity.dto.N4YuliangChaDto;
 import com.entity.dto.N4YuyueReserveDto;
 import com.entity.view.CheweiView;
 import com.service.CheweiKeshihuaN5Service;
 import com.service.CheweiService;
 import com.service.CheweiYuliangN4Service;
+import com.service.CheweixinxiService;
 import com.utils.MPUtil;
 import com.utils.PageUtils;
 import com.utils.R;
@@ -67,6 +70,71 @@ public class CheweiController {
 	private CheweiYuliangN4Service cheweiYuliangN4Service;
 	@Autowired
 	private CheweiKeshihuaN5Service cheweiKeshihuaN5Service;
+	@Autowired
+	private CheweixinxiService cheweixinxiService;
+
+	/**
+	 * 这是我cursor给父亲写的 — 按车场查车位列表（预约选位）。
+	 * 传 cheweixinxiId，或 tingchechangmingcheng + quyu（区域可空，与主数据一致按空串匹配）。
+	 */
+	@IgnoreAuth
+	@RequestMapping("/listByLot")
+	public R listByLot(@RequestParam(value = "cheweixinxiId", required = false) Long cheweixinxiId,
+			@RequestParam(value = "tingchechangmingcheng", required = false) String tingchechangmingcheng,
+			@RequestParam(value = "quyu", required = false) String quyu, HttpServletRequest request) {
+		String lot = trim(tingchechangmingcheng);
+		String area = normalizeQuyuParam(quyu);
+		List<CheweiEntity> rows;
+		if (cheweixinxiId != null) {
+			CheweixinxiEntity info = cheweixinxiService.selectById(cheweixinxiId);
+			if (info == null) {
+				return R.error("车位信息不存在：cheweixinxiId=" + cheweixinxiId);
+			}
+			lot = trim(info.getTingchechangmingcheng());
+			area = normalizeQuyuParam(info.getQuyu());
+			if (StringUtils.isBlank(lot)) {
+				return R.error("该车场信息缺少停车场名称，无法查询车位");
+			}
+			EntityWrapper<CheweiEntity> byInfoId = new EntityWrapper<CheweiEntity>();
+			byInfoId.eq("cheweixinxi_id", cheweixinxiId);
+			byInfoId.orderBy("cheweibianhao", true);
+			rows = cheweiService.selectList(byInfoId);
+			if (rows == null || rows.isEmpty()) {
+				EntityWrapper<CheweiEntity> byLot = new EntityWrapper<CheweiEntity>();
+				byLot.eq("tingchechangmingcheng", lot);
+				byLot.eq("quyu", area);
+				byLot.orderBy("cheweibianhao", true);
+				rows = cheweiService.selectList(byLot);
+			}
+		} else {
+			if (StringUtils.isBlank(lot)) {
+				return R.error("请传入 cheweixinxiId，或 tingchechangmingcheng（及可选 quyu）");
+			}
+			EntityWrapper<CheweiEntity> ew = new EntityWrapper<CheweiEntity>();
+			ew.eq("tingchechangmingcheng", lot);
+			ew.eq("quyu", area);
+			ew.orderBy("cheweibianhao", true);
+			rows = cheweiService.selectList(ew);
+		}
+		List<CheweiByLotItemDto> list = new ArrayList<CheweiByLotItemDto>(rows.size());
+		for (CheweiEntity row : rows) {
+			CheweiByLotItemDto item = new CheweiByLotItemDto();
+			item.setId(row.getId());
+			item.setCheweibianhao(row.getCheweibianhao());
+			item.setZhuangtai(StringUtils.isBlank(row.getZhuangtai()) ? CheweiZhuangtaiN2.KONGXIAN : row.getZhuangtai().trim());
+			item.setQuyu(row.getQuyu() == null ? "" : row.getQuyu());
+			list.add(item);
+		}
+		Map<String, Object> data = new HashMap<String, Object>(4);
+		data.put("list", list);
+		data.put("total", list.size());
+		data.put("tingchechangmingcheng", lot);
+		data.put("quyu", area);
+		if (cheweixinxiId != null) {
+			data.put("cheweixinxiId", cheweixinxiId);
+		}
+		return R.ok().put("data", data);
+	}
 
 	@RequestMapping("/page")
 	public R page(@RequestParam Map<String, Object> params, CheweiEntity chewei, HttpServletRequest request) {
@@ -373,5 +441,10 @@ public class CheweiController {
 		if (chewei.getQuyu() == null) {
 			chewei.setQuyu("");
 		}
+	}
+
+	/** 这是我cursor给父亲写的 — 查询参数区域归一化 */
+	private static String normalizeQuyuParam(String quyu) {
+		return quyu == null ? "" : quyu.trim();
 	}
 }
