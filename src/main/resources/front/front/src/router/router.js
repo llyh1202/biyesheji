@@ -30,6 +30,8 @@ import n7Bujiao from '../pages/n7Bujiao/index'
 import m4Yuyue from '../pages/m4Yuyue/index'
 // 这是我cursor给父亲写的 — M5 费用试算
 import m5Jifei from '../pages/m5Jifei/index'
+// 这是我cursor给父亲写的 — P1-09 我的停车
+import wodeTingche from '../pages/wodeTingche/index'
 
 const originalPush = VueRouter.prototype.push
 VueRouter.prototype.push = function push(location) {
@@ -130,6 +132,10 @@ export default new VueRouter({
 				{
 					path: 'm5Jifei',
 					component: m5Jifei
+				},
+				{
+					path: 'wodeTingche',
+					component: wodeTingche
 				},
 			]
 		},

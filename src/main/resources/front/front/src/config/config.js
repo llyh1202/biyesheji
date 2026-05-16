@@ -1,7 +1,12 @@
+// 这是我cursor给父亲写的 — P1-09 顶部导航增加「我的停车」
 export default {
     baseUrl: 'http://localhost:8080/springboot673i609q/',
 	name: '/springboot673i609q',
     indexNav: [
+        {
+            name: '我的停车',
+            url: '/index/wodeTingche'
+        },
         {
             name: '车位信息',
             url: '/index/cheweixinxi'
