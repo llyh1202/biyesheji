@@ -12,20 +12,27 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.constant.CheweiYuyueZhuangtaiN4;
+import com.constant.YuyueLiuchengJiedianM1;
+import com.dao.CheweiYuyueDao;
 import com.entity.CheweiEntity;
+import com.entity.CheweiYuyueEntity;
+import com.entity.CheweixinxiEntity;
 import com.entity.ChezijinchangEntity;
 import com.entity.TingchejiaofeiEntity;
+import com.entity.dto.M2RuchangDto;
 import com.entity.dto.N3TingcheJiesuanDto;
 import com.entity.dto.N3TingcheLichangDto;
 import com.service.CheweiService;
 import com.service.ChechangliYeN3Service;
 import com.service.ChezijinchangService;
+import com.service.CheweixinxiService;
 import com.service.CheweiZhuangtaiN2Service;
 import com.service.TingchejiaofeiService;
 import com.utils.R;
 
 /**
- * 这是N3代码 — 入场/离场/结算编排实现。
+ * 这是N3代码 — 入场/离场/结算编排实现；这是M2代码 — 预约校验后入场与闭环离场校验。
  * 这是我cursor给父亲写的
  */
 @Service("chechangliYeN3Service")
@@ -39,6 +46,10 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 	private CheweiZhuangtaiN2Service cheweiZhuangtaiN2Service;
 	@Autowired
 	private CheweiService cheweiService;
+	@Autowired
+	private CheweiYuyueDao cheweiYuyueDao;
+	@Autowired
+	private CheweixinxiService cheweixinxiService;
 
 	private static String nz(String s) {
 		if (StringUtils.isBlank(s)) {
@@ -70,6 +81,103 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 	}
 
 	@Override
+	public R m2YuyueSnapshot(Long yuyueId) {
+		if (yuyueId == null) {
+			return R.error("须传入预约单 id：yuyueId");
+		}
+		CheweiYuyueEntity yuyue = cheweiYuyueDao.selectById(yuyueId);
+		if (yuyue == null) {
+			return R.error("预约单不存在");
+		}
+		Map<String, Object> data = new HashMap<String, Object>(6);
+		data.put("yuyue", yuyue);
+		if (yuyue.getCheweiId() != null) {
+			CheweiEntity cw = cheweiService.selectById(yuyue.getCheweiId());
+			data.put("chewei", cw);
+			if (cw != null && cw.getCheweixinxiId() != null) {
+				CheweixinxiEntity info = cheweixinxiService.selectById(cw.getCheweixinxiId());
+				data.put("cheweixinxi", info);
+			}
+		}
+		data.put("hint", "确认时段与车位后，在 M2 页面提交入场；离场请用本系统「生成缴费单」接口，勿手工新建无入场关联的缴费单。");
+		return R.ok().put("data", data);
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public R m2RuchangByYuyue(M2RuchangDto body) {
+		if (body == null || body.getYuyueId() == null) {
+			return R.error("须传入预约单 id：yuyueId");
+		}
+		if (StringUtils.isBlank(body.getChepaihao())) {
+			return R.error("须填写车牌号 chepaihao");
+		}
+		CheweiYuyueEntity yuyue = cheweiYuyueDao.selectById(body.getYuyueId());
+		if (yuyue == null) {
+			return R.error("预约单不存在");
+		}
+		if (!CheweiYuyueZhuangtaiN4.YOUXIAO.equals(nz(yuyue.getZhuangtai()))) {
+			return R.error("预约单无效或已取消，无法入场");
+		}
+		if (yuyue.getCheweiId() == null) {
+			return R.error("预约单未关联车位");
+		}
+		if (yuyue.getChezijinchangId() != null) {
+			return R.error("该预约已关联入场单，请勿重复入场");
+		}
+		String lj = nz(yuyue.getLiuchengJiedian());
+		if (StringUtils.isNotBlank(lj) && !YuyueLiuchengJiedianM1.YIYUYUE_DAIRUCHANG.equals(lj)) {
+			return R.error("预约单流程节点须为「已预约待入场」，当前为「" + lj + "」");
+		}
+		CheweiEntity cw = cheweiService.selectById(yuyue.getCheweiId());
+		if (cw == null) {
+			return R.error("车位不存在");
+		}
+		Date jt = body.getJinchangshijian() != null ? body.getJinchangshijian() : new Date();
+		if (yuyue.getKaishiShijian() != null && jt.getTime() < yuyue.getKaishiShijian().getTime()) {
+			return R.error("未到预约时段开始时间，不允许入场");
+		}
+		if (yuyue.getJieshuShijian() != null && jt.getTime() >= yuyue.getJieshuShijian().getTime()) {
+			return R.error("已超过预约时段结束时间，不允许入场");
+		}
+		int danjia = 1;
+		if (cw.getCheweixinxiId() != null) {
+			CheweixinxiEntity info = cheweixinxiService.selectById(cw.getCheweixinxiId());
+			if (info != null && info.getXiaoshidanjia() != null && info.getXiaoshidanjia() > 0) {
+				danjia = info.getXiaoshidanjia();
+			}
+		}
+		String lot = StringUtils.isNotBlank(yuyue.getTingchechangmingcheng()) ? yuyue.getTingchechangmingcheng()
+				: nz(cw.getTingchechangmingcheng());
+		String quyu = StringUtils.isNotBlank(yuyue.getQuyu()) ? yuyue.getQuyu() : nz(cw.getQuyu());
+		ChezijinchangEntity entry = new ChezijinchangEntity();
+		entry.setCheweiId(yuyue.getCheweiId());
+		entry.setTingchechangmingcheng(lot);
+		entry.setQuyu(quyu);
+		entry.setCheweishuliang(1);
+		entry.setXiaoshidanjia(danjia);
+		entry.setYonghuzhanghao(nz(body.getYonghuzhanghao()));
+		entry.setXingming(nz(body.getXingming()));
+		entry.setShouji(nz(body.getShouji()));
+		entry.setChepaihao(nz(body.getChepaihao()));
+		entry.setCheliangtupian(nz(body.getCheliangtupian()));
+		entry.setJinchangshijian(jt);
+		chezijinchangService.insert(entry);
+		try {
+			cheweiZhuangtaiN2Service.afterChezijinchangInsertedForM2(entry, body.getYuyueId());
+		} catch (IllegalStateException ex) {
+			TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+			return R.error(ex.getMessage());
+		}
+		Map<String, Object> payload = new HashMap<String, Object>(4);
+		payload.put("ruchang", entry);
+		payload.put("yuyueId", body.getYuyueId());
+		payload.put("nextLichangUrl", "/n3/tingcheli/lichang");
+		payload.put("nextJiesuanUrl", "/n3/tingcheli/jiesuan");
+		return R.ok().put("data", payload);
+	}
+
+	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public R lichang(N3TingcheLichangDto body) {
 		if (body == null || body.getChezijinchangId() == null) {
@@ -84,6 +192,22 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 		}
 		if (entry.getJinchangshijian() == null) {
 			return R.error("入场单缺少进场时间，无法计费离场");
+		}
+		if (body.getYuyueId() != null) {
+			CheweiYuyueEntity y = cheweiYuyueDao.selectById(body.getYuyueId());
+			if (y == null) {
+				return R.error("预约单不存在");
+			}
+			if (y.getChezijinchangId() == null || !y.getChezijinchangId().equals(body.getChezijinchangId())) {
+				return R.error("预约单与入场单不匹配");
+			}
+			if (y.getCheweiId() == null || !y.getCheweiId().equals(entry.getCheweiId())) {
+				return R.error("预约单与入场单车位不一致");
+			}
+			String jn = nz(y.getLiuchengJiedian());
+			if (StringUtils.isNotBlank(jn) && !YuyueLiuchengJiedianM1.YIRUCHANG.equals(jn)) {
+				return R.error("预约单须在「已入场」后方可离场结算，当前为「" + jn + "」");
+			}
 		}
 		Date lichang = body.getLichangshijian() != null ? body.getLichangshijian() : new Date();
 		if (lichang.before(entry.getJinchangshijian())) {
@@ -184,6 +308,14 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 		w.eq("crossrefid", chezijinchangId);
 		w.last("ORDER BY id DESC");
 		data.put("tingchejiaofeiList", tingchejiaofeiService.selectList(w));
+		EntityWrapper<CheweiYuyueEntity> yw = new EntityWrapper<CheweiYuyueEntity>();
+		yw.eq("chezijinchang_id", chezijinchangId);
+		yw.orderBy("id", false);
+		List<CheweiYuyueEntity> ylist = cheweiYuyueDao.selectList(yw);
+		data.put("yuyueList", ylist);
+		if (ylist != null && !ylist.isEmpty()) {
+			data.put("yuyue", ylist.get(0));
+		}
 		return R.ok().put("data", data);
 	}
 }

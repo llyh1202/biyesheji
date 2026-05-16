@@ -21,6 +21,7 @@ import chezijinchangAdd from '../pages/chezijinchang/add'
 import tingchejiaofeiList from '../pages/tingchejiaofei/list'
 import tingchejiaofeiDetail from '../pages/tingchejiaofei/detail'
 import tingchejiaofeiAdd from '../pages/tingchejiaofei/add'
+import m2TingcheLi from '../pages/m2TingcheLi/index'
 
 const originalPush = VueRouter.prototype.push
 VueRouter.prototype.push = function push(location) {
@@ -101,6 +102,10 @@ export default new VueRouter({
 				{
 					path: 'tingchejiaofeiAdd',
 					component: tingchejiaofeiAdd
+				},
+				{
+					path: 'm2TingcheLi',
+					component: m2TingcheLi
 				},
 			]
 		},

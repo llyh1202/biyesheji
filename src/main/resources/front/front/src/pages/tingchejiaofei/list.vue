@@ -9,6 +9,10 @@
 	<div v-if="centerType" :style='{"padding":"20px","boxShadow":"0px 4px 10px 0px rgba(0,0,0,0.3)","margin":"30px auto","borderRadius":"0","background":"url(),#fff","display":"flex","width":"80%","backgroundSize":"50%","backgroundPosition":"center left","backgroundRepeat":"no-repeat","justifyContent":"flex-end"}'>
 		<el-button size="mini" @click="backClick">返回</el-button>
 	</div>
+	<div :style='{"padding":"6px 10%","fontSize":"14px","color":"#606266"}'>
+		缴费单应由「离场」接口生成并关联入场单；完整流程见
+		<el-button type="text" @click="$router.push('/index/m2TingcheLi')">停车业务闭环（M2）</el-button>
+	</div>
 	<div class="list-preview" :style='{"padding":"0 10%","margin":"10px auto","flexWrap":"wrap","background":"none","display":"flex","width":"100%","position":"relative"}'>
     <el-form :inline="true" :model="formSearch" class="list-form-pv" :style='{"padding":"0 2%","alignItems":"center","flexWrap":"wrap","background":"none","display":"flex","width":"100%","height":"auto","order":"1"}'>
       <el-form-item :style='{"margin":"0 10px 20px"}'>

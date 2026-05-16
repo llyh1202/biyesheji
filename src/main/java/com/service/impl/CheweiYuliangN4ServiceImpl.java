@@ -252,6 +252,39 @@ public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, Chew
 	}
 
 	@Override
+	public void m1BindRuchangToYuyue(Long yuyueId, Long expectedCheweiId, Long chezijinchangId, Date jinchang) {
+		if (yuyueId == null || expectedCheweiId == null || chezijinchangId == null || jinchang == null) {
+			throw new IllegalStateException("绑定预约缺少参数");
+		}
+		CheweiYuyueEntity y = selectById(yuyueId);
+		if (y == null) {
+			throw new IllegalStateException("预约单不存在");
+		}
+		if (!CheweiYuyueZhuangtaiN4.YOUXIAO.equals(nz(y.getZhuangtai()))) {
+			throw new IllegalStateException("预约单无效，无法入场绑定");
+		}
+		if (y.getCheweiId() == null || !y.getCheweiId().equals(expectedCheweiId)) {
+			throw new IllegalStateException("预约单与入场车位不一致");
+		}
+		if (y.getChezijinchangId() != null) {
+			throw new IllegalStateException("预约单已关联入场单，不能重复入场");
+		}
+		String lj = nz(y.getLiuchengJiedian());
+		if (StringUtils.isNotBlank(lj) && !YuyueLiuchengJiedianM1.YIYUYUE_DAIRUCHANG.equals(lj)) {
+			throw new IllegalStateException("预约单流程节点须为「已预约待入场」，当前为「" + lj + "」");
+		}
+		if (y.getKaishiShijian() != null && jinchang.getTime() < y.getKaishiShijian().getTime()) {
+			throw new IllegalStateException("未到预约时段开始时间，不允许入场");
+		}
+		if (y.getJieshuShijian() != null && jinchang.getTime() >= y.getJieshuShijian().getTime()) {
+			throw new IllegalStateException("已超过预约时段结束时间，不允许入场");
+		}
+		y.setChezijinchangId(chezijinchangId);
+		y.setLiuchengJiedian(YuyueLiuchengJiedianM1.YIRUCHANG);
+		updateById(y);
+	}
+
+	@Override
 	public void m1SyncAfterLichangOrder(Long cheweiId, Long chezijinchangId, Long tingchejiaofeiId) {
 		if (cheweiId == null || chezijinchangId == null || tingchejiaofeiId == null) {
 			return;

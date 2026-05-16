@@ -28,6 +28,12 @@ public interface CheweiYuliangN4Service {
 	/** 这是M1代码 — 入场后把有效时段预约单挂上入场单 id，并推进流程节点。这是我cursor给父亲写的 */
 	void m1SyncAfterRuchang(Long cheweiId, Long chezijinchangId, java.util.Date jinchang);
 
+	/**
+	 * 这是M2代码 — 将指定预约单与入场单显式绑定（避免多预约重叠时误挂）；须与车位、时段、流程节点一致。
+	 * 这是我cursor给父亲写的
+	 */
+	void m1BindRuchangToYuyue(Long yuyueId, Long expectedCheweiId, Long chezijinchangId, java.util.Date jinchang);
+
 	/** 这是M1代码 — 生成离场/缴费单后挂 tingchejiaofei_id，节点进入待支付停车费。这是我cursor给父亲写的 */
 	void m1SyncAfterLichangOrder(Long cheweiId, Long chezijinchangId, Long tingchejiaofeiId);
 

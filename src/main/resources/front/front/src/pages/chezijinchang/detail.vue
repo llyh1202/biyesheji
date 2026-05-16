@@ -55,7 +55,7 @@
 					<el-button :style='{"border":"0","cursor":"pointer","padding":"0 10px","margin":"0 5px 0 0","color":"#fff","borderRadius":"0","background":"#57A7A5","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('chezijinchang','修改')" @click="editClick">修改</el-button>
 					<el-button :style='{"border":"1px solid #CCCCCC","cursor":"pointer","padding":"0 10px","margin":"0 5px 10px 0","color":"#CCCCCC","borderRadius":"0","background":"none","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('chezijinchang','删除')" @click="delClick">删除</el-button>
 					<el-button :style='{"border":"1px solid #CCCCCC","cursor":"pointer","padding":"0 10px","margin":"0 5px 10px 0","color":"#CCCCCC","borderRadius":"0","background":"none","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('chezijinchang','私聊')&&detail.id!=mid" @click="chatClick">联系TA</el-button>
-					<el-button :style='{"border":"0","cursor":"pointer","padding":"0 10px","margin":"0 5px 10px 0","color":"#fff","borderRadius":"0","background":"#57A7A5","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('chezijinchang','缴费')" @click="onAcross('tingchejiaofei','','','[1]','已缴费')" type="warning">缴费</el-button>
+					<el-button :style='{"border":"0","cursor":"pointer","padding":"0 10px","margin":"0 5px 10px 0","color":"#fff","borderRadius":"0","background":"#57A7A5","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('chezijinchang','缴费')" @click="goM2FromRuchang" type="warning">离场/缴费(M2)</el-button>
 				</div>
 			</div>
 		</div>
@@ -136,6 +136,12 @@
             }
           });
         },
+      goM2FromRuchang() {
+        if (!this.detail || !this.detail.id) {
+          return
+        }
+        this.$router.push({ path: '/index/m2TingcheLi', query: { chezijinchangId: this.detail.id } })
+      },
       async onAcross(acrossTable,crossOptAudit,crossOptPay,statusColumnName,tips,statusColumnValue,type=1){
         localStorage.setItem('crossTable',`chezijinchang`);
         localStorage.setItem('crossObj', JSON.stringify(this.detail));

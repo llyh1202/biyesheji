@@ -17,6 +17,13 @@ public interface CheweiZhuangtaiN2Service {
 	void afterChezijinchangInserted(ChezijinchangEntity entry);
 
 	/**
+	 * 这是M2代码 — 入场后占用车位，并将「指定预约单」绑定到该入场单（不走按时段自动匹配）。
+	 *
+	 * @throws IllegalStateException 车位状态或预约绑定不允许时
+	 */
+	void afterChezijinchangInsertedForM2(ChezijinchangEntity entry, Long yuyueId);
+
+	/**
 	 * 离场/缴费单生成后：车位进入「已离场待结算」。
 	 */
 	void afterTingchejiaofeiInserted(TingchejiaofeiEntity order);

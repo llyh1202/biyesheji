@@ -46,8 +46,7 @@ public class CheweiZhuangtaiN2ServiceImpl implements CheweiZhuangtaiN2Service {
 		return null;
 	}
 
-	@Override
-	public void afterChezijinchangInserted(ChezijinchangEntity entry) {
+	private void occupyCheweiForRuchang(ChezijinchangEntity entry) {
 		if (entry == null || entry.getCheweiId() == null) {
 			return;
 		}
@@ -64,8 +63,26 @@ public class CheweiZhuangtaiN2ServiceImpl implements CheweiZhuangtaiN2Service {
 		cw.setChezijinchangId(entry.getId());
 		cw.setTingchejiaofeiId(null);
 		cheweiService.updateById(cw);
+	}
+
+	@Override
+	public void afterChezijinchangInserted(ChezijinchangEntity entry) {
+		occupyCheweiForRuchang(entry);
+		if (entry == null || entry.getCheweiId() == null) {
+			return;
+		}
 		java.util.Date jt = entry.getJinchangshijian() != null ? entry.getJinchangshijian() : new java.util.Date();
 		cheweiYuliangN4Service.m1SyncAfterRuchang(entry.getCheweiId(), entry.getId(), jt);
+	}
+
+	@Override
+	public void afterChezijinchangInsertedForM2(ChezijinchangEntity entry, Long yuyueId) {
+		occupyCheweiForRuchang(entry);
+		if (entry == null || entry.getCheweiId() == null || yuyueId == null) {
+			throw new IllegalStateException("M2 入场缺少车位或预约单");
+		}
+		java.util.Date jt = entry.getJinchangshijian() != null ? entry.getJinchangshijian() : new java.util.Date();
+		cheweiYuliangN4Service.m1BindRuchangToYuyue(yuyueId, entry.getCheweiId(), entry.getId(), jt);
 	}
 
 	@Override

@@ -10,5 +10,9 @@ export default {
             name: '用户反馈',
             url: '/index/messages'
         },
+        {
+            name: '停车闭环(M2)',
+            url: '/index/m2TingcheLi'
+        },
     ]
 }
