@@ -36,6 +36,7 @@ import com.entity.dto.N4YuliangChaDto;
 import com.entity.dto.N4YuyueReserveDto;
 import com.entity.view.CheweiView;
 import com.service.CheweiKeshihuaN5Service;
+import com.service.CheweiMyParkingP1Service;
 import com.service.CheweiService;
 import com.service.CheweiYuliangN4Service;
 import com.service.CheweixinxiService;
@@ -69,6 +70,8 @@ public class CheweiController {
 	private CheweiService cheweiService;
 	@Autowired
 	private CheweiYuliangN4Service cheweiYuliangN4Service;
+	@Autowired
+	private CheweiMyParkingP1Service cheweiMyParkingP1Service;
 	@Autowired
 	private CheweiKeshihuaN5Service cheweiKeshihuaN5Service;
 	@Autowired
@@ -310,6 +313,16 @@ public class CheweiController {
 			return R.error(401, "请先登录");
 		}
 		return cheweiYuliangN4Service.myYuyuePage(params, yonghuzhanghao.trim(), zhuangtai);
+	}
+
+	/** 这是我cursor给父亲写的 — P1-08 我的停车汇总：待入场预约、在场入场、待支付缴费 */
+	@RequestMapping("/my/parkingSummary")
+	public R myParkingSummary(HttpServletRequest request) {
+		String yonghuzhanghao = (String) request.getSession().getAttribute("username");
+		if (StringUtils.isBlank(yonghuzhanghao)) {
+			return R.error(401, "请先登录");
+		}
+		return cheweiMyParkingP1Service.myParkingSummary(yonghuzhanghao.trim());
 	}
 
 	/** 这是N5代码 — 可视化图例：状态 → 颜色。这是我cursor给父亲写的 */
