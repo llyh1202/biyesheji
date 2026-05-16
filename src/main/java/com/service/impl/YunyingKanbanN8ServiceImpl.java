@@ -7,33 +7,20 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.baomidou.mybatisplus.mapper.EntityWrapper;
-import com.constant.CheweiYuyueZhuangtaiN4;
-import com.constant.CheweiZhuangtaiN2;
-import com.constant.TingcheBujiaoZhuangtaiN7;
-import com.dao.CheweiYuyueDao;
-import com.dao.TingcheBujiaoDao;
-import com.entity.CheweiEntity;
-import com.entity.CheweiYuyueEntity;
-import com.entity.ChezijinchangEntity;
-import com.entity.TingcheBujiaoEntity;
-import com.entity.TingchejiaofeiEntity;
 import com.entity.dto.N8KanbanOverviewDto;
 import com.entity.dto.N8PeriodKpiDto;
-import com.service.CheweiService;
-import com.service.ChezijinchangService;
-import com.service.TingchejiaofeiService;
 import com.service.YunyingKanbanN8Service;
+import com.service.stat.CheweiTongjiReadM7Service;
 import com.utils.R;
 
 /**
  * 这是N8代码 — 今日/本周 KPI 聚合（预约、入场、离场、收入、利用率、超时）。
+ * 这是M7代码 — 统计查询改由 CheweiTongjiReadM7Service 只读 SQL/视图承担。
  * 这是我cursor给父亲写的
  */
 @Service("yunyingKanbanN8Service")
@@ -42,15 +29,7 @@ public class YunyingKanbanN8ServiceImpl implements YunyingKanbanN8Service {
 	private static final ZoneId ZONE = ZoneId.of("Asia/Shanghai");
 
 	@Autowired
-	private CheweiYuyueDao cheweiYuyueDao;
-	@Autowired
-	private ChezijinchangService chezijinchangService;
-	@Autowired
-	private TingchejiaofeiService tingchejiaofeiService;
-	@Autowired
-	private TingcheBujiaoDao tingcheBujiaoDao;
-	@Autowired
-	private CheweiService cheweiService;
+	private CheweiTongjiReadM7Service cheweiTongjiReadM7Service;
 
 	@Override
 	public R overview() {
@@ -86,82 +65,52 @@ public class YunyingKanbanN8ServiceImpl implements YunyingKanbanN8Service {
 	}
 
 	private long countYuyue(Date start, Date end) {
-		EntityWrapper<CheweiYuyueEntity> w = new EntityWrapper<CheweiYuyueEntity>();
-		w.ge("addtime", start);
-		w.le("addtime", end);
-		return cheweiYuyueDao.selectCount(w);
+		return cheweiTongjiReadM7Service.countYuyue(start, end);
 	}
 
 	private long countRuchang(Date start, Date end) {
-		EntityWrapper<ChezijinchangEntity> w = new EntityWrapper<ChezijinchangEntity>();
-		w.ge("jinchangshijian", start);
-		w.le("jinchangshijian", end);
-		return chezijinchangService.selectCount(w);
+		return cheweiTongjiReadM7Service.countRuchang(start, end);
 	}
 
 	private long countLichang(Date start, Date end) {
-		EntityWrapper<TingchejiaofeiEntity> w = new EntityWrapper<TingchejiaofeiEntity>();
-		w.isNotNull("lichangshijian");
-		w.ge("lichangshijian", start);
-		w.le("lichangshijian", end);
-		return tingchejiaofeiService.selectCount(w);
+		return cheweiTongjiReadM7Service.countLichang(start, end);
 	}
 
 	private double sumParkingRevenue(Date start, Date end) {
-		EntityWrapper<TingchejiaofeiEntity> w = new EntityWrapper<TingchejiaofeiEntity>();
-		w.setSqlSelect("IFNULL(SUM(bencitingchefeiyong),0) AS total");
-		w.eq("ispay", "已支付");
-		w.isNotNull("lichangshijian");
-		w.ge("lichangshijian", start);
-		w.le("lichangshijian", end);
-		return extractSum(tingchejiaofeiService.selectMaps(w));
+		return cheweiTongjiReadM7Service.sumParkingRevenue(start, end);
 	}
 
 	private double sumBujiaoRevenue(Date start, Date end) {
-		EntityWrapper<TingcheBujiaoEntity> w = new EntityWrapper<TingcheBujiaoEntity>();
-		w.setSqlSelect("IFNULL(SUM(jine),0) AS total");
-		w.eq("zhuangtai", TingcheBujiaoZhuangtaiN7.YI_ZHIFU);
-		w.ge("addtime", start);
-		w.le("addtime", end);
-		return extractSum(tingcheBujiaoDao.selectMaps(w));
+		return cheweiTongjiReadM7Service.sumBujiaoRevenue(start, end);
 	}
 
 	private long countChaoshiCancel(Date start, Date end) {
-		EntityWrapper<CheweiYuyueEntity> w = new EntityWrapper<CheweiYuyueEntity>();
-		w.eq("zhuangtai", CheweiYuyueZhuangtaiN4.YI_QUXIAO);
-		w.ge("addtime", start);
-		w.le("addtime", end);
-		return cheweiYuyueDao.selectCount(w);
+		return cheweiTongjiReadM7Service.countYuyueCancel(start, end);
 	}
 
 	private long countChaoshiBujiao(Date start, Date end) {
-		EntityWrapper<TingcheBujiaoEntity> w = new EntityWrapper<TingcheBujiaoEntity>();
-		w.eq("leixing", "超时补缴");
-		w.ge("addtime", start);
-		w.le("addtime", end);
-		return tingcheBujiaoDao.selectCount(w);
+		return cheweiTongjiReadM7Service.countChaoshiBujiao(start, end);
 	}
 
 	private void fillCheweiSnapshot(N8KanbanOverviewDto dto) {
-		long total = cheweiService.selectCount(new EntityWrapper<CheweiEntity>());
-		EntityWrapper<CheweiEntity> freeW = new EntityWrapper<CheweiEntity>();
-		freeW.eq("zhuangtai", CheweiZhuangtaiN2.KONGXIAN);
-		long free = cheweiService.selectCount(freeW);
+		Map<String, Object> snap = cheweiTongjiReadM7Service.cheweiGlobalSnapshot();
+		long total = num(snap, "chewei_total");
+		long free = num(snap, "chewei_free");
 		long occupied = Math.max(0, total - free);
 		dto.setCheweiTotal(total);
 		dto.setCheweiOccupied(occupied);
 		dto.setUtilizationRate(total <= 0 ? 0.0 : round2(occupied * 100.0 / total));
 	}
 
-	private static double extractSum(List<Map<String, Object>> maps) {
-		if (maps == null || maps.isEmpty() || maps.get(0) == null) {
-			return 0.0;
+	private static long num(Map<String, Object> m, String key) {
+		if (m == null || m.isEmpty()) {
+			return 0L;
 		}
-		Object v = maps.get(0).get("total");
+		Object v = m.get(key);
 		if (v == null) {
-			v = maps.get(0).get("TOTAL");
+			v = m.get(key.toUpperCase());
 		}
-		return v == null ? 0.0 : ((Number) v).doubleValue();
+		return v == null ? 0L : ((Number) v).longValue();
 	}
 
 	private static Date toDate(LocalDateTime ldt) {

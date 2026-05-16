@@ -23,25 +23,17 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.baomidou.mybatisplus.mapper.EntityWrapper;
-import com.dao.TingcheBujiaoDao;
-import com.entity.CheweiEntity;
-import com.entity.ChezijinchangEntity;
-import com.entity.TingcheBujiaoEntity;
-import com.entity.TingchejiaofeiEntity;
 import com.entity.dto.N9BaobiaoQueryDto;
 import com.entity.dto.N9BaobiaoResultDto;
 import com.entity.dto.N9DimensionStatRowDto;
 import com.entity.dto.N9RevenueTrendPointDto;
-import com.constant.TingcheBujiaoZhuangtaiN7;
-import com.service.CheweiService;
-import com.service.ChezijinchangService;
-import com.service.TingchejiaofeiService;
 import com.service.YunyingBaobiaoN9Service;
+import com.service.stat.CheweiTongjiReadM7Service;
 import com.utils.R;
 
 /**
  * 这是N9代码 — 按车场/区域/时段：周转率、平均停车时长、收入趋势；支持 Excel 导出。
+ * 这是M7代码 — 聚合改由只读 SQL/视图（CheweiTongjiReadM7Service）完成。
  * 这是我cursor给父亲写的
  */
 @Service("yunyingBaobiaoN9Service")
@@ -51,13 +43,7 @@ public class YunyingBaobiaoN9ServiceImpl implements YunyingBaobiaoN9Service {
 	private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	@Autowired
-	private CheweiService cheweiService;
-	@Autowired
-	private ChezijinchangService chezijinchangService;
-	@Autowired
-	private TingchejiaofeiService tingchejiaofeiService;
-	@Autowired
-	private TingcheBujiaoDao tingcheBujiaoDao;
+	private CheweiTongjiReadM7Service cheweiTongjiReadM7Service;
 
 	private static class DimAgg {
 		String lot;
@@ -144,7 +130,7 @@ public class YunyingBaobiaoN9ServiceImpl implements YunyingBaobiaoN9Service {
 
 		aggregateRuchang(dimMap, startDt, endDt, lotF, quyuF);
 		double parkingRev = aggregateLichang(dimMap, trendRev, trendLichang, startDt, endDt, lotF, quyuF);
-		double bujiaoRev = aggregateBujiao(trendRev, startDt, endDt, lotF, quyuF);
+		double bujiaoRev = mergeBujiaoTrend(trendRev, startDt, endDt, lotF, quyuF);
 		double totalRev = round2(parkingRev + bujiaoRev);
 
 		List<N9DimensionStatRowDto> rows = new ArrayList<N9DimensionStatRowDto>();
@@ -188,29 +174,18 @@ public class YunyingBaobiaoN9ServiceImpl implements YunyingBaobiaoN9Service {
 	}
 
 	private Map<String, DimAgg> initDimMap(String lotF, String quyuF) {
-		EntityWrapper<CheweiEntity> w = new EntityWrapper<CheweiEntity>();
-		if (StringUtils.isNotBlank(lotF)) {
-			w.eq("tingchechangmingcheng", lotF);
-		}
-		if (StringUtils.isNotBlank(quyuF)) {
-			w.eq("quyu", quyuF);
-		}
-		List<CheweiEntity> list = cheweiService.selectList(w);
+		String lotParam = StringUtils.isNotBlank(lotF) ? lotF : null;
+		String quyuParam = StringUtils.isNotBlank(quyuF) ? quyuF : null;
+		List<Map<String, Object>> list = cheweiTongjiReadM7Service.listDimChewei(lotParam, quyuParam);
 		Map<String, DimAgg> map = new HashMap<String, DimAgg>(32);
-		for (CheweiEntity c : list) {
-			String lot = nz(c.getTingchechangmingcheng());
-			String quyu = nz(c.getQuyu());
-			if (StringUtils.isBlank(lot)) {
-				lot = "未命名车场";
-			}
-			DimAgg a = map.get(dimKey(lot, quyu));
-			if (a == null) {
-				a = new DimAgg();
-				a.lot = lot;
-				a.quyu = quyu;
-				map.put(dimKey(lot, quyu), a);
-			}
-			a.cheweiCount++;
+		for (Map<String, Object> row : list) {
+			String lot = nz(str(row, "tingchechangmingcheng"));
+			String quyu = nz(str(row, "quyu"));
+			DimAgg a = new DimAgg();
+			a.lot = lot;
+			a.quyu = quyu;
+			a.cheweiCount = num(row, "chewei_count");
+			map.put(dimKey(lot, quyu), a);
 		}
 		if (map.isEmpty()) {
 			String lot = StringUtils.isNotBlank(lotF) ? lotF : "全部";
@@ -225,91 +200,49 @@ public class YunyingBaobiaoN9ServiceImpl implements YunyingBaobiaoN9Service {
 	}
 
 	private void aggregateRuchang(Map<String, DimAgg> dimMap, Date start, Date end, String lotF, String quyuF) {
-		EntityWrapper<ChezijinchangEntity> w = new EntityWrapper<ChezijinchangEntity>();
-		w.ge("jinchangshijian", start);
-		w.le("jinchangshijian", end);
-		if (StringUtils.isNotBlank(lotF)) {
-			w.eq("tingchechangmingcheng", lotF);
-		}
-		if (StringUtils.isNotBlank(quyuF)) {
-			w.eq("quyu", quyuF);
-		}
-		List<ChezijinchangEntity> list = chezijinchangService.selectList(w);
-		for (ChezijinchangEntity e : list) {
-			DimAgg a = ensureDim(dimMap, e.getTingchechangmingcheng(), e.getQuyu());
-			a.ruchang++;
+		String lotParam = StringUtils.isNotBlank(lotF) ? lotF : null;
+		String quyuParam = StringUtils.isNotBlank(quyuF) ? quyuF : null;
+		for (Map<String, Object> row : cheweiTongjiReadM7Service.listRuchangByDim(start, end, lotParam, quyuParam)) {
+			DimAgg a = ensureDim(dimMap, str(row, "tingchechangmingcheng"), str(row, "quyu"));
+			a.ruchang += num(row, "ruchang_count");
 		}
 	}
 
 	private double aggregateLichang(Map<String, DimAgg> dimMap, Map<String, Double> trendRev, Map<String, Long> trendLichang,
 			Date start, Date end, String lotF, String quyuF) {
-		EntityWrapper<TingchejiaofeiEntity> w = new EntityWrapper<TingchejiaofeiEntity>();
-		w.isNotNull("lichangshijian");
-		w.ge("lichangshijian", start);
-		w.le("lichangshijian", end);
-		if (StringUtils.isNotBlank(lotF)) {
-			w.eq("tingchechangmingcheng", lotF);
-		}
-		if (StringUtils.isNotBlank(quyuF)) {
-			w.eq("quyu", quyuF);
-		}
-		List<TingchejiaofeiEntity> list = tingchejiaofeiService.selectList(w);
+		String lotParam = StringUtils.isNotBlank(lotF) ? lotF : null;
+		String quyuParam = StringUtils.isNotBlank(quyuF) ? quyuF : null;
 		double sumPaid = 0.0;
-		for (TingchejiaofeiEntity o : list) {
-			String lot = nz(o.getTingchechangmingcheng());
-			String quyu = nz(o.getQuyu());
-			DimAgg a = ensureDim(dimMap, lot, quyu);
-			a.lichang++;
-			String day = formatDay(o.getLichangshijian());
+		for (Map<String, Object> row : cheweiTongjiReadM7Service.listRevenueDim(start, end, lotParam, quyuParam)) {
+			DimAgg a = ensureDim(dimMap, str(row, "tingchechangmingcheng"), str(row, "quyu"));
+			long lc = num(row, "lichang_count");
+			double rev = dbl(row, "parking_revenue");
+			a.lichang += lc;
+			a.revenue += rev;
+			a.durationSum += dbl(row, "duration_sum_hours");
+			a.durationCnt += num(row, "duration_cnt");
+			sumPaid += rev;
+		}
+		for (Map<String, Object> row : cheweiTongjiReadM7Service.listRevenueDaily(start, end, lotParam, quyuParam)) {
+			String day = formatDayKey(row.get("stat_date"));
 			if (trendLichang.containsKey(day)) {
-				trendLichang.put(day, trendLichang.get(day) + 1);
+				trendLichang.put(day, num(row, "lichang_count"));
 			}
-			double hours = o.getBencitingcheshizhang() != null ? o.getBencitingcheshizhang() : 0.0;
-			if (hours <= 0 && o.getJinchangshijian() != null && o.getLichangshijian() != null) {
-				hours = (o.getLichangshijian().getTime() - o.getJinchangshijian().getTime()) / (1000.0 * 3600.0);
-			}
-			if (hours > 0) {
-				a.durationSum += hours;
-				a.durationCnt++;
-			}
-			if ("已支付".equals(nz(o.getIspay())) && o.getBencitingchefeiyong() != null) {
-				double fee = o.getBencitingchefeiyong();
-				a.revenue += fee;
-				sumPaid += fee;
-				if (trendRev.containsKey(day)) {
-					trendRev.put(day, trendRev.get(day) + fee);
-				}
+			if (trendRev.containsKey(day)) {
+				trendRev.put(day, dbl(row, "parking_revenue"));
 			}
 		}
 		return sumPaid;
 	}
 
-	private double aggregateBujiao(Map<String, Double> trendRev, Date start, Date end, String lotF, String quyuF) {
-		EntityWrapper<TingcheBujiaoEntity> w = new EntityWrapper<TingcheBujiaoEntity>();
-		w.eq("zhuangtai", TingcheBujiaoZhuangtaiN7.YI_ZHIFU);
-		w.ge("addtime", start);
-		w.le("addtime", end);
-		List<TingcheBujiaoEntity> list = tingcheBujiaoDao.selectList(w);
+	private double mergeBujiaoTrend(Map<String, Double> trendRev, Date start, Date end, String lotF, String quyuF) {
+		String lotParam = StringUtils.isNotBlank(lotF) ? lotF : null;
+		String quyuParam = StringUtils.isNotBlank(quyuF) ? quyuF : null;
 		double sum = 0.0;
-		for (TingcheBujiaoEntity b : list) {
-			if (StringUtils.isNotBlank(lotF) || StringUtils.isNotBlank(quyuF)) {
-				if (b.getChezijinchangId() == null) {
-					continue;
-				}
-				ChezijinchangEntity entry = chezijinchangService.selectById(b.getChezijinchangId());
-				if (entry == null) {
-					continue;
-				}
-				if (StringUtils.isNotBlank(lotF) && !lotF.equals(nz(entry.getTingchechangmingcheng()))) {
-					continue;
-				}
-				if (StringUtils.isNotBlank(quyuF) && !quyuF.equals(nz(entry.getQuyu()))) {
-					continue;
-				}
-			}
-			double fee = b.getJine() != null ? b.getJine() : 0.0;
+		for (Map<String, Object> row : cheweiTongjiReadM7Service.listBujiaoDaily(start, end, lotParam, quyuParam)) {
+			double fee = dbl(row, "bujiao_revenue");
 			sum += fee;
-			String day = formatDay(b.getAddtime());
+			String day = formatDayKey(row.get("stat_date"));
 			if (trendRev.containsKey(day)) {
 				trendRev.put(day, trendRev.get(day) + fee);
 			}
@@ -340,6 +273,43 @@ public class YunyingBaobiaoN9ServiceImpl implements YunyingBaobiaoN9Service {
 			return "";
 		}
 		return d.toInstant().atZone(ZONE).toLocalDate().format(DAY_FMT);
+	}
+
+	private static String formatDayKey(Object statDate) {
+		if (statDate == null) {
+			return "";
+		}
+		if (statDate instanceof java.sql.Date) {
+			return ((java.sql.Date) statDate).toLocalDate().format(DAY_FMT);
+		}
+		if (statDate instanceof Date) {
+			return formatDay((Date) statDate);
+		}
+		return statDate.toString().substring(0, Math.min(10, statDate.toString().length()));
+	}
+
+	private static String str(Map<String, Object> m, String key) {
+		Object v = m.get(key);
+		if (v == null) {
+			v = m.get(key.toUpperCase());
+		}
+		return v == null ? "" : v.toString();
+	}
+
+	private static long num(Map<String, Object> m, String key) {
+		Object v = m.get(key);
+		if (v == null) {
+			v = m.get(key.toUpperCase());
+		}
+		return v == null ? 0L : ((Number) v).longValue();
+	}
+
+	private static double dbl(Map<String, Object> m, String key) {
+		Object v = m.get(key);
+		if (v == null) {
+			v = m.get(key.toUpperCase());
+		}
+		return v == null ? 0.0 : ((Number) v).doubleValue();
 	}
 
 	private static LocalDate parseDate(String s, LocalDate defaultVal) {

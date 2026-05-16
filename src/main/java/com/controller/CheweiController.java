@@ -53,6 +53,7 @@ import com.utils.R;
  * 这是N10代码 — 异常报表 /chewei/n10/*（未入场、未支付离场、待补缴，与 N6/N7 呼应）。
  * 这是M6代码 — 管理端首页图表扩展 /chewei/m6/*（收入趋势、周转率，联动 N8/N9）。
  * 这是M6代码 — 管理端首页图表 /chewei/m6/home/charts（收入/周转，联动 N8/N9）。
+ * 这是M7代码 — 统计类接口规范：报表统一走 com.controller.stat + /chewei/stat/* + 只读 SQL/视图。
  * 车位编号主数据（N1 车位级主数据；N2 车位占用状态机与预约接口）。
  * 这是我cursor给父亲写的
  */

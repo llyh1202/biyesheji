@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 这是M7代码 — 统计只读 SQL（配合 v_stat_* 视图） -->
+<!-- 这是我cursor给父亲写的 -->
+<mapper namespace="com.dao.stat.CheweiTongjiReadDao">
+
+	<select id="selectCheweiGlobalSnapshot" resultType="map">
+		SELECT chewei_total, chewei_free FROM v_stat_chewei_global
+	</select>
+
+	<select id="selectDimChewei" resultType="map">
+		SELECT tingchechangmingcheng, quyu, chewei_count, free_count
+		FROM v_stat_chewei_dim
+		<where>
+			<if test="lot != null and lot != ''">
+				AND tingchechangmingcheng = #{lot}
+			</if>
+			<if test="quyu != null and quyu != ''">
+				AND quyu = #{quyu}
+			</if>
+		</where>
+	</select>
+
+	<select id="countYuyueBetween" resultType="long">
+		SELECT COUNT(*) FROM chewei_yuyue
+		WHERE addtime &gt;= #{start} AND addtime &lt;= #{end}
+	</select>
+
+	<select id="countRuchangBetween" resultType="long">
+		SELECT COUNT(*) FROM chezijinchang
+		WHERE jinchangshijian &gt;= #{start} AND jinchangshijian &lt;= #{end}
+	</select>
+
+	<select id="countLichangBetween" resultType="long">
+		SELECT COUNT(*) FROM tingchejiaofei
+		WHERE lichangshijian IS NOT NULL
+		  AND lichangshijian &gt;= #{start} AND lichangshijian &lt;= #{end}
+	</select>
+
+	<select id="sumParkingRevenueBetween" resultType="double">
+		SELECT IFNULL(SUM(bencitingchefeiyong), 0)
+		FROM tingchejiaofei
+		WHERE ispay = '已支付'
+		  AND lichangshijian IS NOT NULL
+		  AND lichangshijian &gt;= #{start} AND lichangshijian &lt;= #{end}
+	</select>
+
+	<select id="sumBujiaoRevenueBetween" resultType="double">
+		SELECT IFNULL(SUM(jine), 0)
+		FROM tingche_bujiao
+		WHERE zhuangtai = '已支付'
+		  AND addtime &gt;= #{start} AND addtime &lt;= #{end}
+	</select>
+
+	<select id="countYuyueCancelBetween" resultType="long">
+		SELECT COUNT(*) FROM chewei_yuyue
+		WHERE zhuangtai = '已取消'
+		  AND addtime &gt;= #{start} AND addtime &lt;= #{end}
+	</select>
+
+	<select id="countChaoshiBujiaoBetween" resultType="long">
+		SELECT COUNT(*) FROM tingche_bujiao
+		WHERE leixing = '超时补缴'
+		  AND addtime &gt;= #{start} AND addtime &lt;= #{end}
+	</select>
+
+	<select id="countRuchangByDimBetween" resultType="map">
+		SELECT
+			CASE WHEN TRIM(IFNULL(tingchechangmingcheng, '')) = '' THEN '未命名车场' ELSE TRIM(tingchechangmingcheng) END AS tingchechangmingcheng,
+			IFNULL(quyu, '') AS quyu,
+			COUNT(*) AS ruchang_count
+		FROM chezijinchang
+		WHERE jinchangshijian &gt;= #{start} AND jinchangshijian &lt;= #{end}
+		<if test="lot != null and lot != ''">
+			AND tingchechangmingcheng = #{lot}
+		</if>
+		<if test="quyu != null and quyu != ''">
+			AND quyu = #{quyu}
+		</if>
+		GROUP BY 1, 2
+	</select>
+
+	<select id="selectRevenueDailyBetween" resultType="map">
+		SELECT
+			stat_date,
+			SUM(lichang_count) AS lichang_count,
+			SUM(parking_revenue) AS parking_revenue,
+			SUM(duration_sum_hours) AS duration_sum_hours,
+			SUM(duration_cnt) AS duration_cnt
+		FROM v_stat_revenue_daily
+		WHERE stat_date &gt;= DATE(#{start}) AND stat_date &lt;= DATE(#{end})
+		<if test="lot != null and lot != ''">
+			AND tingchechangmingcheng = #{lot}
+		</if>
+		<if test="quyu != null and quyu != ''">
+			AND quyu = #{quyu}
+		</if>
+		GROUP BY stat_date
+		ORDER BY stat_date
+	</select>
+
+	<select id="sumBujiaoDailyBetween" resultType="map">
+		SELECT DATE(b.addtime) AS stat_date, IFNULL(SUM(b.jine), 0) AS bujiao_revenue
+		FROM tingche_bujiao b
+		LEFT JOIN chezijinchang c ON c.id = b.chezijinchang_id
+		WHERE b.zhuangtai = '已支付'
+		  AND b.addtime &gt;= #{start} AND b.addtime &lt;= #{end}
+		<if test="lot != null and lot != ''">
+			AND c.tingchechangmingcheng = #{lot}
+		</if>
+		<if test="quyu != null and quyu != ''">
+			AND c.quyu = #{quyu}
+		</if>
+		GROUP BY DATE(b.addtime)
+		ORDER BY stat_date
+	</select>
+
+	<select id="selectRevenueDimBetween" resultType="map">
+		SELECT
+			tingchechangmingcheng,
+			quyu,
+			SUM(lichang_count) AS lichang_count,
+			SUM(parking_revenue) AS parking_revenue,
+			SUM(duration_sum_hours) AS duration_sum_hours,
+			SUM(duration_cnt) AS duration_cnt
+		FROM v_stat_revenue_daily
+		WHERE stat_date &gt;= DATE(#{start}) AND stat_date &lt;= DATE(#{end})
+		<if test="lot != null and lot != ''">
+			AND tingchechangmingcheng = #{lot}
+		</if>
+		<if test="quyu != null and quyu != ''">
+			AND quyu = #{quyu}
+		</if>
+		GROUP BY tingchechangmingcheng, quyu
+	</select>
+
+</mapper>

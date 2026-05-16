@@ -1,4 +1,4 @@
-package com.controller;
+package com.controller.stat;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -8,19 +8,17 @@ import com.service.YunyingKanbanN8Service;
 import com.utils.R;
 
 /**
- * 这是N8代码 — 运营总览看板 API（兼容路径）。
- * 这是M7代码 — 新报表请使用 {@link com.controller.stat.CheweiStatKanbanM7Controller} /chewei/stat/kanban/*。
+ * 这是M7代码 — 运营看板统计专用 Controller（/chewei/stat/kanban/*），与业务 CheweiController 分离。
  * 这是我cursor给父亲写的
  */
 @RestController
-@RequestMapping("/chewei/n8")
-public class YunyingKanbanN8Controller {
+@RequestMapping("/chewei/stat/kanban")
+public class CheweiStatKanbanM7Controller {
 
 	@Autowired
 	private YunyingKanbanN8Service yunyingKanbanN8Service;
 
-	/** 今日/本周 KPI 总览 */
-	@RequestMapping("/kanban/overview")
+	@RequestMapping("/overview")
 	public R overview() {
 		return yunyingKanbanN8Service.overview();
 	}
