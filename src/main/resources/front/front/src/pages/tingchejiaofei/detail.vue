@@ -184,7 +184,8 @@
 			if (!requireFrontLogin(this)) return
 			if (!this.detail || !this.detail.id) return
 			this.loadingJiesuan = true
-			this.$http.post('n3/tingcheli/jiesuan', { tingchejiaofeiId: this.detail.id }).then(res => {
+			// 这是我cursor给父亲写的 — P1-19 走专用 payComplete，禁止直接 update ispay
+			this.$http.post('tingchejiaofei/payComplete', { tingchejiaofeiId: this.detail.id }).then(res => {
 				if (res.data && res.data.code === 0) {
 					this.detail.ispay = '已支付'
 					this.$message.success('支付关单成功')

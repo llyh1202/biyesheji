@@ -34,6 +34,7 @@ import com.entity.view.TingchejiaofeiView;
 import com.entity.ChezijinchangEntity;
 import com.service.ChezijinchangService;
 import com.service.CheweiZhuangtaiN2Service;
+import com.service.TingchejiaofeiPayP1Service;
 import com.service.TingchejiaofeiService;
 import com.service.TokenService;
 import com.utils.PageUtils;
@@ -68,6 +69,9 @@ public class TingchejiaofeiController {
     /** 这是N2代码 — 车位状态机。这是我cursor给父亲写的 */
     @Autowired
     private CheweiZhuangtaiN2Service cheweiZhuangtaiN2Service;
+    /** 这是我cursor给父亲写的 — P1-19 用户端支付完成 */
+    @Autowired
+    private TingchejiaofeiPayP1Service tingchejiaofeiPayP1Service;
 
 
 
@@ -200,6 +204,26 @@ public class TingchejiaofeiController {
 
 
     /**
+     * 这是我cursor给父亲写的 — P1-19 用户端支付完成（走 N2 关单逻辑，禁止直接 update ispay）
+     */
+    @RequestMapping("/payComplete")
+    @Transactional(rollbackFor = Exception.class)
+    public R payComplete(@RequestBody Map<String, Object> body, HttpServletRequest request) {
+        Object rawId = body != null ? (body.get("tingchejiaofeiId") != null ? body.get("tingchejiaofeiId") : body.get("id")) : null;
+        if (rawId == null) {
+            return R.error("须传入缴费单 id：tingchejiaofeiId");
+        }
+        Long id;
+        try {
+            id = Long.valueOf(String.valueOf(rawId).trim());
+        } catch (NumberFormatException ex) {
+            return R.error("缴费单 id 须为数字");
+        }
+        String user = sessionUsername(request);
+        return tingchejiaofeiPayP1Service.payComplete(id, user);
+    }
+
+    /**
      * 修改
      */
     @RequestMapping("/update")
@@ -212,6 +236,14 @@ public class TingchejiaofeiController {
             return n3v;
         }
         TingchejiaofeiEntity old = tingchejiaofeiService.selectById(tingchejiaofei.getId());
+        if (old == null) {
+            return R.error("缴费单不存在");
+        }
+        // 这是我cursor给父亲写的 — P1-19 普通用户禁止经 update 改 ispay
+        R payGuard = rejectYonghuIspayUpdate(request, old, tingchejiaofei);
+        if (payGuard != null) {
+            return payGuard;
+        }
         fillCheweiIdFromCrossref(tingchejiaofei);
         tingchejiaofeiService.updateById(tingchejiaofei);//全部更新
         TingchejiaofeiEntity fresh = tingchejiaofeiService.selectById(tingchejiaofei.getId());
@@ -250,6 +282,37 @@ public class TingchejiaofeiController {
 
     private static String nz(String s) {
         return StringUtils.isBlank(s) ? "" : s.trim();
+    }
+
+    private static String sessionUsername(HttpServletRequest request) {
+        if (request == null || request.getSession() == null) {
+            return "";
+        }
+        Object u = request.getSession().getAttribute("username");
+        return u == null ? "" : u.toString();
+    }
+
+    private static boolean isYonghuSession(HttpServletRequest request) {
+        if (request == null || request.getSession() == null) {
+            return false;
+        }
+        Object t = request.getSession().getAttribute("tableName");
+        return t != null && "yonghu".equals(t.toString());
+    }
+
+    /** 这是我cursor给父亲写的 — P1-19 */
+    private R rejectYonghuIspayUpdate(HttpServletRequest request, TingchejiaofeiEntity old,
+            TingchejiaofeiEntity incoming) {
+        if (!isYonghuSession(request) || old == null || incoming == null) {
+            return null;
+        }
+        String oldPay = nz(old.getIspay());
+        String newPay = incoming.getIspay() == null ? oldPay : nz(incoming.getIspay());
+        if (!newPay.equals(oldPay)) {
+            return R.error(403, "普通用户不可直接修改支付状态，请使用 POST /tingchejiaofei/payComplete 或 M2「/n3/tingcheli/jiesuan」");
+        }
+        incoming.setIspay(old.getIspay());
+        return null;
     }
 
     private void fillCheweiIdFromCrossref(TingchejiaofeiEntity t) {
