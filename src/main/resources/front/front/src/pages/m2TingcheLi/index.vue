@@ -161,6 +161,8 @@
     <!-- ⑤ 支付 -->
     <el-card v-show="activeStep === 4" shadow="never" class="m2-wizard-card">
       <div slot="header">⑤ 支付与关单</div>
+      <!-- 这是我cursor给父亲写的 — P1-18 统一支付路径说明 -->
+      <p class="m2-pay-path-hint">待支付停车费请在本步「模拟结算关单」或「缴费详情页」完成，勿使用通用支付页。</p>
       <div v-if="orderAfterLichang" class="m2-pay-summary">
         <p>缴费单号：<b>{{ orderAfterLichang.dingdanhao || ('#' + orderAfterLichang.id) }}</b></p>
         <p>应付金额：<b class="m2-fee">{{ orderAfterLichang.bencitingchefeiyong }} 元</b></p>
@@ -694,6 +696,12 @@ export default {
 }
 .m2-bujiao-table {
   margin-top: 8px;
+}
+.m2-pay-path-hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.6;
 }
 .m2-pay-summary {
   font-size: 15px;

@@ -150,9 +150,35 @@ const router = new VueRouter({
 	]
 })
 
-// 这是我cursor给父亲写的 — P1-17 普通用户不可直达车子进场新增（路由保留，菜单已隐藏）
+// 这是我cursor给父亲写的 — P1-17/P1-18 路由守卫（车子进场新增、停车费勿走通用 pay 页）
 router.beforeEach((to, from, next) => {
 	const path = to.path || ''
+	if (path.indexOf('/pay') !== -1 || path.endsWith('pay')) {
+		const payTable = localStorage.getItem('paytable')
+		if (payTable === 'tingchejiaofei') {
+			let obj = null
+			try {
+				obj = JSON.parse(localStorage.getItem('payObject') || 'null')
+			} catch (e) {
+				obj = null
+			}
+			const id = obj && obj.id != null ? String(obj.id) : ''
+			if (!obj || !obj.lichangshijian) {
+				sessionStorage.setItem('p1_pay_hint', '须先在 M2 完成离场生成缴费单后再支付停车费。')
+				if (id) {
+					next({ path: '/index/tingchejiaofeiDetail', query: { id }, replace: true })
+				} else {
+					next({ path: '/index/m2TingcheLi', replace: true })
+				}
+				return
+			}
+			if (id) {
+				sessionStorage.setItem('p1_pay_hint', '请在缴费详情页支付，或在 M2 使用「模拟结算关单」。')
+				next({ path: '/index/tingchejiaofeiDetail', query: { id }, replace: true })
+				return
+			}
+		}
+	}
 	const isChezijinchangAdd = path.indexOf('chezijinchangAdd') !== -1
 	if (!isChezijinchangAdd) {
 		next()

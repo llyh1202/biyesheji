@@ -63,9 +63,25 @@
 					<div class="lable" :style='{"padding":"0 10px","color":"#818181","textAlign":"right","width":"auto","fontSize":"14px","lineHeight":"40px","minWidth":"100px","height":"40px"}'>停车费用</div>
 					<div  :style='{"padding":"8px 10px 0","fontSize":"14px","lineHeight":"24px","color":"#818181","flex":"1","height":"auto"}'>{{detail.bencitingchefeiyong}}</div>
 				</div>
-				<div class="item" :style='{"border":"1px solid #D8D8D8","padding":"0 10px","margin":"0 0 10px 0","background":"none","justifyContent":"spaceBetween","display":"flex"}' v-if="centerType">
+				<div class="item" :style='{"border":"1px solid #D8D8D8","padding":"0 10px","margin":"0 0 10px 0","background":"none","justifyContent":"spaceBetween","display":"flex"}'>
 					<div class="lable" :style='{"padding":"0 10px","color":"#818181","textAlign":"right","width":"auto","fontSize":"14px","lineHeight":"40px","minWidth":"100px","height":"40px"}'>是否支付</div>
 					<div  :style='{"padding":"8px 10px 0","fontSize":"14px","lineHeight":"24px","color":"#818181","flex":"1","height":"auto"}'>{{detail.ispay=='已支付'?'已支付':'未支付'}}</div>
+				</div>
+				<!-- 这是我cursor给父亲写的 — P1-18 用户端统一支付入口 -->
+				<el-alert
+					v-if="needLichangFirst"
+					title="须先完成离场"
+					description="请先在「停车闭环 M2」完成离场并生成缴费单，再在本页支付或使用 M2「模拟结算关单」。"
+					type="warning"
+					:closable="false"
+					show-icon
+					class="tingche-pay-alert"
+				/>
+				<div v-if="canFrontPay" class="tingche-front-pay">
+					<p class="tingche-pay-tip">待支付停车费请通过以下方式完成（与 M2 关单一致）：</p>
+					<el-button type="success" :loading="loadingJiesuan" @click="doM2Jiesuan">确认支付关单（M2）</el-button>
+					<el-button type="warning" @click="payClick">支付宝支付</el-button>
+					<el-button type="text" @click="goM2WithFee">在 M2 中查看</el-button>
 				</div>
 				<div class="btn" :style='{"padding":"10px 0","flexWrap":"wrap","justifyContent":"flex-start","display":"flex"}'>
 					<el-button :style='{"border":"0","cursor":"pointer","padding":"0 10px","margin":"0 5px 0 0","color":"#fff","borderRadius":"0","background":"#57A7A5","width":"auto","lineHeight":"40px","fontSize":"14px","height":"40px"}' v-if="btnAuth('tingchejiaofei','修改')" @click="editClick">修改</el-button>
@@ -99,6 +115,8 @@
   import CountDown from '@/components/CountDown';
   import axios from 'axios'
   import Swiper from "swiper";
+  import { requireFrontLogin } from '@/common/auth'
+  import { hasLichangForPay, isParkingFeeUnpaid } from '@/common/parkingPay'
   
   export default {
     //数据集合
@@ -123,8 +141,17 @@
         buynumber: 1,
 		centerType: false,
 		shareUrl: location.href,
+		loadingJiesuan: false,
       }
     },
+	computed: {
+		needLichangFirst() {
+			return !this.centerType && isParkingFeeUnpaid(this.detail) && !hasLichangForPay(this.detail)
+		},
+		canFrontPay() {
+			return !this.centerType && isParkingFeeUnpaid(this.detail) && hasLichangForPay(this.detail)
+		}
+	},
     created() {
 		if(this.$route.query.centerType) {
 			this.centerType = true
@@ -145,13 +172,36 @@
 				this.title = this.detail.xingming;
 				this.detailBanner = this.detail.cheliangtupian ? this.detail.cheliangtupian.split(",") : [];
 				this.$forceUpdate();
-
-				if(localStorage.getItem('frontToken')){
+				const hint = sessionStorage.getItem('p1_pay_hint')
+				if (hint) {
+					this.$message.warning(hint)
+					sessionStorage.removeItem('p1_pay_hint')
 				}
-
             }
           });
         },
+		doM2Jiesuan() {
+			if (!requireFrontLogin(this)) return
+			if (!this.detail || !this.detail.id) return
+			this.loadingJiesuan = true
+			this.$http.post('n3/tingcheli/jiesuan', { tingchejiaofeiId: this.detail.id }).then(res => {
+				if (res.data && res.data.code === 0) {
+					this.detail.ispay = '已支付'
+					this.$message.success('支付关单成功')
+				} else {
+					this.$message.error((res.data && res.data.msg) || '关单失败')
+				}
+			}).catch(() => this.$message.error('关单请求失败')).finally(() => {
+				this.loadingJiesuan = false
+			})
+		},
+		goM2WithFee() {
+			const q = { tingchejiaofeiId: this.detail.id ? String(this.detail.id) : '' }
+			if (this.detail.crossrefid) {
+				q.chezijinchangId = String(this.detail.crossrefid)
+			}
+			this.$router.push({ path: '/index/m2TingcheLi', query: q })
+		},
 		payClick(){
 			let params = {
 				tradeno: this.detail.dingdanhao,
@@ -765,4 +815,24 @@
 				position: relative;
 				transition: .3s;
 			}
+/* 这是我cursor给父亲写的 — P1-18 缴费详情支付区 */
+.tingche-pay-alert {
+	margin: 12px 0;
+}
+.tingche-front-pay {
+	margin: 12px 0 16px;
+	padding: 14px 16px;
+	background: #f0fdf4;
+	border: 1px solid #86efac;
+	border-radius: 8px;
+}
+.tingche-pay-tip {
+	margin: 0 0 10px;
+	font-size: 14px;
+	color: #166534;
+}
+.tingche-front-pay .el-button {
+	margin-right: 8px;
+	margin-bottom: 6px;
+}
 </style>

@@ -2,7 +2,7 @@
   <!-- 这是我cursor给父亲写的 — P1-09 我的停车（Tab：待入场 / 停车中 / 待支付） -->
   <div class="tech-feature-wrap tech-page-panel wode-tingche-page">
     <h2 class="wode-tingche-title">我的停车</h2>
-    <p class="wode-tingche-desc">查看预约、在场与待支付记录，可一键跳转入场、离场或支付。</p>
+    <p class="wode-tingche-desc">查看预约、在场与待支付记录；待支付请进入缴费详情页支付，或在 M2 使用「模拟结算关单」。</p>
 
     <el-alert
       v-if="!hasToken"
@@ -87,7 +87,7 @@
               <li><span>离场时间</span><b>{{ row.lichangshijian || '—' }}</b></li>
             </ul>
             <div class="wode-tingche-actions">
-              <el-button type="success" size="small" @click="goPay(row)">去支付</el-button>
+              <el-button type="success" size="small" @click="goPay(row)">缴费详情 / 支付</el-button>
             </div>
           </el-card>
         </div>
