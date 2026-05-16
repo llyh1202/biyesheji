@@ -1,18 +1,26 @@
 <template>
-  <div :style='{"width":"80%","padding":"20px","margin":"10px auto","position":"relative","background":"#fff"}'>
+  <div :style='{"width":"80%","padding":"20px","margin":"10px auto","position":"relative","background":"#fff","zIndex":1}'>
     <h2 :style='{"margin":"0 0 8px","fontSize":"20px"}'>停车业务闭环（M2）</h2>
     <p :style='{"color":"#666","margin":"0 0 16px","lineHeight":"1.6"}'>
-      先通过「车位时段预约」拿到预约单 id（<code>chewei_yuyue.id</code>），再在本页完成：读预约 → 校验时段 → 入场 → 离场生成缴费单 → 关单/去支付。
+      预约单 id 填数据库主键<strong>数字</strong>（如 <code>1</code>），不要填表名 <code>chewei_yuyue.1</code>。流程：读预约 → 入场 → 离场生成缴费单 → 关单。
     </p>
+    <el-alert
+      v-if="!hasToken"
+      title="未登录时部分接口可能失败；建议先登录用户账号后再操作。"
+      type="warning"
+      :closable="false"
+      show-icon
+      :style='{"marginBottom":"16px"}'
+    />
 
     <el-card shadow="never" :style='{"marginBottom":"16px"}'>
       <div slot="header">1. 查询预约快照</div>
-      <el-form inline>
+      <el-form inline @submit.native.prevent="loadSnapshot">
         <el-form-item label="预约单 id">
-          <el-input v-model.number="yuyueIdInput" placeholder="chewei_yuyue 主键" clearable style="width:220px" />
+          <el-input v-model="yuyueIdInput" placeholder="仅数字，例如 1" clearable style="width:220px" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="loadSnapshot">加载</el-button>
+          <el-button type="primary" native-type="button" :loading="loadingSnapshot" @click="loadSnapshot">加载</el-button>
         </el-form-item>
       </el-form>
       <div v-if="snapshot && snapshot.yuyue" :style='{"fontSize":"14px","lineHeight":"1.8"}'>
@@ -26,9 +34,9 @@
 
     <el-card shadow="never" :style='{"marginBottom":"16px"}'>
       <div slot="header">2. 预约校验后入场</div>
-      <el-form label-width="110px" :model="ruchangForm">
+      <el-form label-width="110px" :model="ruchangForm" @submit.native.prevent="doM2Ruchang">
         <el-form-item label="预约单 id">
-          <el-input v-model.number="ruchangForm.yuyueId" :disabled="!!lockedYuyueId" />
+          <el-input v-model="ruchangForm.yuyueId" :disabled="!!lockedYuyueId" placeholder="数字 id" />
         </el-form-item>
         <el-form-item label="进场时间">
           <el-date-picker v-model="ruchangForm.jinchangshijian" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" placeholder="默认当前" style="width:260px" />
@@ -49,7 +57,7 @@
           <el-input v-model="ruchangForm.cheliangtupian" placeholder="可选，逗号分隔相对路径" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="doM2Ruchang">提交入场</el-button>
+          <el-button type="primary" native-type="button" :loading="loadingRuchang" @click="doM2Ruchang">提交入场</el-button>
         </el-form-item>
       </el-form>
       <div v-if="ruchangResult" :style='{"marginTop":"12px"}'>
@@ -60,18 +68,18 @@
 
     <el-card shadow="never" :style='{"marginBottom":"16px"}'>
       <div slot="header">3. 离场 → 生成缴费单（触发结算）</div>
-      <el-form inline>
+      <el-form inline @submit.native.prevent="doLichang">
         <el-form-item label="入场单 id">
-          <el-input v-model.number="lichangForm.chezijinchangId" />
+          <el-input v-model="lichangForm.chezijinchangId" placeholder="数字 id" />
         </el-form-item>
         <el-form-item label="预约单 id">
-          <el-input v-model.number="lichangForm.yuyueId" placeholder="M2 建议填写" />
+          <el-input v-model="lichangForm.yuyueId" placeholder="数字 id，建议填写" />
         </el-form-item>
         <el-form-item label="离场时间">
           <el-date-picker v-model="lichangForm.lichangshijian" type="datetime" value-format="yyyy-MM-dd HH:mm:ss" style="width:260px" />
         </el-form-item>
         <el-form-item>
-          <el-button type="warning" @click="doLichang">生成缴费单</el-button>
+          <el-button type="warning" native-type="button" :loading="loadingLichang" @click="doLichang">生成缴费单</el-button>
         </el-form-item>
       </el-form>
       <div v-if="orderAfterLichang" :style='{"marginTop":"8px"}'>
@@ -81,13 +89,13 @@
 
     <el-card shadow="never">
       <div slot="header">4. 关单（标记已支付）/ 再去支付页</div>
-      <el-form inline>
+      <el-form inline @submit.native.prevent="doJiesuan">
         <el-form-item label="缴费单 id">
-          <el-input v-model.number="jiesuanId" />
+          <el-input v-model="jiesuanId" placeholder="数字 id" />
         </el-form-item>
         <el-form-item>
-          <el-button type="success" @click="doJiesuan">模拟结算（关单）</el-button>
-          <el-button @click="goPayDetail">打开支付详情</el-button>
+          <el-button type="success" native-type="button" :loading="loadingJiesuan" @click="doJiesuan">模拟结算（关单）</el-button>
+          <el-button native-type="button" @click="goPayDetail">打开支付详情</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -98,11 +106,16 @@
 export default {
   data() {
     return {
-      yuyueIdInput: null,
+      hasToken: !!localStorage.getItem('frontToken'),
+      yuyueIdInput: '',
       lockedYuyueId: null,
       snapshot: null,
+      loadingSnapshot: false,
+      loadingRuchang: false,
+      loadingLichang: false,
+      loadingJiesuan: false,
       ruchangForm: {
-        yuyueId: null,
+        yuyueId: '',
         jinchangshijian: '',
         yonghuzhanghao: '',
         xingming: '',
@@ -112,26 +125,26 @@ export default {
       },
       ruchangResult: null,
       lichangForm: {
-        chezijinchangId: null,
-        yuyueId: null,
+        chezijinchangId: '',
+        yuyueId: '',
         lichangshijian: ''
       },
       orderAfterLichang: null,
-      jiesuanId: null
+      jiesuanId: ''
     }
   },
   created() {
     const q = this.$route.query || {}
     if (q.yuyueId) {
-      this.yuyueIdInput = Number(q.yuyueId)
-      this.ruchangForm.yuyueId = Number(q.yuyueId)
-      this.lockedYuyueId = Number(q.yuyueId)
-      this.lichangForm.yuyueId = Number(q.yuyueId)
+      this.yuyueIdInput = String(q.yuyueId)
+      this.ruchangForm.yuyueId = String(q.yuyueId)
+      this.lockedYuyueId = String(q.yuyueId)
+      this.lichangForm.yuyueId = String(q.yuyueId)
       this.loadSnapshot()
     }
     if (q.chezijinchangId) {
-      this.lichangForm.chezijinchangId = Number(q.chezijinchangId)
-      this.loadChain(Number(q.chezijinchangId))
+      this.lichangForm.chezijinchangId = String(q.chezijinchangId)
+      this.loadChain(q.chezijinchangId)
     }
     const un = localStorage.getItem('username')
     if (un) {
@@ -139,46 +152,81 @@ export default {
     }
   },
   methods: {
+    // 这是我cursor给父亲写的 — 预约/入场/缴费单 id 须为纯数字主键
+    parseId(val, label) {
+      if (val === null || val === undefined || String(val).trim() === '') {
+        this.$message.warning('请填写' + label + '（纯数字，如 1）')
+        return null
+      }
+      const s = String(val).trim()
+      if (!/^\d+$/.test(s)) {
+        this.$message.error(label + '须为数字主键，勿填表名（错误示例：chewei_yuyue.1）')
+        return null
+      }
+      return parseInt(s, 10)
+    },
+    onHttpFail(err, fallback) {
+      const msg = (err && err.body && err.body.msg) || (err && err.message) || fallback || '请求失败，请确认后端已启动且地址为 ' + (this.$config.baseUrl || '')
+      this.$message.error(msg)
+    },
     loadSnapshot() {
-      const id = this.yuyueIdInput || this.ruchangForm.yuyueId
-      if (!id) {
-        this.$message.error('请填写预约单 id')
+      const id = this.parseId(this.yuyueIdInput || this.ruchangForm.yuyueId, '预约单 id')
+      if (id == null) {
         return
       }
+      this.loadingSnapshot = true
       this.$http.get('n3/tingcheli/m2/yuyue/snapshot', { params: { yuyueId: id } }).then(res => {
-        if (res.data.code === 0) {
+        if (res.data && res.data.code === 0) {
           this.snapshot = res.data.data
-          this.ruchangForm.yuyueId = id
-          this.lichangForm.yuyueId = id
+          this.ruchangForm.yuyueId = String(id)
+          this.lichangForm.yuyueId = String(id)
           this.$message.success('已加载预约快照')
         } else {
-          this.$message.error(res.data.msg || '加载失败')
+          this.$message.error((res.data && res.data.msg) || '加载失败')
         }
+      }).catch(err => {
+        this.onHttpFail(err, '加载快照失败')
+      }).finally(() => {
+        this.loadingSnapshot = false
       })
     },
     loadChain(cid) {
-      this.$http.get('n3/tingcheli/chain', { params: { chezijinchangId: cid } }).then(res => {
-        if (res.data.code === 0) {
+      const id = this.parseId(cid, '入场单 id')
+      if (id == null) {
+        return
+      }
+      this.$http.get('n3/tingcheli/chain', { params: { chezijinchangId: id } }).then(res => {
+        if (res.data && res.data.code === 0) {
           const d = res.data.data || {}
           if (d.ruchang) {
             this.ruchangResult = { ruchang: d.ruchang, yuyueId: this.lichangForm.yuyueId }
-            this.lichangForm.chezijinchangId = d.ruchang.id
+            this.lichangForm.chezijinchangId = String(d.ruchang.id)
           }
           if (d.yuyue && d.yuyue.id) {
-            this.lichangForm.yuyueId = d.yuyue.id
-            this.ruchangForm.yuyueId = d.yuyue.id
-            this.yuyueIdInput = d.yuyue.id
+            this.lichangForm.yuyueId = String(d.yuyue.id)
+            this.ruchangForm.yuyueId = String(d.yuyue.id)
+            this.yuyueIdInput = String(d.yuyue.id)
             this.snapshot = { yuyue: d.yuyue, chewei: d.chewei, hint: '已从业务链带出关联预约单。' }
           }
           this.$message.success('已加载入场业务链')
         } else {
-          this.$message.error(res.data.msg || '加载失败')
+          this.$message.error((res.data && res.data.msg) || '加载失败')
         }
+      }).catch(err => {
+        this.onHttpFail(err, '加载业务链失败')
       })
     },
     doM2Ruchang() {
+      const yuyueId = this.parseId(this.ruchangForm.yuyueId, '预约单 id')
+      if (yuyueId == null) {
+        return
+      }
+      if (!(this.ruchangForm.chepaihao || '').trim()) {
+        this.$message.error('请填写车牌号')
+        return
+      }
       const body = {
-        yuyueId: this.ruchangForm.yuyueId,
+        yuyueId: yuyueId,
         chepaihao: (this.ruchangForm.chepaihao || '').trim(),
         yonghuzhanghao: (this.ruchangForm.yonghuzhanghao || '').trim(),
         xingming: (this.ruchangForm.xingming || '').trim(),
@@ -188,59 +236,83 @@ export default {
       if (this.ruchangForm.jinchangshijian) {
         body.jinchangshijian = this.ruchangForm.jinchangshijian
       }
+      this.loadingRuchang = true
       this.$http.post('n3/tingcheli/m2/ruchang', body).then(res => {
-        if (res.data.code === 0) {
+        if (res.data && res.data.code === 0) {
           this.ruchangResult = res.data.data
           const r = res.data.data && res.data.data.ruchang
           if (r && r.id) {
-            this.lichangForm.chezijinchangId = r.id
+            this.lichangForm.chezijinchangId = String(r.id)
             if (res.data.data.yuyueId) {
-              this.lichangForm.yuyueId = res.data.data.yuyueId
+              this.lichangForm.yuyueId = String(res.data.data.yuyueId)
             }
           }
           this.$message.success('入场成功')
         } else {
-          this.$message.error(res.data.msg || '入场失败')
+          this.$message.error((res.data && res.data.msg) || '入场失败')
         }
+      }).catch(err => {
+        this.onHttpFail(err, '入场请求失败')
+      }).finally(() => {
+        this.loadingRuchang = false
       })
     },
     doLichang() {
-      const body = {
-        chezijinchangId: this.lichangForm.chezijinchangId,
-        yuyueId: this.lichangForm.yuyueId || undefined
+      const chezijinchangId = this.parseId(this.lichangForm.chezijinchangId, '入场单 id')
+      if (chezijinchangId == null) {
+        return
+      }
+      const body = { chezijinchangId: chezijinchangId }
+      const yuyueRaw = (this.lichangForm.yuyueId || '').trim()
+      if (yuyueRaw) {
+        const yuyueId = this.parseId(yuyueRaw, '预约单 id')
+        if (yuyueId == null) {
+          return
+        }
+        body.yuyueId = yuyueId
       }
       if (this.lichangForm.lichangshijian) {
         body.lichangshijian = this.lichangForm.lichangshijian
       }
+      this.loadingLichang = true
       this.$http.post('n3/tingcheli/lichang', body).then(res => {
-        if (res.data.code === 0) {
+        if (res.data && res.data.code === 0) {
           this.orderAfterLichang = res.data.data
-          this.jiesuanId = res.data.data.id
+          this.jiesuanId = String(res.data.data.id)
           this.$message.success('已生成缴费单')
         } else {
-          this.$message.error(res.data.msg || '离场失败')
+          this.$message.error((res.data && res.data.msg) || '离场失败')
         }
+      }).catch(err => {
+        this.onHttpFail(err, '离场请求失败')
+      }).finally(() => {
+        this.loadingLichang = false
       })
     },
     doJiesuan() {
-      if (!this.jiesuanId) {
-        this.$message.error('请填写缴费单 id')
+      const tingchejiaofeiId = this.parseId(this.jiesuanId, '缴费单 id')
+      if (tingchejiaofeiId == null) {
         return
       }
-      this.$http.post('n3/tingcheli/jiesuan', { tingchejiaofeiId: this.jiesuanId }).then(res => {
-        if (res.data.code === 0) {
+      this.loadingJiesuan = true
+      this.$http.post('n3/tingcheli/jiesuan', { tingchejiaofeiId: tingchejiaofeiId }).then(res => {
+        if (res.data && res.data.code === 0) {
           this.$message.success('结算成功')
         } else {
-          this.$message.error(res.data.msg || '结算失败')
+          this.$message.error((res.data && res.data.msg) || '结算失败')
         }
+      }).catch(err => {
+        this.onHttpFail(err, '结算请求失败')
+      }).finally(() => {
+        this.loadingJiesuan = false
       })
     },
     goPayDetail() {
-      if (!this.jiesuanId) {
-        this.$message.error('请先生成缴费单或填写缴费单 id')
+      const id = this.parseId(this.jiesuanId, '缴费单 id')
+      if (id == null) {
         return
       }
-      this.$router.push({ path: '/index/tingchejiaofeiDetail', query: { id: this.jiesuanId } })
+      this.$router.push({ path: '/index/tingchejiaofeiDetail', query: { id: id } })
     }
   }
 }

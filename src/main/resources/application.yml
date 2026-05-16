@@ -7,6 +7,11 @@ server:
         context-path: /springboot673i609q
 
 
+# 这是N6代码 — 超时策略定时任务开关（false 可关闭每分钟扫描）
+chewei:
+  n6:
+    scheduled-enabled: true
+
 spring:
     datasource:
         driverClassName: com.mysql.cj.jdbc.Driver

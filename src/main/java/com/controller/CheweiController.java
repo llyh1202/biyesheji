@@ -44,6 +44,7 @@ import com.utils.R;
  * 这是N4代码 — 余位校验与时段预约 /chewei/n4/*。
  * 这是M1代码 — 预约/订单模型扩展：chewei_yuyue 支付态与流程节点，与入场离场支付联动；查询 /chewei/m1/yuyue/list。
  * 这是N5代码 — 车位可视化 /chewei/n5/* 与 public/n5-chewei-keshihua.html。
+ * 这是N6代码 — 超时策略 /chewei/n6/*（规则表 + 定时任务）。
  * 车位编号主数据（N1 车位级主数据；N2 车位占用状态机与预约接口）。
  * 这是我cursor给父亲写的
  */

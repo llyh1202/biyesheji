@@ -23,6 +23,7 @@ import com.entity.TingchejiaofeiEntity;
 import com.entity.dto.M2RuchangDto;
 import com.entity.dto.N3TingcheJiesuanDto;
 import com.entity.dto.N3TingcheLichangDto;
+import com.service.CheweiChaoshiN6Service;
 import com.service.CheweiService;
 import com.service.ChechangliYeN3Service;
 import com.service.ChezijinchangService;
@@ -32,7 +33,7 @@ import com.service.TingchejiaofeiService;
 import com.utils.R;
 
 /**
- * 这是N3代码 — 入场/离场/结算编排实现；这是M2代码 — 预约校验后入场与闭环离场校验；这是M3代码 — 结算关单触发支付态与 N2 一致。
+ * 这是N3代码 — 入场/离场/结算编排实现；这是M2/M3/N6代码 — 预约入场、支付联动、离场计费宽限期。
  * 这是我cursor给父亲写的
  */
 @Service("chechangliYeN3Service")
@@ -50,6 +51,8 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 	private CheweiYuyueDao cheweiYuyueDao;
 	@Autowired
 	private CheweixinxiService cheweixinxiService;
+	@Autowired
+	private CheweiChaoshiN6Service cheweiChaoshiN6Service;
 
 	private static String nz(String s) {
 		if (StringUtils.isBlank(s)) {
@@ -225,7 +228,11 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 
 		int danjia = entry.getXiaoshidanjia() != null && entry.getXiaoshidanjia() > 0 ? entry.getXiaoshidanjia() : 1;
 		double hours = (lichang.getTime() - entry.getJinchangshijian().getTime()) / (1000.0 * 3600.0);
-		double billHours = Math.max(1.0, Math.ceil(hours - 1e-9));
+		// 这是N6代码 — 停车计费宽限期：从计费时长中扣减规则配置的分钟数后再按小时向上取整
+		int graceMin = cheweiChaoshiN6Service.resolveJifeiKuanxianFenzhong(entry.getTingchechangmingcheng(),
+				entry.getQuyu());
+		double chargeableHours = Math.max(0.0, hours - graceMin / 60.0);
+		double billHours = Math.max(1.0, Math.ceil(chargeableHours - 1e-9));
 		double fee = billHours * danjia;
 
 		TingchejiaofeiEntity order = new TingchejiaofeiEntity();
@@ -240,7 +247,7 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 		order.setCheliangtupian(entry.getCheliangtupian());
 		order.setJinchangshijian(entry.getJinchangshijian());
 		order.setLichangshijian(lichang);
-		order.setBencitingcheshizhang(hours);
+		order.setBencitingcheshizhang(chargeableHours > 0 ? chargeableHours : hours);
 		order.setBencitingchefeiyong(fee);
 		order.setCrossrefid(entry.getId());
 		order.setCheweiId(entry.getCheweiId());
