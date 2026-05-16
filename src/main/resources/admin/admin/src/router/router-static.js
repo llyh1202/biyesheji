@@ -16,6 +16,8 @@ import center from '@/views/center'
     import chewei from '@/views/modules/chewei/list'
     // 这是我cursor给父亲写的 — N6 超时策略
     import cheweichaoshiguize from '@/views/modules/cheweichaoshiguize/list'
+    // 这是我cursor给父亲写的 — M5 计费规则
+    import tingchejifeiguize from '@/views/modules/tingchejifeiguize/list'
     // 这是我cursor给父亲写的 — N7 补缴单
     import tingchebujiao from '@/views/modules/tingchebujiao/list'
     import chezijinchang from '@/views/modules/chezijinchang/list'
@@ -67,6 +69,11 @@ export const routes = [{
 	path: '/cheweichaoshiguize',
         name: '超时策略',
         component: cheweichaoshiguize
+      }
+      ,{
+	path: '/tingchejifeiguize',
+        name: '计费规则',
+        component: tingchejifeiguize
       }
       ,{
 	path: '/tingchebujiao',

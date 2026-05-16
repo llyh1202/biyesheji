@@ -26,6 +26,7 @@ import com.entity.dto.N7AdminBujiaoDto;
 import com.service.CheweiService;
 import com.service.ChezijinchangService;
 import com.service.TingcheBujiaoN7Service;
+import com.service.TingcheJifeiM5Service;
 import com.utils.R;
 
 /**
@@ -40,6 +41,8 @@ public class TingcheBujiaoN7ServiceImpl extends ServiceImpl<TingcheBujiaoDao, Ti
 	private ChezijinchangService chezijinchangService;
 	@Autowired
 	private CheweiService cheweiService;
+	@Autowired
+	private TingcheJifeiM5Service tingcheJifeiM5Service;
 	@Autowired
 	private CheweiYuyueDao cheweiYuyueDao;
 
@@ -186,12 +189,23 @@ public class TingcheBujiaoN7ServiceImpl extends ServiceImpl<TingcheBujiaoDao, Ti
 		if (y.getJieshuShijian() != null && now.after(y.getJieshuShijian())) {
 			long ms = now.getTime() - y.getJieshuShijian().getTime();
 			double overHours = Math.ceil(ms / (1000.0 * 3600.0));
-			int danjia = entry.getXiaoshidanjia() != null && entry.getXiaoshidanjia() > 0 ? entry.getXiaoshidanjia() : 1;
-			double suggested = overHours * danjia;
+			// 这是M5代码 — 超时补缴建议金额走统一计费规则
+			R calcR = tingcheJifeiM5Service.calculateParkingFee(y.getJieshuShijian(), now,
+					entry.getTingchechangmingcheng(), entry.getQuyu(), entry.getXiaoshidanjia());
+			double suggested = overHours * (entry.getXiaoshidanjia() != null && entry.getXiaoshidanjia() > 0
+					? entry.getXiaoshidanjia() : 1);
+			if (calcR != null && Integer.valueOf(0).equals(calcR.get("code")) && calcR.get("data") instanceof Map) {
+				@SuppressWarnings("unchecked")
+				Map<String, Object> calc = (Map<String, Object>) calcR.get("data");
+				if (calc.get("fee") != null) {
+					suggested = ((Number) calc.get("fee")).doubleValue();
+				}
+				data.put("jifeiCalc", calc);
+			}
 			data.put("overtime", true);
 			data.put("overHours", overHours);
 			data.put("suggestedJine", suggested);
-			data.put("hint", "已超过预约结束时间，建议补缴约 " + suggested + " 元（按超时时长向上取整小时 × 单价）");
+			data.put("hint", "已超过预约结束时间，建议补缴约 " + suggested + " 元（M5 计费规则）");
 			String lj = nz(y.getLiuchengJiedian());
 			if (YuyueLiuchengJiedianM1.YIRUCHANG.equals(lj) || StringUtils.isBlank(lj)) {
 				data.put("canCreateBujiao", true);

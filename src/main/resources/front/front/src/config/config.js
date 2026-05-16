@@ -19,6 +19,10 @@ export default {
             url: '/index/m2TingcheLi'
         },
         {
+            name: '费用试算(M5)',
+            url: '/index/m5Jifei'
+        },
+        {
             name: '超时策略(N6)',
             url: '/index/n6Chaoshi'
         },

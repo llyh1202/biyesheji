@@ -23,8 +23,8 @@ import com.entity.TingchejiaofeiEntity;
 import com.entity.dto.M2RuchangDto;
 import com.entity.dto.N3TingcheJiesuanDto;
 import com.entity.dto.N3TingcheLichangDto;
-import com.service.CheweiChaoshiN6Service;
 import com.service.TingcheBujiaoN7Service;
+import com.service.TingcheJifeiM5Service;
 import com.service.CheweiService;
 import com.service.ChechangliYeN3Service;
 import com.service.ChezijinchangService;
@@ -34,7 +34,7 @@ import com.service.TingchejiaofeiService;
 import com.utils.R;
 
 /**
- * 这是N3代码 — 入场/离场/结算编排实现；这是M2/M3/N6/N7代码 — 预约入场、支付联动、离场计费与补缴并入。
+ * 这是N3代码 — 入场/离场/结算编排实现；这是M2/M3/M5/N7代码 — 预约入场、M5 计费、补缴并入。
  * 这是我cursor给父亲写的
  */
 @Service("chechangliYeN3Service")
@@ -53,7 +53,7 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 	@Autowired
 	private CheweixinxiService cheweixinxiService;
 	@Autowired
-	private CheweiChaoshiN6Service cheweiChaoshiN6Service;
+	private TingcheJifeiM5Service tingcheJifeiM5Service;
 	@Autowired
 	private TingcheBujiaoN7Service tingcheBujiaoN7Service;
 
@@ -235,14 +235,20 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 			return R.error(ex.getMessage());
 		}
 
-		int danjia = entry.getXiaoshidanjia() != null && entry.getXiaoshidanjia() > 0 ? entry.getXiaoshidanjia() : 1;
-		double hours = (lichang.getTime() - entry.getJinchangshijian().getTime()) / (1000.0 * 3600.0);
-		// 这是N6代码 — 停车计费宽限期：从计费时长中扣减规则配置的分钟数后再按小时向上取整
-		int graceMin = cheweiChaoshiN6Service.resolveJifeiKuanxianFenzhong(entry.getTingchechangmingcheng(),
-				entry.getQuyu());
-		double chargeableHours = Math.max(0.0, hours - graceMin / 60.0);
-		double billHours = Math.max(1.0, Math.ceil(chargeableHours - 1e-9));
-		double fee = billHours * danjia;
+		// 这是M5代码 — 统一计费入口（含 N6 宽限 + 首小时/阶梯/封顶）
+		R calcR = tingcheJifeiM5Service.calculateParkingFee(entry.getJinchangshijian(), lichang,
+				entry.getTingchechangmingcheng(), entry.getQuyu(), entry.getXiaoshidanjia());
+		if (calcR == null || !Integer.valueOf(0).equals(calcR.get("code"))) {
+			return R.error(calcR != null && calcR.get("msg") != null ? calcR.get("msg").toString() : "计费失败");
+		}
+		@SuppressWarnings("unchecked")
+		Map<String, Object> calc = (Map<String, Object>) calcR.get("data");
+		double fee = calc.get("fee") != null ? ((Number) calc.get("fee")).doubleValue() : 0.0;
+		double chargeableHours = calc.get("chargeableHours") != null
+				? ((Number) calc.get("chargeableHours")).doubleValue() : 0.0;
+		Object danjiaObj = calc.get("danjia");
+		int danjia = danjiaObj != null ? ((Number) danjiaObj).intValue()
+				: (entry.getXiaoshidanjia() != null ? entry.getXiaoshidanjia() : 1);
 
 		TingchejiaofeiEntity order = new TingchejiaofeiEntity();
 		order.setDingdanhao("TC" + System.currentTimeMillis());
@@ -256,7 +262,7 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 		order.setCheliangtupian(entry.getCheliangtupian());
 		order.setJinchangshijian(entry.getJinchangshijian());
 		order.setLichangshijian(lichang);
-		order.setBencitingcheshizhang(chargeableHours > 0 ? chargeableHours : hours);
+		order.setBencitingcheshizhang(chargeableHours);
 		order.setBencitingchefeiyong(fee);
 		order.setCrossrefid(entry.getId());
 		order.setCheweiId(entry.getCheweiId());
@@ -280,6 +286,7 @@ public class ChechangliYeN3ServiceImpl implements ChechangliYeN3Service {
 		payload.put("baseParkingFee", fee);
 		payload.put("bujiaoMerged", totalFee - fee);
 		payload.put("totalFee", totalFee);
+		payload.put("jifeiCalc", calc);
 		return R.ok().put("data", payload);
 	}
 
