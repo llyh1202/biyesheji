@@ -66,6 +66,7 @@
 import Vue from 'vue'
 import Swiper from "swiper";
 import axios from 'axios'
+import { getVisibleIndexNav } from '@/config/config'
 
 export default {
     data() {
@@ -120,7 +121,8 @@ export default {
     },
     created() {
 		this.baseUrl = this.$config.baseUrl;
-		this.menuList = this.$config.indexNav;
+		// 这是我cursor给父亲写的 — P1-17 顶栏不展示 hidden 入口（含车子进场新增）
+		this.menuList = getVisibleIndexNav(this.$config.indexNav);
 		this.getCarousel();
         if(localStorage.getItem('frontToken') && localStorage.getItem('frontToken')!=null) {
 			this.getSession()

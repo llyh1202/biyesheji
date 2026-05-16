@@ -155,6 +155,15 @@
 		}
 	  //this.bg();
       let type = this.$route.query.type ? this.$route.query.type : '';
+      // 这是我cursor给父亲写的 — P1-17 前台用户不走手工新增进场单
+      if (!this.centerType && type !== 'edit' && !this.$route.query.id) {
+        const table = localStorage.getItem('UserTableName') || localStorage.getItem('frontSessionTable') || ''
+        if (table === 'yonghu' || type === 'cross') {
+          this.$message.warning('请通过「我的停车」或车位预约完成入场，不支持手工新增进场单')
+          this.$router.replace({ path: '/index/wodeTingche' })
+          return
+        }
+      }
       this.init(type);
       this.baseUrl = this.$config.baseUrl;
       this.ruleForm.jinchangshijian = this.getCurDateTime()

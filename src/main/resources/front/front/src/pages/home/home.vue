@@ -100,12 +100,9 @@ import Swiper from "swiper";
           { title: '离场与补缴', desc: '正常离场；如有超时，可在 N7 完成补缴。' }
         ],
         capabilityList: [
-          { title: '车位信息', desc: '查看各停车场余位、区域与参考价格。', path: '/index/cheweixinxi' },
-          { title: '时段预约 (M4)', desc: '提前预约停车时段，减少现场等待。', path: '/index/m4Yuyue' },
-          { title: '停车闭环 (M2)', desc: '进出场全流程记录，状态一目了然。', path: '/index/m2TingcheLi' },
-          { title: '费用试算 (M5)', desc: '按规则试算停车费用，缴费更便捷。', path: '/index/m5Jifei' },
-          { title: '超时策略 (N6)', desc: '了解超时计费规则与策略说明。', path: '/index/n6Chaoshi' },
-          { title: '超时补缴 (N7)', desc: '查询并补缴超时产生的差额费用。', path: '/index/n7Bujiao' }
+          { title: '我的停车', desc: '查看预约、在场与待缴费，一键进入停车闭环。', path: '/index/wodeTingche' },
+          { title: '车位信息', desc: '浏览车场并在详情页预约时段车位。', path: '/index/cheweixinxi' },
+          { title: '用户反馈', desc: '提交使用问题与建议。', path: '/index/messages' }
         ],
         tipsList: [
           '登录后可使用个人中心查看预约、缴费与反馈记录。',
@@ -117,7 +114,9 @@ import Swiper from "swiper";
     },
     created() {
 		this.baseUrl = this.$config.baseUrl;
-		this.menuList = this.$config.indexNav || [];
+		// 这是我cursor给父亲写的 — P1-17 首页快捷入口与顶栏一致
+		const nav = this.$config.indexNav || []
+		this.menuList = nav.filter(item => item && !item.hidden)
 		this.getList();
     },
 	mounted() {

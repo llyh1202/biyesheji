@@ -39,7 +39,7 @@ VueRouter.prototype.push = function push(location) {
 }
 
 //配置路由
-export default new VueRouter({
+const router = new VueRouter({
 	routes:[
 		{
       path: '/',
@@ -149,3 +149,24 @@ export default new VueRouter({
 		},
 	]
 })
+
+// 这是我cursor给父亲写的 — P1-17 普通用户不可直达车子进场新增（路由保留，菜单已隐藏）
+router.beforeEach((to, from, next) => {
+	const path = to.path || ''
+	const isChezijinchangAdd = path.indexOf('chezijinchangAdd') !== -1
+	if (!isChezijinchangAdd) {
+		next()
+		return
+	}
+	const table = localStorage.getItem('UserTableName') || localStorage.getItem('frontSessionTable') || ''
+	const isEndUser = table === 'yonghu'
+	const centerType = to.query && (to.query.centerType === '1' || to.query.centerType === 1 || to.query.centerType === true)
+	const isEdit = to.query && to.query.type === 'edit' && to.query.id
+	if (isEndUser && !centerType && !isEdit) {
+		next({ path: '/index/wodeTingche', replace: true })
+		return
+	}
+	next()
+})
+
+export default router
