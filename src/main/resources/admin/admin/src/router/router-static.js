@@ -20,6 +20,8 @@ import center from '@/views/center'
     import tingchejifeiguize from '@/views/modules/tingchejifeiguize/list'
     // 这是我cursor给父亲写的 — N7 补缴单
     import tingchebujiao from '@/views/modules/tingchebujiao/list'
+    // 这是我cursor给父亲写的 — N8 运营总览
+    import yunyingkanban from '@/views/modules/yunyingkanban/index'
     import chezijinchang from '@/views/modules/chezijinchang/list'
     import yonghu from '@/views/modules/yonghu/list'
     import tingchejiaofei from '@/views/modules/tingchejiaofei/list'
@@ -38,6 +40,10 @@ export const routes = [{
       name: '系统首页',
       component: Home,
       meta: {icon:'', title:'center', affix: true}
+    }, {
+      path: '/yunyingkanban',
+      name: '运营总览',
+      component: yunyingkanban
     }, {
       path: '/updatePassword',
       name: '修改密码',

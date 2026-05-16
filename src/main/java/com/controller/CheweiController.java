@@ -48,6 +48,7 @@ import com.utils.R;
  * 这是N5代码 — 车位可视化 /chewei/n5/* 与 public/n5-chewei-keshihua.html。
  * 这是N6代码 — 超时策略 /chewei/n6/*（规则表 + 定时任务）。
  * 这是N7代码 — 续费/超时补缴 /chewei/n7/*（管理员调整 + 用户补缴，离场并入主单）。
+ * 这是N8代码 — 运营总览看板 /chewei/n8/*（今日/本周 KPI）。
  * 车位编号主数据（N1 车位级主数据；N2 车位占用状态机与预约接口）。
  * 这是我cursor给父亲写的
  */
