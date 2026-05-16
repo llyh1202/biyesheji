@@ -33,6 +33,8 @@ public class CheweiYuyueEntity implements Serializable {
 	private Date jieshuShijian;
 
 	private String zhuangtai;
+	/** 这是我cursor给父亲写的 — P1-05 预约用户账号（与登录 session username 一致，供「我的停车」查询） */
+	private String yonghuzhanghao;
 	/** 这是M1代码 — 预约链路支付状态（与 tingchejiaofei.ispay 区分又可对齐） */
 	private String yuyueZhifuZhuangtai;
 	/** 这是M1代码 — 当前业务节点：已预约待入场→已入场→已离场待支付→已完成 */
@@ -98,6 +100,14 @@ public class CheweiYuyueEntity implements Serializable {
 
 	public void setZhuangtai(String zhuangtai) {
 		this.zhuangtai = zhuangtai;
+	}
+
+	public String getYonghuzhanghao() {
+		return yonghuzhanghao;
+	}
+
+	public void setYonghuzhanghao(String yonghuzhanghao) {
+		this.yonghuzhanghao = yonghuzhanghao;
 	}
 
 	public String getYuyueZhifuZhuangtai() {

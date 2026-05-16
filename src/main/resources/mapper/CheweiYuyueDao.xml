@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dao.CheweiYuyueDao">
+	<!-- 这是我cursor给父亲写的 — P1-05 chewei_yuyue 字段映射（含 yonghuzhanghao） -->
+
+	<resultMap type="com.entity.CheweiYuyueEntity" id="cheweiYuyueMap">
+		<id property="id" column="id"/>
+		<result property="cheweiId" column="chewei_id"/>
+		<result property="tingchechangmingcheng" column="tingchechangmingcheng"/>
+		<result property="quyu" column="quyu"/>
+		<result property="kaishiShijian" column="kaishi_shijian"/>
+		<result property="jieshuShijian" column="jieshu_shijian"/>
+		<result property="zhuangtai" column="zhuangtai"/>
+		<result property="yonghuzhanghao" column="yonghuzhanghao"/>
+		<result property="yuyueZhifuZhuangtai" column="yuyue_zhifu_zhuangtai"/>
+		<result property="liuchengJiedian" column="liucheng_jiedian"/>
+		<result property="chezijinchangId" column="chezijinchang_id"/>
+		<result property="tingchejiaofeiId" column="tingchejiaofei_id"/>
+		<result property="addtime" column="addtime"/>
+	</resultMap>
+
+</mapper>
