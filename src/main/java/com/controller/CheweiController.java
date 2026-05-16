@@ -301,6 +301,17 @@ public class CheweiController {
 		return cheweiYuliangN4Service.m1YuyueListByChewei(cheweiId);
 	}
 
+	/** 这是我cursor给父亲写的 — P1-07 我的预约列表：当前登录用户分页，可选 zhuangtai（有效/已取消） */
+	@RequestMapping("/n4/yuyue/myPage")
+	public R myYuyuePage(@RequestParam Map<String, Object> params,
+			@RequestParam(value = "zhuangtai", required = false) String zhuangtai, HttpServletRequest request) {
+		String yonghuzhanghao = (String) request.getSession().getAttribute("username");
+		if (StringUtils.isBlank(yonghuzhanghao)) {
+			return R.error(401, "请先登录");
+		}
+		return cheweiYuliangN4Service.myYuyuePage(params, yonghuzhanghao.trim(), zhuangtai);
+	}
+
 	/** 这是N5代码 — 可视化图例：状态 → 颜色。这是我cursor给父亲写的 */
 	@RequestMapping("/n5/legend")
 	public R n5Legend(HttpServletRequest request) {

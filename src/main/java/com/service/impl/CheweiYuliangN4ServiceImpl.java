@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
+import com.baomidou.mybatisplus.plugins.Page;
 import com.baomidou.mybatisplus.service.impl.ServiceImpl;
 import com.constant.CheweiYuyueM4Codes;
 import com.constant.CheweiYuyueZhuangtaiN4;
@@ -31,6 +32,8 @@ import com.entity.dto.N4YuyueReserveDto;
 import com.service.CheweiService;
 import com.service.CheweiYuliangN4Service;
 import com.service.CheweixinxiService;
+import com.utils.PageUtils;
+import com.utils.Query;
 import com.utils.R;
 
 /**
@@ -513,5 +516,22 @@ public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, Chew
 		w.eq("chewei_id", cheweiId);
 		w.orderBy("id", false);
 		return R.ok().put("data", selectList(w));
+	}
+
+	@Override
+	public R myYuyuePage(Map<String, Object> params, String yonghuzhanghao, String zhuangtai) {
+		// 这是我cursor给父亲写的 — P1-07 我的预约列表
+		if (StringUtils.isBlank(yonghuzhanghao)) {
+			return R.error(401, "请先登录");
+		}
+		EntityWrapper<CheweiYuyueEntity> w = new EntityWrapper<CheweiYuyueEntity>();
+		w.eq("yonghuzhanghao", yonghuzhanghao.trim());
+		if (StringUtils.isNotBlank(zhuangtai)) {
+			w.eq("zhuangtai", zhuangtai.trim());
+		}
+		w.orderBy("id", false);
+		Map<String, Object> pageParams = params == null ? new HashMap<String, Object>(2) : params;
+		Page<CheweiYuyueEntity> page = selectPage(new Query<CheweiYuyueEntity>(pageParams).getPage(), w);
+		return R.ok().put("data", new PageUtils(page));
 	}
 }

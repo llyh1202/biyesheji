@@ -1,5 +1,7 @@
 package com.service;
 
+import java.util.Map;
+
 import com.entity.dto.N4SpotAvailChaDto;
 import com.entity.dto.N4YuliangChaDto;
 import com.entity.dto.N4YuyueReserveDto;
@@ -49,4 +51,9 @@ public interface CheweiYuliangN4Service {
 
 	/** 这是M1代码 — 查询某车位时段预约单列表（含扩展字段），按 id 倒序。这是我cursor给父亲写的 */
 	R m1YuyueListByChewei(Long cheweiId);
+
+	/**
+	 * 这是我cursor给父亲写的 — P1-07 我的预约列表：按当前用户 yonghuzhanghao 分页，可选 zhuangtai 筛选。
+	 */
+	R myYuyuePage(Map<String, Object> params, String yonghuzhanghao, String zhuangtai);
 }
