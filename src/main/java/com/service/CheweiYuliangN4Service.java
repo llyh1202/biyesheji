@@ -23,8 +23,9 @@ public interface CheweiYuliangN4Service {
 
 	/**
 	 * 余位足够且目标车位在时段内可用时：写入时段预约并置车位为「已预约未入场」。
+	 * 这是我cursor给父亲写的 — P1-06 写入预约用户账号 yonghuzhanghao（来自登录 token/session）
 	 */
-	R reserveWithSlot(N4YuyueReserveDto body);
+	R reserveWithSlot(N4YuyueReserveDto body, String yonghuzhanghao);
 
 	/**
 	 * 取消该车位的所有「有效」时段预约（供 N2 取消预约时联动）。

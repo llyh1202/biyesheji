@@ -309,7 +309,11 @@ public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, Chew
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public R reserveWithSlot(N4YuyueReserveDto body) {
+	public R reserveWithSlot(N4YuyueReserveDto body, String yonghuzhanghao) {
+		// 这是我cursor给父亲写的 — P1-06 未登录不可预约
+		if (StringUtils.isBlank(yonghuzhanghao)) {
+			return R.error(401, "请先登录");
+		}
 		if (body == null || body.getCheweiId() == null) {
 			return R.error("须传入车位 id：cheweiId");
 		}
@@ -368,6 +372,7 @@ public class CheweiYuliangN4ServiceImpl extends ServiceImpl<CheweiYuyueDao, Chew
 		row.setKaishiShijian(body.getKaishiShijian());
 		row.setJieshuShijian(body.getJieshuShijian());
 		row.setZhuangtai(CheweiYuyueZhuangtaiN4.YOUXIAO);
+		row.setYonghuzhanghao(yonghuzhanghao.trim());
 		row.setYuyueZhifuZhuangtai(YuyueZhifuZhuangtaiM1.WUXU_YUFU);
 		row.setLiuchengJiedian(YuyueLiuchengJiedianM1.YIYUYUE_DAIRUCHANG);
 		row.setAddtime(new Date());

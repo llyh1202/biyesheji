@@ -284,12 +284,15 @@ public class CheweiController {
 		return cheweiYuliangN4Service.availabilityBySpot(body);
 	}
 
-	/** 这是N4/M4代码 — 带时段预约：余位校验 + 并发控制后写 chewei_yuyue。这是我cursor给父亲写的 */
-	@IgnoreAuth
+	/** 这是N4/M4代码 — 带时段预约：余位校验 + 并发控制后写 chewei_yuyue；P1-06 须登录并绑定 yonghuzhanghao。这是我cursor给父亲写的 */
 	@RequestMapping("/n4/reserve")
 	@Transactional(rollbackFor = Exception.class)
 	public R n4Reserve(@RequestBody N4YuyueReserveDto body, HttpServletRequest request) {
-		return cheweiYuliangN4Service.reserveWithSlot(body);
+		String yonghuzhanghao = (String) request.getSession().getAttribute("username");
+		if (StringUtils.isBlank(yonghuzhanghao)) {
+			return R.error(401, "请先登录");
+		}
+		return cheweiYuliangN4Service.reserveWithSlot(body, yonghuzhanghao.trim());
 	}
 
 	/** 这是M1代码 — 查询某车位下时段预约单（含 yuyueZhifuZhuangtai、liuchengJiedian、关联入场/缴费单 id）。这是我cursor给父亲写的 */
